@@ -3,75 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HVAC Diagnose</title>
+    <title>HVAC Diagnose AI</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h1, h2 { color: #0275d8; text-align: center; }
-        label { font-weight: bold; display: block; margin-top: 15px; }
-        select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
-        button { background-color: #0275d8; color: white; border: none; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        h1, h2 { color: #0275d8; text-align: center; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
+        label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
+        select, textarea, input[type="file"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        textarea { resize: vertical; height: 100px; }
+        button { width: 100%; padding: 15px; background-color: #0275d8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; font-weight: bold; font-size: 16px; transition: background 0.3s; }
         button:hover { background-color: #025aa5; }
-        #result { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 5px; display: none; }
-        .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; }
+        button:disabled { background-color: #a0c4e8; cursor: not-allowed; }
+        .ai-section { border-top: 2px dashed #ccc; margin-top: 30px; padding-top: 20px; }
+        #result { margin-top: 20px; padding: 15px; background: #e9f5ff; border-radius: 8px; display: none; border: 1px solid #bce0fd; white-space: pre-wrap; line-height: 1.6; }
+        .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .prob { color: #d9534f; font-weight: bold; }
-        ul { padding-right: 20px; }
+        .loading { text-align: center; color: #0275d8; font-weight: bold; display: none; margin-top: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>❄ HVAC Diagnose</h1>
-    <p style="text-align: center;">Fehlerdiagnose für Kälte- und Klimatechnik</p>
+    <h1>❄ HVAC Diagnose AI</h1>
+    <p class="subtitle">مساعدك الذكي لتشخيص أعطال التكييف والتبريد</p>
 
+    <!-- القسم اليدوي السريع -->
     <label for="deviceType">1. نوع الجهاز / Gerätetyp:</label>
     <select id="deviceType">
         <option value="split">مكيف سبليت / Split-Klimaanlage</option>
         <option value="coldroom">غرفة تبريد / Kühlraum</option>
     </select>
 
-    <label for="symptom">2. وصف العطل / Fehler beschreiben:</label>
+    <label for="symptom">2. وصف العطل السريع:</label>
     <select id="symptom">
         <option value="not_cooling">لا يبرد / Kühlt nicht</option>
         <option value="high_pressure">ضغط مرتفع / Hoher Druck</option>
     </select>
 
-    <button onclick="runDiagnose()">🔍 تشخيص / Diagnose starten</button>
+    <button onclick="runDiagnose()">🔍 تشخيص سريع (يدوي)</button>
 
+    <!-- قسم الذكاء الاصطناعي -->
+    <div class="ai-section">
+        <h2>🤖 التشخيص بالذكاء الاصطناعي</h2>
+        
+        <label for="problemText">اكتب تفاصيل العطل هنا (أو صوت ما تراه):</label>
+        <textarea id="problemText" placeholder="مثال: المكيف يعمل ولكن لا يخرج هواء بارد، وأسمع صوت طقطقة من الوحدة الخارجية..."></textarea>
+
+        <label for="imageInput">أو أرفق صورة للعطل (من الكاميرا أو المعرض):</label>
+        <input type="file" id="imageInput" accept="image/*" capture="environment">
+
+        <button id="aiBtn" onclick="diagnoseWithAI()">✨ اطلب التشخيص من الذكاء الاصطناعي</button>
+        <div id="loading" class="loading">جاري تحليل الصورة والنص... الرجاء الانتظار ⏳</div>
+    </div>
+
+    <!-- مكان عرض النتائج -->
     <div id="result"></div>
 </div>
 
 <script>
-    // قاعدة بيانات التشخيص
+    // 1. قاعدة البيانات اليدوية (السريعة)
     const diagnoseDB = {
         split: {
-            not_cooling: {
-                label: "لا يبرد / Kühlt nicht",
-                causes: [
-                    { name: "نقص غاز التبريد / Kältemittelmangel", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] },
-                    { name: "فلتر هواء مسدود / Verstopfter Luftfilter", prob: "30%", checks: ["فحص الفلتر", "تنظيف أو استبدال"] },
-                    { name: "عطل في الضاغط / Kompressorfehler", prob: "15%", checks: ["قياس تيار الضاغط"] },
-                    { name: "عطل في المروحة / Lüfterfehler", prob: "15%", checks: ["فحص دوران المروحة"] }
-                ]
-            },
-            high_pressure: {
-                label: "ضغط مرتفع / Hoher Druck",
-                causes: [
-                    { name: "مكثف متسخ / Verschmutzter Kondensator", prob: "50%", checks: ["تنظيف المكثف", "فحص تدفق الهواء"] },
-                    { name: "مروحة المكثف لا تعمل / Kondensatorlüfter defekt", prob: "30%", checks: ["فحص المروحة"] },
-                    { name: "شحن زائد للغاز / Überfüllung", prob: "20%", checks: ["قياس الضغط", "فحص الشحن"] }
-                ]
-            }
+            not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }] },
+            high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }] }
         },
         coldroom: {
-            not_cooling: {
-                label: "لا يبرد / Kühlt nicht",
-                causes: [
-                    { name: "تسرب غاز / Kältemittelleck", prob: "35%", checks: ["فحص التسربات", "قياس الضغط"] },
-                    { name: "عطل في منظم الحرارة / Thermostatfehler", prob: "25%", checks: ["فحص الإعدادات"] },
-                    { name: "تراكم ثلج على المبخر / Vereisung", prob: "25%", checks: ["فحص دورة إذابة الثلج"] }
-                ]
-            }
+            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص دورة إذابة الثلج"] }] }
         }
     };
 
@@ -79,7 +77,6 @@
         const device = document.getElementById("deviceType").value;
         const symptom = document.getElementById("symptom").value;
         const resultDiv = document.getElementById("result");
-
         const data = diagnoseDB[device][symptom];
 
         if (!data) {
@@ -88,20 +85,73 @@
             return;
         }
 
-        let html = `<h3>النتائج / Ergebnisse: ${data.label}</h3>`;
-        
+        let html = `<h3>النتائج السريعة: ${data.label}</h3>`;
         data.causes.forEach(c => {
-            html += `
-            <div class="cause-item">
-                <strong>${c.name}</strong> <span class="prob">(${c.prob})</span>
-                <ul>
-                    ${c.checks.map(ch => `<li>${ch}</li>`).join("")}
-                </ul>
-            </div>`;
+            html += `<div class="cause-item"><strong>${c.name}</strong> <span class="prob">(${c.prob})</span><ul>${c.checks.map(ch => `<li>${ch}</li>`).join("")}</ul></div>`;
         });
-
         resultDiv.innerHTML = html;
         resultDiv.style.display = "block";
+    }
+
+    // 2. دالة الذكاء الاصطناعي
+    async function diagnoseWithAI() {
+        const promptText = document.getElementById("problemText").value;
+        const fileInput = document.getElementById("imageInput");
+        const resultDiv = document.getElementById("result");
+        const btn = document.getElementById("aiBtn");
+        const loading = document.getElementById("loading");
+
+        if (!promptText && !fileInput.files[0]) {
+            alert("الرجاء كتابة وصف العطل أو إرفاق صورة أولاً.");
+            return;
+        }
+
+        btn.disabled = true;
+        loading.style.display = "block";
+        resultDiv.style.display = "none";
+
+        let base64Image = null;
+
+        // تحويل الصورة إلى Base64 إذا وجدت
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            base64Image = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result.split(',')[1]); // إزالة البادئة
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // إعداد النص المرسل للذكاء الاصطناعي
+        const fullPrompt = `أنت خبير في هندسة التبريد والتكييف. المستخدم يصف المشكلة التالية: "${promptText}". 
+        قم بتحليل المشكلة بناءً على الوصف والصورة (إن وجدت). 
+        أعطني: 1. الأسباب المحتملة مرتبة. 2. خطوات الفحص المطلوبة. 3. تحذيرات السلامة. 
+        أجب باللغة العربية بأسلوب فني واضح ومختصر.`;
+
+        try {
+            // استبدل الرابط أدناه برابط الـ Worker الخاص بك
+            const workerUrl = "https://hvac-ia.yassersaid98765.workers.dev"; 
+            
+            const response = await fetch(workerUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: fullPrompt, imageData: base64Image })
+            });
+
+            const data = await response.json();
+            
+            if (data.error) throw new Error(data.error);
+
+            resultDiv.innerHTML = `<h3>🤖 تحليل الذكاء الاصطناعي:</h3><p>${data.result.replace(/\n/g, '<br>')}</p>`;
+            resultDiv.style.display = "block";
+
+        } catch (error) {
+            resultDiv.innerHTML = `<p style="color:red;">حدث خطأ: ${error.message}. تأكد من إعدادات الخادم.</p>`;
+            resultDiv.style.display = "block";
+        } finally {
+            btn.disabled = false;
+            loading.style.display = "none";
+        }
     }
 </script>
 
