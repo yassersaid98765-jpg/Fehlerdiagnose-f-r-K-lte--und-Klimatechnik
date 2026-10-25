@@ -5,14 +5,23 @@ export async function onRequestPost(context) {
   try {
     const { prompt, imageData } = await request.json();
     
+    // التأكد من وجود المفتاح
     if (!env.GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "خطأ: مفتاح GEMINI_API_KEY غير موجود في إعدادات Cloudflare. يرجى إضافته في Environment variables." }), { status: 500, headers: cors });
+      return new Response(JSON.stringify({ error: "خطأ: مفتاح GEMINI_API_KEY غير موجود في إعدادات Cloudflare." }), { status: 500, headers: cors });
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
+    // استخدام النموذج الأحدث
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${env.GEMINI_API_KEY}`;
     
     const parts = [{ text: prompt }];
-    if (imageData) parts.push({ inline_data: { mime_type: "image/jpeg", data: imageData } });
+    if (imageData) {
+      parts.push({ 
+        inline_data: { 
+          mime_type: "image/jpeg", 
+          data: imageData 
+        } 
+      });
+    }
 
     const res = await fetch(url, {
       method: "POST",
@@ -22,8 +31,9 @@ export async function onRequestPost(context) {
     
     const data = await res.json();
 
+    // التحقق من وجود رد صالح
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        return new Response(JSON.stringify({ error: "لم يتم استلام رد صالح من الذكاء الاصطناعي. تفاصيل الخطأ من Google: " + JSON.stringify(data) }), { status: 500, headers: cors });
+        return new Response(JSON.stringify({ error: "خطأ من Google: " + JSON.stringify(data) }), { status: 500, headers: cors });
     }
 
     const aiText = data.candidates[0].content.parts[0].text;
