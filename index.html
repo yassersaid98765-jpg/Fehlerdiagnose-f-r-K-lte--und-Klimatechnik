@@ -7,9 +7,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
+        
+        /* تنسيقات القوائم القابلة للطي */
+        details { background: #fff; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
+        summary { padding: 15px; font-weight: bold; font-size: 16px; cursor: pointer; background-color: #f8f9fa; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #0275d8; }
+        summary::-webkit-details-marker { display: none; } /* إخفاء السهم الافتراضي */
+        summary::after { content: '➕'; font-size: 14px; color: #888; }
+        details[open] summary::after { content: '➖'; }
+        details[open] summary { border-bottom: 1px solid #ddd; background-color: #e2eafc; color: #025aa5; }
+        .details-content { padding: 15px; background: white; }
+        
         label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
         select, input[type="text"], input[type="number"], input[type="file"], textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
         textarea { resize: vertical; height: 80px; }
@@ -18,28 +28,16 @@
         
         .sync-bar { background-color: #d4edda; color: #155724; text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; display: none; border: 1px solid #c3e6cb;}
         
-        .search-section { background-color: #e8f4fd; padding: 15px; border-radius: 8px; border: 1px solid #bce0fd; }
-        .search-btn { background-color: #5cb85c; }
-        .search-btn:hover { background-color: #4cae4c; }
-        .google-btn { background-color: #4285f4; margin-top: 10px; }
-        .google-btn:hover { background-color: #3367d6; }
-        
         #result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none; border: 1px solid #ddd; line-height: 1.6; }
         .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative;}
         .prob { color: #d9534f; font-weight: bold; }
         
-        .add-fault-section { background-color: #e6f4ea; border: 2px dashed #34a853; padding: 15px; border-radius: 8px; margin-top: 30px; }
-        .add-fault-section h3 { color: #1e8e3e; margin-top: 0; text-align: center;}
         .add-btn { background-color: #34a853; }
         .add-btn:hover { background-color: #2b8a44; }
 
-        /* قسم إدارة الأعطال المخصصة */
-        .manage-faults-section { background-color: #f8d7da; border: 2px dashed #dc3545; padding: 15px; border-radius: 8px; margin-top: 15px; }
-        .manage-faults-section h3 { color: #721c24; margin-top: 0; text-align: center;}
-        .custom-fault-item { background: white; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; }
-        .custom-fault-item span { font-weight: bold; color: #333; font-size: 14px;}
-
-        .history-section { border-top: 2px solid #0275d8; margin-top: 30px; padding-top: 20px; }
+        .custom-fault-item { background: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f5c6cb; }
+        .custom-fault-item span { font-weight: bold; color: #721c24; font-size: 14px;}
+        
         .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; position: relative;}
         .history-date { color: #888; font-size: 12px; margin-bottom: 5px; }
         .history-text { font-weight: bold; color: #333; margin-bottom: 5px; padding-left: 25px;}
@@ -47,15 +45,10 @@
         .delete-btn { position: absolute; top: 10px; left: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; padding: 0; line-height: 1; }
         .clear-btn { background-color: #d9534f; margin-top: 10px; padding: 10px; font-size: 14px; }
         
-        .catalog-section { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 15px; }
-        .catalog-section h3 { color: #856404; margin-top: 0; text-align: center;}
-        .catalog-item { background: white; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; }
-        .catalog-item a { color: #0275d8; text-decoration: none; font-weight: bold; word-break: break-all; }
+        .catalog-item { background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ffeeba; }
+        .catalog-item a { color: #856404; text-decoration: none; font-weight: bold; word-break: break-all; }
         .save-btn { background-color: #f0ad4e; margin-top: 10px; font-size: 14px;}
         .save-btn:hover { background-color: #ec971f; }
-        
-        .local-catalog-section { background-color: #e2e3e5; border: 1px solid #d6d8db; padding: 15px; border-radius: 8px; margin-top: 15px; }
-        .local-catalog-section h3 { color: #383d41; margin-top: 0; text-align: center; font-size: 16px;}
         
         #pdfViewerContainer { display: none; margin-top: 15px; border: 2px solid #0275d8; border-radius: 8px; overflow: hidden; background: #525659; }
         .pdf-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd; gap: 5px;}
@@ -78,99 +71,111 @@
 
 <div class="container">
     <h1>❄ HVAC Diagnose Tool</h1>
-    <p class="subtitle">مرجعك الميداني السريع (مزامنة سحابية)</p>
+    <p class="subtitle">مرجعك الميداني السريع</p>
 
     <div id="syncStatus" class="sync-bar">☁️ جاري المزامنة مع السحابة...</div>
 
-    <div class="search-section">
-        <label for="manualSearchText">🔎 اكتب العطل بكلماتك الخاصة:</label>
-        <input type="text" id="manualSearchText" placeholder="مثال: الكهرباء تفصل...">
-        <button class="search-btn" onclick="unifiedSearch()">البحث في المكتبة الداخلية</button>
-        <button class="google-btn" onclick="searchGoogle()">🌐 ابحث عن هذا العطل في جوجل</button>
-    </div>
+    <!-- 1. قسم التشخيص السريع (مفتوح افتراضياً) -->
+    <details open>
+        <summary>🔍 التشخيص والبحث السريع</summary>
+        <div class="details-content">
+            <label for="manualSearchText">اكتب العطل بكلماتك الخاصة:</label>
+            <input type="text" id="manualSearchText" placeholder="مثال: الكهرباء تفصل...">
+            <button class="search-btn" style="background-color: #5cb85c;" onclick="unifiedSearch()">البحث في المكتبة الداخلية</button>
+            <button class="google-btn" style="background-color: #4285f4;" onclick="searchGoogle()">🌐 ابحث عن هذا العطل في جوجل</button>
 
-    <div style="border-top: 1px dashed #ccc; margin-top: 20px; padding-top: 15px;">
-        <label>أو اختر من القائمة:</label>
-        <select id="deviceType" onchange="updateSymptoms()">
-            <option value="split">مكيف سبليت / Split</option>
-            <option value="coldroom">غرفة تبريد / Cold Room</option>
-        </select>
-        <select id="symptom" style="margin-top: 10px;"></select>
-        <button onclick="runDiagnose()">🔍 تشخيص من القائمة</button>
-    </div>
+            <div style="border-top: 1px dashed #ccc; margin-top: 20px; padding-top: 15px;">
+                <label>أو اختر من القائمة:</label>
+                <select id="deviceType" onchange="updateSymptoms()">
+                    <option value="split">مكيف سبليت / Split</option>
+                    <option value="coldroom">غرفة تبريد / Cold Room</option>
+                </select>
+                <select id="symptom" style="margin-top: 10px;"></select>
+                <button onclick="runDiagnose()">🔍 تشخيص</button>
+            </div>
+        </div>
+    </details>
 
     <div id="result"></div>
 
-    <div class="add-fault-section">
-        <h3>➕ إضافة عطل جديد للمكتبة</h3>
-        <label>نوع الجهاز:</label>
-        <select id="addDeviceType">
-            <option value="split">مكيف سبليت</option>
-            <option value="coldroom">غرفة تبريد</option>
-        </select>
-        
-        <label>اسم العطل:</label>
-        <input type="text" id="newFaultName" placeholder="مثال: تسريب ماء من السقف">
-        
-        <label>الأسباب وخطوات الفحص (كل سبب في سطر جديد):</label>
-        <textarea id="newFaultCauses" placeholder="مثال:&#10;انسداد في خرطوم التصريف - قم بنفخ الخرطوم&#10;تجمد المبخر - قم بتنظيف الفلتر"></textarea>
-        
-        <button class="add-btn" onclick="addNewFault()">💾 حفظ العطل في المكتبة</button>
-    </div>
-
-    <!-- 🌟 قسم إدارة وحذف الأعطال المخصصة 🌟 -->
-    <div class="manage-faults-section">
-        <h3>🗑️ إدارة الأعطال المخصصة (التي أضفتها)</h3>
-        <div id="customFaultsList"></div>
-    </div>
-
-    <div class="catalog-section">
-        <h3>📖 مكتبة الكتالوجات (الروابط)</h3>
-        <input type="text" id="catalogName" placeholder="اسم الكتالوج/الجهاز">
-        <input type="text" id="catalogLink" placeholder="https://..." style="margin-top:5px;">
-        <button class="save-btn" onclick="saveCatalogLink()">💾 حفظ الرابط</button>
-        <div id="catalogList" class="catalog-item-list"></div>
-    </div>
-
-    <div class="local-catalog-section">
-        <h3>📂 فتح كتالوج من ذاكرة الهاتف</h3>
-        <input type="file" id="localCatalogInput" accept="application/pdf" onchange="loadLocalPDF()" style="background: white; cursor: pointer;">
-        
-        <div id="pdfViewerContainer">
-            <div class="pdf-controls">
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <button onclick="changePage(-1)">⬅️</button>
-                    <input type="number" id="pageInput" min="1" onchange="goToPage()">
-                    <span>من <span id="pageCount">?</span></span>
-                </div>
-                <button onclick="changePage(1)">➡️</button>
-                <button style="background-color:#d9534f;" onclick="closePdfViewer()">× إغلاق</button>
-            </div>
+    <!-- 2. قسم إدارة الأعطال (مغلق افتراضياً) -->
+    <details>
+        <summary>➕ إضافة وإدارة الأعطال المخصصة</summary>
+        <div class="details-content">
+            <label>نوع الجهاز:</label>
+            <select id="addDeviceType">
+                <option value="split">مكيف سبليت</option>
+                <option value="coldroom">غرفة تبريد</option>
+            </select>
             
-            <div class="zoom-controls">
-                <button onclick="zoomIn()">➕ تكبير</button>
-                <button onclick="zoomOut()">➖ تصغير</button>
-                <button class="external-btn" onclick="openPdfExternally()">↗️ فتح خارجي</button>
-                <button class="translate-free-btn" onclick="translateTextFree()">📄 ترجمة سريعة</button>
-                <button class="translate-ai-btn" onclick="translateCurrentPage()">🌐 ترجمة AI</button>
+            <label>اسم العطل:</label>
+            <input type="text" id="newFaultName" placeholder="مثال: تسريب ماء من السقف">
+            
+            <label>الأسباب وخطوات الفحص (كل سبب في سطر جديد):</label>
+            <textarea id="newFaultCauses" placeholder="مثال:&#10;انسداد في خرطوم التصريف - قم بنفخ الخرطوم&#10;تجمد المبخر - قم بتنظيف الفلتر"></textarea>
+            
+            <button class="add-btn" onclick="addNewFault()">💾 حفظ العطل</button>
+
+            <hr style="margin: 25px 0; border: 1px solid #eee;">
+
+            <h3 style="color: #d9534f; font-size: 16px;">🗑️ الأعطال المضافة (لحذفها):</h3>
+            <div id="customFaultsList"></div>
+        </div>
+    </details>
+
+    <!-- 3. قسم الكتالوجات (مغلق افتراضياً) -->
+    <details>
+        <summary>📖 الكتالوجات وقارئ PDF</summary>
+        <div class="details-content">
+            <label>حفظ رابط كتالوج:</label>
+            <input type="text" id="catalogName" placeholder="اسم الكتالوج">
+            <input type="text" id="catalogLink" placeholder="https://..." style="margin-top:5px;">
+            <button class="save-btn" onclick="saveCatalogLink()">💾 حفظ الرابط</button>
+            <div id="catalogList" class="catalog-item-list" style="margin-top: 15px;"></div>
+
+            <hr style="margin: 25px 0; border: 1px solid #eee;">
+
+            <label>فتح كتالوج من ذاكرة الهاتف:</label>
+            <input type="file" id="localCatalogInput" accept="application/pdf" onchange="loadLocalPDF()" style="background: #f8f9fa;">
+            
+            <div id="pdfViewerContainer">
+                <div class="pdf-controls">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <button onclick="changePage(-1)">⬅️</button>
+                        <input type="number" id="pageInput" min="1" onchange="goToPage()">
+                        <span>من <span id="pageCount">?</span></span>
+                    </div>
+                    <button onclick="changePage(1)">➡️</button>
+                    <button style="background-color:#d9534f;" onclick="closePdfViewer()">× إغلاق</button>
+                </div>
+                
+                <div class="zoom-controls">
+                    <button onclick="zoomIn()">➕</button>
+                    <button onclick="zoomOut()">➖</button>
+                    <button class="external-btn" onclick="openPdfExternally()">↗️ خارجي</button>
+                    <button class="translate-free-btn" onclick="translateTextFree()">📄 ترجمة سريعة</button>
+                    <button class="translate-ai-btn" onclick="translateCurrentPage()">🌐 ترجمة AI</button>
+                </div>
+
+                <div id="canvasContainer"><canvas id="pdfCanvas"></canvas></div>
             </div>
 
-            <div id="canvasContainer">
-                <canvas id="pdfCanvas"></canvas>
+            <div id="translationBox">
+                <h4 style="margin-top:0;">🌐 النص المترجم:</h4>
+                <p id="translationText">جاري الترجمة...</p>
             </div>
         </div>
+    </details>
 
-        <div id="translationBox">
-            <h4 style="margin-top:0;">🌐 النص المترجم:</h4>
-            <p id="translationText">جاري الترجمة...</p>
+    <!-- 4. السجل (مغلق افتراضياً) -->
+    <details>
+        <summary>📚 سجل التشخيصات السابقة</summary>
+        <div class="details-content">
+            <div id="historyList"></div>
+            <button class="clear-btn" onclick="clearHistory()">🗑️ مسح السجل بالكامل</button>
         </div>
-    </div>
+    </details>
 
-    <div class="history-section">
-        <h2>📚 سجل التشخيصات</h2>
-        <div id="historyList"></div>
-        <button class="clear-btn" onclick="clearHistory()">🗑️ مسح السجل بالكامل</button>
-    </div>
 </div>
 
 <script>
@@ -181,8 +186,7 @@
         const syncBar = document.getElementById("syncStatus");
         syncBar.style.display = "block";
         syncBar.textContent = "☁️ جاري الحفظ في السحابة...";
-        syncBar.style.backgroundColor = "#fff3cd"; 
-        syncBar.style.color = "#856404";
+        syncBar.style.backgroundColor = "#fff3cd"; syncBar.style.color = "#856404";
 
         const dataToSync = {
             customDB: localStorage.getItem("hvacCustomDB"),
@@ -192,18 +196,15 @@
 
         try {
             await fetch('/api/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSync)
             });
             syncBar.textContent = "✅ تم الحفظ في السحابة بنجاح";
-            syncBar.style.backgroundColor = "#d4edda"; 
-            syncBar.style.color = "#155724";
+            syncBar.style.backgroundColor = "#d4edda"; syncBar.style.color = "#155724";
             setTimeout(() => { syncBar.style.display = "none"; }, 3000); 
         } catch (e) {
             syncBar.textContent = "❌ فشل الاتصال بالسحابة";
-            syncBar.style.backgroundColor = "#f8d7da"; 
-            syncBar.style.color = "#721c24";
+            syncBar.style.backgroundColor = "#f8d7da"; syncBar.style.color = "#721c24";
         }
     }
 
@@ -218,18 +219,13 @@
                 localStorage.setItem("hvacCatalogs", cloudData.catalogs || "[]");
                 
                 diagnoseDB = JSON.parse(cloudData.customDB);
-                updateSymptoms();
-                renderCustomFaults(); // تحديث قائمة الأعطال المخصصة
-                renderHistory();
-                renderCatalogs();
+                updateSymptoms(); renderCustomFaults(); renderHistory(); renderCatalogs();
             }
-        } catch (e) {
-            console.log("لا توجد بيانات سحابية سابقة.");
-        }
+        } catch (e) { console.log("لا توجد بيانات سحابية سابقة."); }
     }
 
     // ==========================================
-    // 2. قاعدة البيانات وإدارة الأعطال
+    // 2. إدارة الأعطال
     // ==========================================
     let defaultDB = {
         split: {
@@ -250,7 +246,6 @@
             { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
             { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار"] }
         ];
-        // إضافة الأعطال المخصصة للبحث
         for (let dev in diagnoseDB) {
             for (let symp in diagnoseDB[dev]) {
                 if (symp.startsWith("custom_")) {
@@ -278,17 +273,13 @@
         
         localStorage.setItem("hvacCustomDB", JSON.stringify(diagnoseDB));
         
-        rebuildKeywordMap();
-        updateSymptoms();
-        renderCustomFaults(); // تحديث القائمة الحمراء
-        syncToCloud();
+        rebuildKeywordMap(); updateSymptoms(); renderCustomFaults(); syncToCloud();
 
         document.getElementById("newFaultName").value = "";
         document.getElementById("newFaultCauses").value = "";
         alert("✅ تم حفظ العطل بنجاح! (ومزامنته مع السحابة)");
     }
 
-    // دالة عرض الأعطال المخصصة لحذفها
     function renderCustomFaults() {
         const list = document.getElementById("customFaultsList");
         list.innerHTML = "";
@@ -309,22 +300,14 @@
                 }
             }
         }
-
-        if (!hasCustom) {
-            list.innerHTML = "<p style='text-align:center; font-size:12px; color:#555; margin:0;'>لا توجد أعطال مخصصة مضافة حالياً.</p>";
-        }
+        if (!hasCustom) list.innerHTML = "<p style='text-align:center; font-size:12px; color:#555; margin:0;'>لا توجد أعطال مخصصة مضافة حالياً.</p>";
     }
 
-    // دالة حذف عطل مخصص
     function deleteCustomFault(device, key) {
         if (confirm("هل أنت متأكد من حذف هذا العطل المخصص نهائياً؟")) {
             delete diagnoseDB[device][key];
             localStorage.setItem("hvacCustomDB", JSON.stringify(diagnoseDB));
-            
-            rebuildKeywordMap();
-            updateSymptoms();
-            renderCustomFaults();
-            syncToCloud();
+            rebuildKeywordMap(); updateSymptoms(); renderCustomFaults(); syncToCloud();
         }
     }
 
@@ -336,8 +319,7 @@
         history.unshift({ id: Date.now(), date: new Date().toLocaleString('ar-EG'), title: title, result: resultText }); 
         if (history.length > 50) history = history.slice(0, 50); 
         localStorage.setItem("hvacHistory", JSON.stringify(history));
-        renderHistory();
-        syncToCloud(); 
+        renderHistory(); syncToCloud(); 
     }
 
     function deleteHistory(id) { 
@@ -345,16 +327,14 @@
             let history = JSON.parse(localStorage.getItem("hvacHistory")) || []; 
             history = history.filter(item => item.id !== id); 
             localStorage.setItem("hvacHistory", JSON.stringify(history)); 
-            renderHistory(); 
-            syncToCloud(); 
+            renderHistory(); syncToCloud(); 
         } 
     }
     
     function clearHistory() { 
         if (confirm("مسح كل السجل؟")) { 
             localStorage.removeItem("hvacHistory"); 
-            renderHistory(); 
-            syncToCloud(); 
+            renderHistory(); syncToCloud(); 
         } 
     }
 
@@ -366,20 +346,18 @@
         catalogs.push({ name: name, link: link });
         localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs));
         document.getElementById("catalogName").value = ""; document.getElementById("catalogLink").value = "";
-        renderCatalogs();
-        syncToCloud(); 
+        renderCatalogs(); syncToCloud(); 
     }
 
     function deleteCatalog(index) {
         let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
         catalogs.splice(index, 1); 
         localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs)); 
-        renderCatalogs();
-        syncToCloud(); 
+        renderCatalogs(); syncToCloud(); 
     }
 
     // ==========================================
-    // 4. قارئ الـ PDF والترجمة
+    // 4. PDF والترجمة
     // ==========================================
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
@@ -518,14 +496,14 @@
         let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
         if (catalogs.length === 0) { catalogList.innerHTML = "<p style='text-align:center; font-size:12px; color:#888;'>لا توجد كتالوجات محفوظة.</p>"; return; }
         let html = "";
-        catalogs.forEach((item, index) => { html += `<div class="catalog-item"><a href="${item.link}" target="_blank">📄 ${item.name}</a><button class="delete-btn" style="position:static; border-radius:5px; width:30px; height:30px;" onclick="deleteCatalog(${index})">×</button></div>`; });
+        catalogs.forEach((item, index) => { html += `<div class="catalog-item"><a href="${item.link}" target="_blank">📄 ${item.name}</a><button class="delete-btn" style="position:static; border-radius:5px; width:30px; height:30px; background-color:#d9534f;" onclick="deleteCatalog(${index})">×</button></div>`; });
         catalogList.innerHTML = html;
     }
 
     window.onload = () => { 
         rebuildKeywordMap();
         updateSymptoms(); 
-        renderCustomFaults(); // عرض الأعطال المخصصة عند التحميل
+        renderCustomFaults();
         renderHistory(); 
         renderCatalogs(); 
         loadFromCloud(); 
