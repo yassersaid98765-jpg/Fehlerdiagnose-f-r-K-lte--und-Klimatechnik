@@ -50,11 +50,12 @@
         .pdf-controls button { width: auto; margin: 0; padding: 8px 12px; font-size: 12px; background-color: #0275d8;}
         .pdf-controls input { width: 60px; padding: 5px; margin: 0; text-align: center; font-size: 14px;}
         .pdf-controls span { font-weight: bold; color: #333; font-size: 14px;}
-        #canvasContainer { width: 100%; text-align: center; padding: 10px 0; max-height: 500px; overflow: auto; } /* إضافة overflow: auto للتمرير */
+        #canvasContainer { width: 100%; text-align: center; padding: 10px 0; max-height: 500px; overflow: auto; }
         canvas { max-width: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         
-        .zoom-controls { display: flex; justify-content: center; gap: 10px; background: #eee; padding: 5px; }
+        .zoom-controls { display: flex; justify-content: center; gap: 10px; background: #eee; padding: 8px; border-bottom: 1px solid #ddd; }
         .zoom-controls button { background-color: #6c757d; margin: 0; padding: 5px 15px; font-size: 14px;}
+        .external-btn { background-color: #28a745 !important; }
     </style>
 </head>
 <body>
@@ -94,7 +95,7 @@
     <!-- قسم فتح الكتالوجات من الهاتف -->
     <div class="local-catalog-section">
         <h3>📂 فتح كتالوج من ذاكرة الهاتف</h3>
-        <p style="font-size: 12px; color: #555; text-align: center;">اختر ملف PDF من هاتفك لقراءته هنا:</p>
+        <p style="font-size: 12px; color: #555; text-align: center;">اختر ملف PDF من هاتفك:</p>
         <input type="file" id="localCatalogInput" accept="application/pdf" onchange="loadLocalPDF()" style="background: white; cursor: pointer;">
         
         <!-- حاوية عرض الكتالوج المدمجة -->
@@ -109,10 +110,11 @@
                 <button style="background-color:#d9534f;" onclick="closePdfViewer()">× إغلاق</button>
             </div>
             
-            <!-- أزرار التكبير والتصغير -->
+            <!-- أزرار التكبير والتصغير وفتح خارجي -->
             <div class="zoom-controls">
                 <button onclick="zoomIn()">➕ تكبير</button>
                 <button onclick="zoomOut()">➖ تصغير</button>
+                <button class="external-btn" onclick="openPdfExternally()">↗️ فتح خارجي</button>
             </div>
 
             <div id="canvasContainer">
@@ -135,13 +137,17 @@
     let pageNum = 1;
     let pageRendering = false;
     let pageNumPending = null;
-    let scale = 1.5; // الحجم الافتراضي
+    let scale = 1.5; 
+    let currentPdfBlobUrl = null; // متغير لحفظ رابط الملف للفتح الخارجي
 
     // --- دوال عرض الكتالوج المحلي ---
     function loadLocalPDF() {
         const fileInput = document.getElementById("localCatalogInput");
         const file = fileInput.files[0];
         if (!file) return;
+
+        // إنشاء رابط للملف لاستخدامه في الفتح الخارجي
+        currentPdfBlobUrl = URL.createObjectURL(file);
 
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -152,7 +158,7 @@
                 document.getElementById("pageCount").textContent = pdfDoc.numPages;
                 document.getElementById("pdfViewerContainer").style.display = "block";
                 pageNum = 1;
-                scale = 1.5; // إعادة ضبط الحجم عند فتح ملف جديد
+                scale = 1.5; 
                 renderPage(pageNum);
             }).catch(function(error) {
                 alert("حدث خطأ في قراءة الملف: " + error.message);
@@ -168,7 +174,6 @@
             const canvas = document.getElementById('pdfCanvas');
             const ctx = canvas.getContext('2d');
             
-            // جعل حجم الكانفاس يتناسب مع الحجم الجديد
             canvas.height = viewport.height;
             canvas.width = viewport.width;
 
@@ -187,7 +192,6 @@
             });
         });
         
-        // تحديث مؤشر الصفحة الحالية
         document.getElementById('pageInput').value = num;
     }
 
@@ -216,26 +220,39 @@
             queueRenderPage(pageNum);
         } else {
             alert("رقم الصفحة غير صحيح");
-            document.getElementById('pageInput').value = pageNum; // إعادة الرقم الصحيح
+            document.getElementById('pageInput').value = pageNum;
         }
     }
 
     function zoomIn() {
         if (!pdfDoc) return;
-        scale += 0.3; // زيادة الحجم
+        scale += 0.3;
         queueRenderPage(pageNum);
     }
 
     function zoomOut() {
-        if (!pdfDoc || scale <= 0.5) return; // منع التصغير الزائد
-        scale -= 0.3; // تقليل الحجم
+        if (!pdfDoc || scale <= 0.5) return;
+        scale -= 0.3;
         queueRenderPage(pageNum);
+    }
+
+    // دالة الفتح الخارجي
+    function openPdfExternally() {
+        if (currentPdfBlobUrl) {
+            window.open(currentPdfBlobUrl, '_blank');
+        } else {
+            alert("الرجاء اختيار ملف أولاً.");
+        }
     }
 
     function closePdfViewer() {
         document.getElementById("pdfViewerContainer").style.display = "none";
         document.getElementById("localCatalogInput").value = "";
         pdfDoc = null;
+        if (currentPdfBlobUrl) {
+            URL.revokeObjectURL(currentPdfBlobUrl);
+            currentPdfBlobUrl = null;
+        }
     }
 
     // قاعدة البيانات الموسعة
