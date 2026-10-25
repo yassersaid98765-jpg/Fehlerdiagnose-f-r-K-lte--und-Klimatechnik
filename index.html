@@ -21,12 +21,14 @@
         .prob { color: #d9534f; font-weight: bold; }
         .loading { text-align: center; color: #0275d8; font-weight: bold; display: none; margin-top: 15px; }
         
-        /* تنسيقات مكتبة الأعطال الجديدة */
+        /* تنسيقات مكتبة الأعطال */
         .history-section { border-top: 2px solid #0275d8; margin-top: 40px; padding-top: 20px; }
-        .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; }
+        .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; position: relative;}
         .history-date { color: #888; font-size: 12px; margin-bottom: 5px; }
-        .history-text { font-weight: bold; color: #333; margin-bottom: 5px; }
-        .history-result { color: #555; font-size: 13px; background: white; padding: 8px; border-radius: 4px; max-height: 100px; overflow-y: auto; }
+        .history-text { font-weight: bold; color: #333; margin-bottom: 5px; padding-left: 25px;}
+        .history-result { color: #555; font-size: 13px; background: white; padding: 8px; border-radius: 4px; max-height: 120px; overflow-y: auto; }
+        .delete-btn { position: absolute; top: 10px; left: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; padding: 0; line-height: 1; }
+        .delete-btn:hover { background: #cc0000; }
         .clear-btn { background-color: #d9534f; margin-top: 10px; padding: 10px; font-size: 14px; }
         .clear-btn:hover { background-color: #c9302c; }
     </style>
@@ -39,15 +41,14 @@
 
     <!-- القسم اليدوي السريع -->
     <label for="deviceType">1. نوع الجهاز / Gerätetyp:</label>
-    <select id="deviceType">
+    <select id="deviceType" onchange="updateSymptoms()">
         <option value="split">مكيف سبليت / Split-Klimaanlage</option>
         <option value="coldroom">غرفة تبريد / Kühlraum</option>
     </select>
 
     <label for="symptom">2. وصف العطل السريع:</label>
     <select id="symptom">
-        <option value="not_cooling">لا يبرد / Kühlt nicht</option>
-        <option value="high_pressure">ضغط مرتفع / Hoher Druck</option>
+        <!-- سيتم تعبئتها تلقائياً بواسطة الجافاسكريبت -->
     </select>
 
     <button onclick="runDiagnose()">🔍 تشخيص سريع (يدوي)</button>
@@ -72,24 +73,99 @@
     <!-- قسم مكتبة الأعطال (السجل) -->
     <div class="history-section">
         <h2>📚 مكتبة الأعطال (السجل)</h2>
-        <div id="historyList">
-            <!-- سيتم عرض الأعطال المحفوظة هنا -->
-        </div>
+        <div id="historyList"></div>
         <button class="clear-btn" onclick="clearHistory()">🗑️ مسح السجل بالكامل</button>
     </div>
 </div>
 
 <script>
-    // --- قاعدة البيانات اليدوية ---
+    // --- قاعدة البيانات اليدوية الموسعة ---
     const diagnoseDB = {
         split: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }] },
-            high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }] }
+            not_cooling: { 
+                label: "لا يبرد", 
+                causes: [
+                    { name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, 
+                    { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر", "تنظيف الفلتر"] },
+                    { name: "عطل في الضاغط (الكمبرسور)", prob: "20%", checks: ["قياس تيار الضاغط", "فحص الكابستور"] },
+                    { name: "عطل في المروحة الخارجية", prob: "10%", checks: ["فحص دوران المروحة", "فحص الكهرباء"] }
+                ] 
+            },
+            high_pressure: { 
+                label: "ضغط مرتفع", 
+                causes: [
+                    { name: "مكثف متسخ (الوحدة الخارجية)", prob: "50%", checks: ["تنظيف المكثف"] }, 
+                    { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة والكابستور"] },
+                    { name: "شحن زائد للغاز", prob: "20%", checks: ["قياس الضغط وتفريغ الزائد"] }
+                ] 
+            },
+            low_pressure: {
+                label: "ضغط منخفض",
+                causes: [
+                    { name: "تسريب غاز", prob: "60%", checks: ["فحص مفاصل النحاس", "فحص الصمامات"] },
+                    { name: "انسداد في الفلتر أو الأنبوب الشعري", prob: "40%", checks: ["فحص الفلتر", "فحص الانخفاض الحراري"] }
+                ]
+            },
+            water_leak: {
+                label: "تسريب ماء من الوحدة الداخلية",
+                causes: [
+                    { name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم", "فحص مضخة التصريف"] },
+                    { name: "تجمد المبخر بسبب فلتر متسخ", prob: "30%", checks: ["فحص الفلتر", "فحص إذابة الثلج"] },
+                    { name: "ميل الوحدة الداخلية غير صحيح", prob: "20%", checks: ["تعديل ميل الوحدة"] }
+                ]
+            },
+            noise: {
+                label: "صوت عالي أو اهتزاز",
+                causes: [
+                    { name: "اهتزاز في الوحدة الخارجية", prob: "40%", checks: ["فحص القواعد", "تثبيت الوحدة"] },
+                    { name: "تلف في بلوفير المروحة الداخلية", prob: "30%", checks: ["فحص المروحة الداخلية"] },
+                    { name: "احتكاك في مروحة الوحدة الخارجية", prob: "30%", checks: ["فحص المروحة الخارجية"] }
+                ]
+            }
         },
         coldroom: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص دورة إذابة الثلج"] }] }
+            not_cooling: { 
+                label: "لا يبرد", 
+                causes: [
+                    { name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات", "قياس الضغط"] }, 
+                    { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص دورة إذابة الثلج Defrost"] },
+                    { name: "عطل في منظم الحرارة (الثرموستات)", prob: "20%", checks: ["فحص الإعدادات", "فحص الحساس"] },
+                    { name: "باب الغرفة غير محكم", prob: "20%", checks: ["فحص المطاط (العزل)"] }
+                ] 
+            },
+            ice_buildup: {
+                label: "تراكم ثلج على المبخر",
+                causes: [
+                    { name: "عطل في مؤقت إذابة الثلج (Defrost Timer)", prob: "40%", checks: ["فحص المؤقت"] },
+                    { name: "عطل في سخانات إذابة الثلج (Heaters)", prob: "30%", checks: ["قياس مقاومة السخانات"] },
+                    { name: "عطل في حساس الحرارة", prob: "30%", checks: ["فحص الحساس"] }
+                ]
+            },
+            compressor_off: {
+                label: "الضاغط لا يعمل",
+                causes: [
+                    { name: "فصل أوفرلود الحماية", prob: "40%", checks: ["انتظار 30 دقيقة ثم إعادة التشغيل"] },
+                    { name: "عطل في الكابستور أو الكونتاكتور", prob: "40%", checks: ["فحص الكونتاكتور"] },
+                    { name: "انخفاض الجهد الكهربائي", prob: "20%", checks: ["قياس الفولت"] }
+                ]
+            }
         }
     };
+
+    // --- تحديث الأعطال بناءً على الجهاز المختار ---
+    function updateSymptoms() {
+        const device = document.getElementById("deviceType").value;
+        const symptomSelect = document.getElementById("symptom");
+        symptomSelect.innerHTML = ""; // تفريغ القائمة
+
+        const symptoms = diagnoseDB[device];
+        for (let key in symptoms) {
+            let option = document.createElement("option");
+            option.value = key;
+            option.text = symptoms[key].label;
+            symptomSelect.appendChild(option);
+        }
+    }
 
     // --- دالة التشخيص اليدوي ---
     function runDiagnose() {
@@ -98,11 +174,7 @@
         const resultDiv = document.getElementById("result");
         const data = diagnoseDB[device][symptom];
 
-        if (!data) {
-            resultDiv.innerHTML = "<p>عذراً، البيانات غير متوفرة لهذا العطل.</p>";
-            resultDiv.style.display = "block";
-            return;
-        }
+        if (!data) return;
 
         let html = `<h3>النتائج السريعة: ${data.label}</h3>`;
         let textToSave = `نوع العطل: ${data.label}\n`;
@@ -115,7 +187,6 @@
         resultDiv.innerHTML = html;
         resultDiv.style.display = "block";
 
-        // حفظ التشخيص في المكتبة
         saveToHistory("تشخيص سريع: " + data.label, textToSave);
     }
 
@@ -138,7 +209,6 @@
 
         let base64Image = null;
 
-        // ضغط الصورة وتحويلها إلى Base64
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             base64Image = await new Promise((resolve) => {
@@ -183,7 +253,6 @@
             resultDiv.innerHTML = `<h3>🤖 تحليل الذكاء الاصطناعي:</h3><p>${formattedResult}</p>`;
             resultDiv.style.display = "block";
 
-            // حفظ التشخيص في المكتبة
             saveToHistory("ذكاء اصطناعي: " + promptText, data.result);
 
         } catch (error) {
@@ -199,27 +268,20 @@
     // --- وظائف مكتبة الأعطال (السجل) ---
     // ==========================================
 
-    // دالة حفظ العطل في الذاكرة
     function saveToHistory(title, resultText) {
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
-        
         const newRecord = {
             id: Date.now(),
-            date: new Date().toLocaleString('ar-EG'), // التاريخ والوقت
+            date: new Date().toLocaleString('ar-EG'),
             title: title,
             result: resultText
         };
-
-        history.unshift(newRecord); // إضافة العطل في بداية القائمة
-        
-        // الاحتفاظ بآخر 50 عطلاً فقط لتجنب امتلاء الذاكرة
+        history.unshift(newRecord); 
         if (history.length > 50) history = history.slice(0, 50); 
-
         localStorage.setItem("hvacHistory", JSON.stringify(history));
         renderHistory();
     }
 
-    // دالة عرض السجل
     function renderHistory() {
         const historyList = document.getElementById("historyList");
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
@@ -233,6 +295,7 @@
         history.forEach(item => {
             html += `
             <div class="history-item">
+                <button class="delete-btn" onclick="deleteHistory(${item.id})" title="حذف">×</button>
                 <div class="history-date">🕒 ${item.date}</div>
                 <div class="history-text">${item.title}</div>
                 <div class="history-result">${item.result.replace(/\n/g, '<br>')}</div>
@@ -241,7 +304,15 @@
         historyList.innerHTML = html;
     }
 
-    // دالة مسح السجل
+    function deleteHistory(id) {
+        if (confirm("هل تريد حذف هذا العطل من السجل؟")) {
+            let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
+            history = history.filter(item => item.id !== id);
+            localStorage.setItem("hvacHistory", JSON.stringify(history));
+            renderHistory();
+        }
+    }
+
     function clearHistory() {
         if (confirm("هل أنت متأكد من مسح كل سجل الأعطال؟")) {
             localStorage.removeItem("hvacHistory");
@@ -249,8 +320,11 @@
         }
     }
 
-    // عرض السجل عند فتح الصفحة
-    window.onload = renderHistory;
+    // عند تحميل الصفحة
+    window.onload = () => {
+        updateSymptoms(); // تعبئة قائمة الأعطال
+        renderHistory();  // عرض السجل
+    };
 
 </script>
 
