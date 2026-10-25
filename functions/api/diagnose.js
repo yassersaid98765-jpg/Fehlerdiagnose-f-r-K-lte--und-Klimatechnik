@@ -14,7 +14,8 @@ export async function onRequestPost(context) {
       parts.push({ inline_data: { mime_type: mimeType || "image/jpeg", data: fileData } });
     }
 
-    const models = ["gemini-1.5-flash", "gemini-1.5-pro"];
+    // استخدام أسماء النماذج المتوافقة مع الإصدار الحالي
+    const models = ["gemini-2.0-flash", "gemini-2.5-flash"];
     let lastError = null;
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
