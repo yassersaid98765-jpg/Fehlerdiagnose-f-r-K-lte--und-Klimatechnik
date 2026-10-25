@@ -12,7 +12,7 @@
         h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
         label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
-        select, input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        select, input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
         button { width: 100%; padding: 15px; background-color: #0275d8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; font-size: 16px; transition: background 0.3s; }
         button:hover { background-color: #025aa5; }
         
@@ -46,11 +46,15 @@
         
         /* تنسيقات عارض الـ PDF الداخلي */
         #pdfViewerContainer { display: none; margin-top: 15px; border: 2px solid #0275d8; border-radius: 8px; overflow: hidden; background: #525659; }
-        .pdf-controls { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd; }
-        .pdf-controls button { width: auto; margin: 0; padding: 8px 12px; font-size: 14px; background-color: #0275d8;}
-        .pdf-controls span { font-weight: bold; color: #333; }
-        #canvasContainer { width: 100%; text-align: center; padding: 10px 0; max-height: 500px; overflow-y: auto; }
-        canvas { max-width: 100%; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .pdf-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd; gap: 5px;}
+        .pdf-controls button { width: auto; margin: 0; padding: 8px 12px; font-size: 12px; background-color: #0275d8;}
+        .pdf-controls input { width: 60px; padding: 5px; margin: 0; text-align: center; font-size: 14px;}
+        .pdf-controls span { font-weight: bold; color: #333; font-size: 14px;}
+        #canvasContainer { width: 100%; text-align: center; padding: 10px 0; max-height: 500px; overflow: auto; } /* إضافة overflow: auto للتمرير */
+        canvas { max-width: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
+        
+        .zoom-controls { display: flex; justify-content: center; gap: 10px; background: #eee; padding: 5px; }
+        .zoom-controls button { background-color: #6c757d; margin: 0; padding: 5px 15px; font-size: 14px;}
     </style>
 </head>
 <body>
@@ -96,14 +100,24 @@
         <!-- حاوية عرض الكتالوج المدمجة -->
         <div id="pdfViewerContainer">
             <div class="pdf-controls">
-                <button onclick="changePage(-1)">⬅️ السابق</button>
-                <span>صفحة <span id="pageNum">1</span> من <span id="pageCount">?</span></span>
-                <button onclick="changePage(1)">التالي ➡️</button>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <button onclick="changePage(-1)">⬅️</button>
+                    <input type="number" id="pageInput" min="1" onchange="goToPage()">
+                    <span>من <span id="pageCount">?</span></span>
+                </div>
+                <button onclick="changePage(1)">➡️</button>
+                <button style="background-color:#d9534f;" onclick="closePdfViewer()">× إغلاق</button>
             </div>
+            
+            <!-- أزرار التكبير والتصغير -->
+            <div class="zoom-controls">
+                <button onclick="zoomIn()">➕ تكبير</button>
+                <button onclick="zoomOut()">➖ تصغير</button>
+            </div>
+
             <div id="canvasContainer">
                 <canvas id="pdfCanvas"></canvas>
             </div>
-            <button style="background-color:#d9534f; margin-top:0; border-radius:0;" onclick="closePdfViewer()">× إغلاق الكتالوج</button>
         </div>
     </div>
 
@@ -121,7 +135,7 @@
     let pageNum = 1;
     let pageRendering = false;
     let pageNumPending = null;
-    const scale = 1.5; 
+    let scale = 1.5; // الحجم الافتراضي
 
     // --- دوال عرض الكتالوج المحلي ---
     function loadLocalPDF() {
@@ -133,12 +147,12 @@
         reader.onload = function(e) {
             const typedarray = new Uint8Array(e.target.result);
             
-            // تحميل الملف في PDF.js
             pdfjsLib.getDocument(typedarray).promise.then(function(pdfDoc_) {
                 pdfDoc = pdfDoc_;
                 document.getElementById("pageCount").textContent = pdfDoc.numPages;
                 document.getElementById("pdfViewerContainer").style.display = "block";
                 pageNum = 1;
+                scale = 1.5; // إعادة ضبط الحجم عند فتح ملف جديد
                 renderPage(pageNum);
             }).catch(function(error) {
                 alert("حدث خطأ في قراءة الملف: " + error.message);
@@ -153,6 +167,8 @@
             const viewport = page.getViewport({scale: scale});
             const canvas = document.getElementById('pdfCanvas');
             const ctx = canvas.getContext('2d');
+            
+            // جعل حجم الكانفاس يتناسب مع الحجم الجديد
             canvas.height = viewport.height;
             canvas.width = viewport.width;
 
@@ -170,7 +186,9 @@
                 }
             });
         });
-        document.getElementById('pageNum').textContent = num;
+        
+        // تحديث مؤشر الصفحة الحالية
+        document.getElementById('pageInput').value = num;
     }
 
     function queueRenderPage(num) {
@@ -188,6 +206,30 @@
             pageNum = newPage;
             queueRenderPage(pageNum);
         }
+    }
+
+    function goToPage() {
+        if (!pdfDoc) return;
+        const inputVal = parseInt(document.getElementById('pageInput').value);
+        if (inputVal >= 1 && inputVal <= pdfDoc.numPages) {
+            pageNum = inputVal;
+            queueRenderPage(pageNum);
+        } else {
+            alert("رقم الصفحة غير صحيح");
+            document.getElementById('pageInput').value = pageNum; // إعادة الرقم الصحيح
+        }
+    }
+
+    function zoomIn() {
+        if (!pdfDoc) return;
+        scale += 0.3; // زيادة الحجم
+        queueRenderPage(pageNum);
+    }
+
+    function zoomOut() {
+        if (!pdfDoc || scale <= 0.5) return; // منع التصغير الزائد
+        scale -= 0.3; // تقليل الحجم
+        queueRenderPage(pageNum);
     }
 
     function closePdfViewer() {
