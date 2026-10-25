@@ -68,7 +68,7 @@
 
     <div class="search-section">
         <label for="manualSearchText">🔎 اكتب العطل بكلماتك الخاصة:</label>
-        <input type="text" id="manualSearchText" placeholder="مثال: المكيف يقطر ماء...">
+        <input type="text" id="manualSearchText" placeholder="مثال: الكهرباء تفصل، أو تسريب ماء...">
         <button class="search-btn" onclick="unifiedSearch()">البحث في المكتبة الداخلية</button>
         <button class="google-btn" onclick="searchGoogle()">🌐 ابحث عن هذا العطل في جوجل</button>
     </div>
@@ -135,6 +135,179 @@
 </div>
 
 <script>
+    // ==========================================
+    // 1. قاعدة البيانات الموسعة والشاملة
+    // ==========================================
+    let diagnoseDB = {
+        split: {
+            not_cooling: { 
+                label: "لا يبرد (هواء عادي)", 
+                causes: [
+                    { name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس", "البحث عن آثار زيت"] }, 
+                    { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر", "تنظيف أو استبدال"] }, 
+                    { name: "عطل في الضاغط (الكمبرسور)", prob: "15%", checks: ["قياس تيار الضاغط", "فحص الكابستور"] }, 
+                    { name: "عطل في المروحة الخارجية", prob: "10%", checks: ["فحص دوران المروحة", "فحص الكابستور"] },
+                    { name: "انسداد في الأنبوب الشعري", prob: "10%", checks: ["فحص الصقيع على الأنبوب"] }
+                ] 
+            },
+            high_pressure: { 
+                label: "ضغط مرتفع", 
+                causes: [
+                    { name: "مكثف متسخ (الوحدة الخارجية)", prob: "50%", checks: ["تنظيف المكثف بالماء والفرشاة"] }, 
+                    { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة والكابستور"] }, 
+                    { name: "شحن زائد للغاز", prob: "20%", checks: ["قياس الضغط وتفريغ الزائد"] }
+                ] 
+            },
+            low_pressure: { 
+                label: "ضغط منخفض", 
+                causes: [
+                    { name: "تسريب غاز", prob: "60%", checks: ["فحص مفاصل النحاس", "فحص الصمامات"] }, 
+                    { name: "انسداد في الفلتر أو الأنبوب الشعري", prob: "40%", checks: ["فحص الفلتر", "فحص الانخفاض الحراري"] }
+                ] 
+            },
+            water_leak: { 
+                label: "تسريب ماء", 
+                causes: [
+                    { name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم", "فحص مضخة التصريف"] }, 
+                    { name: "تجمد المبخر بسبب فلتر متسخ", prob: "30%", checks: ["فحص الفلتر", "فحص إذابة الثلج"] }, 
+                    { name: "ميل الوحدة الداخلية غير صحيح", prob: "20%", checks: ["تعديل ميل الوحدة"] }
+                ] 
+            },
+            noise: { 
+                label: "صوت عالي أو اهتزاز", 
+                causes: [
+                    { name: "اهتزاز في الوحدة الخارجية", prob: "40%", checks: ["فحص القواعد", "تثبيت الوحدة"] }, 
+                    { name: "تلف في بلوفير المروحة الداخلية", prob: "30%", checks: ["فحص المروحة الداخلية"] }, 
+                    { name: "احتكاك في مروحة الوحدة الخارجية", prob: "30%", checks: ["فحص المروحة الخارجية"] }
+                ] 
+            },
+            compressor_off: {
+                label: "الضاغط لا يعمل (الوحدة الخارجية صامتة)",
+                causes: [
+                    { name: "الكابستور (المكثف الكهربائي) تالف", prob: "40%", checks: ["فحص الكابستور", "استبداله"] },
+                    { name: "أوفرلود الحماية فصل", prob: "30%", checks: ["انتظار 30 دقيقة", "قياس الأمبير"] },
+                    { name: "عطل في الكونتاكتور", prob: "15%", checks: ["فحص الكونتاكتور"] },
+                    { name: "انخفاض الجهد الكهربائي", prob: "15%", checks: ["قياس الفولت"] }
+                ]
+            },
+            fan_off: {
+                label: "المروحة لا تدور",
+                causes: [
+                    { name: "تلف موتور المروحة", prob: "40%", checks: ["قياس مقاومة الموتور"] },
+                    { name: "تلف الكابستور", prob: "30%", checks: ["فحص الكابستور"] },
+                    { name: "عطل في لوحة التحكم (البوردة)", prob: "30%", checks: ["فحص خروج الكهرباء للبوردة"] }
+                ]
+            },
+            tripping_breaker: {
+                label: "الكهرباء تفصل (الأتوماتيك يطيح)",
+                causes: [
+                    { name: "تماس كهربائي في الأسلاك", prob: "40%", checks: ["فحص الأسلاك والوصلات"] },
+                    { name: "تلف الضاغط (تماس داخلي)", prob: "40%", checks: ["قياس الضاغط بالأفوميتر"] },
+                    { name: "تلف موتور المروحة", prob: "20%", checks: ["فصل المروحة وتجربة التشغيل"] }
+                ]
+            },
+            ice_buildup: {
+                label: "تثلج الأنابيب أو الوحدة الداخلية",
+                causes: [
+                    { name: "نقص غاز التبريد", prob: "50%", checks: ["قياس الضغط", "فحص التسريب"] },
+                    { name: "نقص تدفق الهواء (فلتر مسدود)", prob: "30%", checks: ["فحص وتنظيف الفلتر"] },
+                    { name: "عطل في المروحة الداخلية", prob: "20%", checks: ["فحص سرعة المروحة"] }
+                ]
+            },
+            smell: {
+                label: "رائحة كريهة أو عفن",
+                causes: [
+                    { name: "تراكم العفن في حوض التصريف", prob: "50%", checks: ["تنظيف الحوض بالماء والكلور"] },
+                    { name: "تسخ المبخر (الوحدة الداخلية)", prob: "30%", checks: ["تنظيف المبخر ببخاخ مخصص"] },
+                    { name: "فلتر متسخ جداً", prob: "20%", checks: ["تنظيف الفلتر"] }
+                ]
+            },
+            remote_issue: {
+                label: "الريموت لا يعمل",
+                causes: [
+                    { name: "بطاريات الريموت فارغة", prob: "50%", checks: ["استبدال البطاريات"] },
+                    { name: "عطل في مستقبل الإشارة (البوردة)", prob: "30%", checks: ["فحص مستقبل الأشعة"] },
+                    { name: "عطل في الريموت نفسه", prob: "20%", checks: ["تجربة ريموت آخر أو كاميرا الهاتف"] }
+                ]
+            }
+        },
+        coldroom: {
+            not_cooling: { 
+                label: "غرفة التبريد لا تبرد", 
+                causes: [
+                    { name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات", "قياس الضغط"] }, 
+                    { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص دورة إذابة الثلج Defrost"] },
+                    { name: "عطل في منظم الحرارة (الثرموستات)", prob: "20%", checks: ["فحص الإعدادات", "فحص الحساس"] },
+                    { name: "باب الغرفة غير محكم", prob: "20%", checks: ["فحص المطاط (العزل)"] }
+                ] 
+            },
+            ice_buildup: { 
+                label: "تراكم ثلج على المبخر", 
+                causes: [
+                    { name: "عطل في مؤقت إذابة الثلج (Defrost Timer)", prob: "40%", checks: ["فحص المؤقت"] },
+                    { name: "عطل في سخانات إذابة الثلج (Heaters)", prob: "30%", checks: ["قياس مقاومة السخانات"] },
+                    { name: "عطل في حساس الحرارة", prob: "30%", checks: ["فحص الحساس"] }
+                ] 
+            },
+            compressor_off: { 
+                label: "الضاغط لا يعمل", 
+                causes: [
+                    { name: "فصل أوفرلود الحماية", prob: "40%", checks: ["انتظار 30 دقيقة ثم إعادة التشغيل"] },
+                    { name: "عطل في الكابستور أو الكونتاكتور", prob: "40%", checks: ["فحص الكونتاكتور"] },
+                    { name: "انخفاض الجهد الكهربائي", prob: "20%", checks: ["قياس الفولت"] }
+                ] 
+            },
+            oil_leak: {
+                label: "تسريب زيت من الضاغط",
+                causes: [
+                    { name: "تلف في حشوة العمود (Shaft Seal)", prob: "50%", checks: ["فحص الحشوة", "استبدالها"] },
+                    { name: "ارتخاء في الوصلات", prob: "30%", checks: ["إحكام الوصلات"] },
+                    { name: "ضغط مرتفع جداً يفجر الوصلات", prob: "20%", checks: ["فحص ضغط التصريف"] }
+                ]
+            },
+            high_current: {
+                label: "سحب تيار عالي / يفصل كهرباء",
+                causes: [
+                    { name: "ضغط تصريف مرتفع (مكثف متسخ)", prob: "40%", checks: ["تنظيف المكثف"] },
+                    { name: "نقص الجهد الكهربائي", prob: "30%", checks: ["قياس الفولت وقت التشغيل"] },
+                    { name: "تلف في محامل الضاغط", prob: "30%", checks: ["فحص الضاغط"] }
+                ]
+            },
+            noise_compressor: {
+                label: "صوت عالي من الضاغط",
+                causes: [
+                    { name: "سحب غاز سائل (Liquid Slugging)", prob: "40%", checks: ["فحص الشحنة", "فحص صمام التمدد"] },
+                    { name: "اهتزاز في القواعد", prob: "30%", checks: ["تثبيت الضاغط"] },
+                    { name: "تلف داخلي في الضاغط", prob: "30%", checks: ["قياس الضوضاء والأمبير"] }
+                ]
+            }
+        }
+    };
+
+    // خريطة الكلمات المفتاحية الموسعة للبحث المحلي
+    const keywordMap = [
+        { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "قطرات", "يقطر", "تنقيط"] },
+        { device: "split", symptom: "noise", words: ["صوت", "ضجيج", "اهتزاز", "طقطقة"] },
+        { device: "split", symptom: "high_pressure", words: ["ضغط عالي", "ضغط مرتفع"] },
+        { device: "split", symptom: "low_pressure", words: ["ضغط منخفض", "ضغط ضعيف"] },
+        { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "هواء ساخن", "بارد"] },
+        { device: "split", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور لا يعمل", "صامت"] },
+        { device: "split", symptom: "fan_off", words: ["المروحة لا تدور", "المروحة واقفة", "مروحة"] },
+        { device: "split", symptom: "tripping_breaker", words: ["يفصل", "كهرباء", "أتوماتيك", "قاطع", "شورت"] },
+        { device: "split", symptom: "ice_buildup", words: ["تثلج", "ثلج", "صقيع", "يتجمد"] },
+        { device: "split", symptom: "smell", words: ["رائحة", "عفن", "كريهة"] },
+        { device: "split", symptom: "remote_issue", words: ["ريموت", "ريموت لا يعمل", "حساس"] },
+        { device: "coldroom", symptom: "ice_buildup", words: ["ثلج", "تجميد", "جليد"] },
+        { device: "coldroom", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور لا يعمل", "مطفي"] },
+        { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
+        { device: "coldroom", symptom: "oil_leak", words: ["زيت", "تسريب زيت"] },
+        { device: "coldroom", symptom: "high_current", words: ["أمبير", "يفصل", "تيار عالي"] },
+        { device: "coldroom", symptom: "noise_compressor", words: ["صوت", "ضاغط", "طقطقة"] }
+    ];
+
+    // ==========================================
+    // 2. باقي الوظائف (البحث، السجل، الكتالوج)
+    // ==========================================
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null;
     let pageNum = 1;
@@ -216,7 +389,6 @@
         if (currentPdfBlobUrl) { URL.revokeObjectURL(currentPdfBlobUrl); currentPdfBlobUrl = null; }
     }
 
-    // --- 1. الترجمة السريعة (بدون ذكاء اصطناعي - تعتمد على استخراج النص) ---
     async function translateTextFree() {
         if (!pdfDoc) return;
         const translationBox = document.getElementById("translationBox");
@@ -230,12 +402,8 @@
             const textContent = await page.getTextContent();
             const text = textContent.items.map(item => item.str).join(" ").trim();
 
-            if (text.length < 5) {
-                throw new Error("هذه الصفحة لا تحتوي على نصوص قابلة للنسخ (قد تكون مجرد صورة).\nاستخدم 'ترجمة AI' أو 'فتح خارجي'.");
-            }
+            if (text.length < 5) throw new Error("هذه الصفحة لا تحتوي على نصوص قابلة للنسخ.\nاستخدم 'ترجمة AI' أو 'فتح خارجي'.");
 
-            // استخدام خدمة MyMemory المجانية للترجمة
-            // لاحظ أن الخدمة لها حد أقصى للطلب الواحد، لذلك نأخذ أول 500 حرف
             const textToTranslate = text.substring(0, 500);
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=en|ar`);
             const data = await res.json();
@@ -243,15 +411,12 @@
             if (data.responseData && data.responseData.translatedText) {
                 translationText.innerHTML = data.responseData.translatedText;
                 translationText.style.color = "#333";
-            } else {
-                throw new Error("فشلت الترجمة، يرجى المحاولة لاحقاً.");
-            }
+            } else throw new Error("فشلت الترجمة، يرجى المحاولة لاحقاً.");
         } catch (error) {
             translationText.innerHTML = `<span style="color:red;">${error.message}</span>`;
         }
     }
 
-    // --- 2. الترجمة بالذكاء الاصطناعي (تقرأ الصور) ---
     async function translateCurrentPage() {
         if (!pdfDoc) return;
         const translationBox = document.getElementById("translationBox");
@@ -263,9 +428,7 @@
         try {
             const canvas = document.getElementById('pdfCanvas');
             const imageData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-
-            const prompt = `أنت مترجم فني خبير. قم باستخراج جميع النصوص من هذه الصورة وترجمتها إلى اللغة العربية. 
-            حافظ على المصطلحات الفنية للتبريد والتكييف. أجب بالنص المترجم فقط.`;
+            const prompt = `أنت مترجم فني خبير. قم باستخراج جميع النصوص من هذه الصورة وترجمتها إلى اللغة العربية. حافظ على المصطلحات الفنية. أجب بالنص المترجم فقط.`;
 
             const response = await fetch("/api/diagnose", {
                 method: "POST",
@@ -278,27 +441,10 @@
 
             translationText.innerHTML = data.result.replace(/\n/g, '<br>');
             translationText.style.color = "#333";
-
         } catch (error) {
             translationText.innerHTML = `<span style="color:red;">حدث خطأ في الترجمة: ${error.message}</span>`;
         }
     }
-
-    // --- باقي الدوال ---
-    let diagnoseDB = {
-        split: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }] },
-            high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }] }
-        },
-        coldroom: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص إذابة الثلج"] }] }
-        }
-    };
-
-    const keywordMap = [
-        { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
-        { device: "split", symptom: "high_pressure", words: ["ضغط عالي", "ضغط مرتفع"] }
-    ];
 
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
@@ -331,6 +477,7 @@
     }
 
     function runDiagnose() { showResults(document.getElementById("deviceType").value, document.getElementById("symptom").value); }
+    
     function showResults(device, symptom) {
         const resultDiv = document.getElementById("result");
         const data = diagnoseDB[device][symptom];
