@@ -113,10 +113,10 @@
         <summary id="secCodeTitle">🔢 البحث عن أكواد الأعطال (Fehlercodes)</summary>
         <div class="details-content">
             <label id="lblBrand">اسم الماركة (الشركة المصنعة):</label>
-            <input type="text" id="searchBrand" placeholder="مثال: LG, Daikin, Samsung...">
+            <input type="text" id="searchBrand" placeholder="LG, Daikin, Samsung...">
             
             <label id="lblCode">كود العطل:</label>
-            <input type="text" id="searchCode" placeholder="مثال: E5, CH05, U4...">
+            <input type="text" id="searchCode" placeholder="E5, CH05, U4...">
             
             <button class="search-code-btn" onclick="searchErrorCode()" id="btnSearchCode">🔍 بحث عن الكود</button>
             
@@ -124,7 +124,7 @@
         </div>
     </details>
 
-    <!-- 2. التشخيص السريع (القوائم) -->
+    <!-- 2. التشخيص السريع -->
     <details>
         <summary id="sec1Title">🔍 التشخيص السريع (قائمة الأعطال)</summary>
         <div class="details-content">
@@ -157,11 +157,11 @@
             
             <h3 style="color: #0275d8; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px;" id="lblAddCodeTitle">إضافة كود عطل جديد:</h3>
             <label id="lblAddBrand">الماركة:</label>
-            <input type="text" id="newBrandName" placeholder="مثال: LG">
+            <input type="text" id="newBrandName" placeholder="LG">
             <label id="lblAddCode">الكود:</label>
-            <input type="text" id="newCodeName" placeholder="مثال: E5">
+            <input type="text" id="newCodeName" placeholder="E5">
             <label id="lblAddCodeDesc">الوصف والأسباب (كل سبب في سطر):</label>
-            <textarea id="newCodeCauses" placeholder="مثال:&#10;ارتفاع حرارة الضاغط&#10;مشكلة في الكابستور - قم بفحصه"></textarea>
+            <textarea id="newCodeCauses" placeholder="مثال:&#10;ارتفاع حرارة الضاغط&#10;مشكلة في الكابستور"></textarea>
             <button class="add-btn" onclick="addNewCode()" id="btnAddCode">💾 حفظ الكود</button>
 
             <hr style="margin: 25px 0; border: 1px solid #eee;">
@@ -267,7 +267,7 @@
             syncBar: "☁️ جاري المزامنة...",
             secCodeTitle: "🔢 البحث عن أكواد الأعطال (Fehlercodes)",
             lblBrand: "اسم الماركة (الشركة المصنعة):", lblCode: "كود العطل:", btnSearchCode: "🔍 بحث عن الكود",
-            sec1Title: "🔍 التشخيص السريع (قائمة الأعطال)", lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: ضغط عالي، الكهرباء تفصل...",
+            sec1Title: "🔍 التشخيص السريع (قائمة الأعطال)", lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: ضغط عالي...",
             btnSearchLocal: "البحث في كل الأجهزة", btnSearchGoogle: "🌐 ابحث عن هذا العطل في جوجل",
             lblSelect: "أو اختر الجهاز والعطل:", 
             optAll: "كل الأجهزة (شامل)", optSplit: "مكيف سبليت", optCold: "غرفة تبريد", optChiller: "تشيلر (Chiller)", optWindow: "مكيف شباك",
@@ -281,49 +281,49 @@
             btnClosePdf: "× إغلاق", btnExtPdf: "↗️ خارجي", btnTransPdf: "📄 ترجمة سريعة", lblTransTitle: "🌐 النص المترجم:",
             sec5Title: "📚 سجل التشخيصات السابقة", btnClearHistory: "🗑️ مسح السجل بالكامل",
             noCustomFaults: "لا توجد إضافات حالياً.", noCatalogs: "لا توجد كتالوجات محفوظة.", noHistory: "لا توجد أعطال محفوظة.", noPage: "رقم الصفحة غير صحيح",
-            codeNotFound: "لم يتم العثور على الكود. جرب البحث في جوجل.", btnGoogleCode: "🌐 ابحث عنه في جوجل"
+            codeNotFound: "لم يتم العثور على الكود. ابحث عنه في جوجل:", btnGoogleCode: "🌐 البحث في جوجل", saveLabel: "هل وجدت الحل؟ الصقه هنا واحفظه:", saveBtn: "💾 حفظ الكود", savePlaceholder: "مثال: نقص غاز، يجب فحص الضغط..."
         },
         de: {
             title: "❄ HVAC Diagnose-Tool", subtitle: "Ihr schneller Außendienst-Leitfaden",
             syncBar: "☁️ Synchronisierung...",
             secCodeTitle: "🔢 Fehlercodes suchen",
             lblBrand: "Marke (Hersteller):", lblCode: "Fehlercode:", btnSearchCode: "🔍 Code suchen",
-            sec1Title: "🔍 Schnelldiagnose (Fehlerliste)", lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Hochdruck, Sicherung...",
+            sec1Title: "🔍 Schnelldiagnose (Fehlerliste)", lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Hochdruck...",
             btnSearchLocal: "In allen Geräten suchen", btnSearchGoogle: "🌐 Bei Google suchen",
             lblSelect: "Oder Gerät & Fehler wählen:", 
             optAll: "Alle Geräte", optSplit: "Split-Klimaanlage", optCold: "Kühlraum", optChiller: "Kaltwassersatz", optWindow: "Fensterklima",
             btnDiagnose: "🔍 Diagnose",
             sec2Title: "📸 Bildsuche (Google Lens)", lensDesc: "Machen Sie ein Foto vom Fehlercode oder Bauteil.",
             btnCam: "📷 Foto machen", btnGal: "🖼️ Aus Galerie", imgPreview: "✅ Bild ausgewählt", btnLens: "🔍 In Google Lens öffnen",
-            sec3Title: "➕ Fehler / Codes hinzufügen", lblAddCodeTitle: "Neuen Fehlercode hinzufügen:", lblAddBrand: "Marke:", lblAddCode: "Code:", lblAddCodeDesc: "Beschreibung & Ursachen (je 1 pro Zeile):", btnAddCode: "💾 Code speichern",
-            lblAddFaultTitle: "Allgemeinen Fehler hinzufügen (ohne Code):", lblAddDevice: "Gerätetyp:", lblAddName: "Fehlername:", lblAddCauses: "Ursachen & Prüfschritte:", btnAddFault: "💾 Fehler speichern",
+            sec3Title: "➕ Fehler / Codes hinzufügen", lblAddCodeTitle: "Neuen Fehlercode hinzufügen:", lblAddBrand: "Marke:", lblAddCode: "Code:", lblAddCodeDesc: "Beschreibung & Ursachen:", btnAddCode: "💾 Code speichern",
+            lblAddFaultTitle: "Allgemeinen Fehler hinzufügen:", lblAddDevice: "Gerätetyp:", lblAddName: "Fehlername:", lblAddCauses: "Ursachen & Prüfschritte:", btnAddFault: "💾 Fehler speichern",
             btnExportFaults: "⬇️ Daten exportieren", btnImportFaults: "⬆️ Daten importieren", lblDeleteFaults: "🗑️ Hinzugefügte Codes/Fehler (löschen):",
             sec4Title: "📖 Kataloge & PDF-Reader", lblCatLink: "Katalog-Link speichern:", btnSaveCat: "💾 Link speichern", lblCatFile: "Katalog vom Handy öffnen:",
             btnClosePdf: "× Schließen", btnExtPdf: "↗️ Extern", btnTransPdf: "📄 Übersetzung", lblTransTitle: "🌐 Übersetzter Text:",
             sec5Title: "📚 Diagnose-Verlauf", btnClearHistory: "🗑️ Verlauf löschen",
             noCustomFaults: "Noch keine Einträge vorhanden.", noCatalogs: "Keine Kataloge gespeichert.", noHistory: "Keine Fehler gespeichert.", noPage: "Ungültige Seitenzahl",
-            codeNotFound: "Code nicht gefunden. Bitte bei Google suchen.", btnGoogleCode: "🌐 Bei Google suchen"
+            codeNotFound: "Code nicht gefunden. Bitte bei Google suchen:", btnGoogleCode: "🌐 Bei Google suchen", saveLabel: "Lösung gefunden? Hier einfügen:", saveBtn: "💾 Code speichern", savePlaceholder: "z.B.: Kältemittelmangel, Druck prüfen..."
         }
     };
 
     // ==========================================
-    // قاعدة البيانات الافتراضية للأكواد (يمكن إضافة المزيد)
+    // قاعدة البيانات الافتراضية للأكواد
     // ==========================================
     let defaultCodesDB = {
         "LG": {
             "E5": { desc: "Kompressor-Überhitzung / ارتفاع حرارة الضاغط", causes: ["Kältemittelmangel - Druck prüfen", "Verstopfter Filter - reinigen"] },
             "CH05": { desc: "Kommunikationsfehler / خطأ في الاتصال", causes: ["Kabel prüfen", "Platine prüfen"] }
         },
-        "Daikin": {
+        "DAIKIN": {
             "E4": { desc: "Niederdruckfehler / خطأ ضغط منخفض", causes: ["Kältemittel prüfen", "Lecksuche"] },
             "U4": { desc: "Kommunikationsfehler / خطأ اتصال", causes: ["Verkabelung prüfen"] }
         },
-        "Samsung": {
+        "SAMSUNG": {
             "E1": { desc: "Raumtemperaturfühler defekt / حساس حرارة الغرفة تالف", causes: ["Fühler prüfen", "Kabel prüfen"] }
         }
     };
 
-    let customCodesDB = JSON.parse(localStorage.getItem("hvacCustomCodes")) || {}; // يتم سحبها من السحابة لاحقاً
+    let customCodesDB = JSON.parse(localStorage.getItem("hvacCustomCodes")) || {};
 
     // دالة البحث عن الكود
     function searchErrorCode() {
@@ -331,12 +331,8 @@
         const code = document.getElementById("searchCode").value.trim().toUpperCase();
         const resultDiv = document.getElementById("codeResult");
 
-        if (!brand || !code) {
-            alert(currentLang === 'ar' ? "الرجاء إدخال الماركة والكود." : "Bitte Marke und Code eingeben.");
-            return;
-        }
+        if (!brand || !code) { alert("Bitte Marke und Code eingeben / الرجاء إدخال الماركة والكود."); return; }
 
-        // البحث في الأكواد المخصصة أولاً، ثم الافتراضية
         let foundCode = null;
         if (customCodesDB[brand] && customCodesDB[brand][code]) {
             foundCode = customCodesDB[brand][code];
@@ -353,41 +349,48 @@
             resultDiv.innerHTML = html;
             resultDiv.style.display = "block";
             
-            // حفظ في السجل
             let textToSave = `Code: ${brand} ${code}\n${foundCode.desc}\n` + foundCode.causes.join('\n');
             saveToHistory(`Code: ${brand} ${code}`, textToSave);
 
         } else {
-            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold;">${translations[currentLang].codeNotFound}</p>
-            <button style="background-color: #4285f4;" onclick="window.open('https://www.google.com/search?q=${brand}+${code}+HVAC+error', '_blank')">${translations[currentLang].btnGoogleCode}</button>`;
+            resultDiv.innerHTML = `
+                <p style="color:#d9534f; font-weight:bold;">${translations[currentLang].codeNotFound}</p>
+                <button style="background-color: #4285f4; margin-bottom: 15px;" onclick="window.open('https://www.google.com/search?q=${brand}+${code}+HVAC+error', '_blank')">${translations[currentLang].btnGoogleCode}</button>
+                
+                <div style="padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px;">
+                    <label style="font-size: 13px; color: #333;">${translations[currentLang].saveLabel}</label>
+                    <textarea id="foundCodeDesc" style="height: 60px; font-size: 14px;" placeholder="${translations[currentLang].savePlaceholder}"></textarea>
+                    <button class="add-btn" style="margin-top: 5px; padding: 10px;" onclick="saveCodeFromSearch('${brand}', '${code}')">
+                        ${translations[currentLang].saveBtn}
+                    </button>
+                </div>
+            `;
             resultDiv.style.display = "block";
         }
     }
 
-    // دالة إضافة كود جديد
-    function addNewCode() {
-        const brand = document.getElementById("newBrandName").value.trim().toUpperCase();
-        const code = document.getElementById("newCodeName").value.trim().toUpperCase();
-        const causesText = document.getElementById("newCodeCauses").value.trim();
+    // دالة حفظ الكود من البحث
+    function saveCodeFromSearch(brand, code) {
+        const descText = document.getElementById("foundCodeDesc").value.trim();
+        if (!descText) { alert("Bitte Beschreibung eingeben / الرجاء كتابة الوصف."); return; }
 
-        if (!brand || !code || !causesText) { alert(currentLang === 'ar' ? "املأ الحقول!" : "Bitte Felder ausfüllen!"); return; }
+        const lines = descText.split('\n').filter(line => line.trim() !== "");
+        const desc = lines[0];
+        const causes = lines.length > 1 ? lines.slice(1) : ["Überprüfen / فحص"];
 
-        const causesArray = causesText.split('\n').filter(line => line.trim() !== "");
         if (!customCodesDB[brand]) customCodesDB[brand] = {};
-        customCodesDB[brand][code] = { desc: causesArray[0], causes: causesArray.slice(1) };
+        customCodesDB[brand][code] = { desc: desc, causes: causes };
 
         localStorage.setItem("hvacCustomCodes", JSON.stringify(customCodesDB));
         syncToCloud();
         renderCustomFaults();
 
-        document.getElementById("newBrandName").value = "";
-        document.getElementById("newCodeName").value = "";
-        document.getElementById("newCodeCauses").value = "";
-        alert(currentLang === 'ar' ? "✅ تم حفظ الكود!" : "✅ Code gespeichert!");
+        alert(currentLang === 'ar' ? "✅ تم الحفظ بنجاح!" : "✅ Erfolgreich gespeichert!");
+        searchErrorCode(); // تحديث العرض
     }
 
     // ==========================================
-    // نظام الترجمة والتشغيل الأساسي
+    // نظام الترجمة
     // ==========================================
     function applyLanguage() {
         const t = translations[currentLang];
@@ -469,7 +472,7 @@
     }
 
     // ==========================================
-    // باقي الدوال (السجل، الكتالوج، الأعطال العامة، والمزامنة)
+    // الأعطال العامة وقاعدة البيانات
     // ==========================================
     let defaultDB_ar = {
         split: { not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز", prob: "40%", checks: ["قياس الضغط"] }] } },
@@ -552,6 +555,25 @@
         }
     }
 
+    function addNewCode() {
+        const brand = document.getElementById("newBrandName").value.trim().toUpperCase();
+        const code = document.getElementById("newCodeName").value.trim().toUpperCase();
+        const causesText = document.getElementById("newCodeCauses").value.trim();
+        if (!brand || !code || !causesText) { alert("Bitte Felder ausfüllen!"); return; }
+
+        const causesArray = causesText.split('\n').filter(line => line.trim() !== "");
+        if (!customCodesDB[brand]) customCodesDB[brand] = {};
+        customCodesDB[brand][code] = { desc: causesArray[0], causes: causesArray.slice(1) };
+
+        localStorage.setItem("hvacCustomCodes", JSON.stringify(customCodesDB));
+        syncToCloud(); renderCustomFaults();
+
+        document.getElementById("newBrandName").value = "";
+        document.getElementById("newCodeName").value = "";
+        document.getElementById("newCodeCauses").value = "";
+        alert("✅ Gespeichert!");
+    }
+
     function addNewFault() {
         const device = document.getElementById("addDeviceType").value;
         const faultName = document.getElementById("newFaultName").value.trim();
@@ -571,14 +593,13 @@
         localStorage.setItem("hvacCustomDB", JSON.stringify(customDB));
         updateDefaultDBLanguage(); rebuildKeywordMap(); updateSymptoms(); renderCustomFaults(); syncToCloud();
         document.getElementById("newFaultName").value = ""; document.getElementById("newFaultCauses").value = "";
-        alert("✅ Gespeichert! / تم الحفظ!");
+        alert("✅ Gespeichert!");
     }
 
     function renderCustomFaults() {
         const list = document.getElementById("customFaultsList");
         list.innerHTML = ""; let hasCustom = false;
         
-        // عرض الأكواد المضافة
         for (let brand in customCodesDB) {
             for (let code in customCodesDB[brand]) {
                 hasCustom = true;
@@ -586,7 +607,6 @@
             }
         }
 
-        // عرض الأعطال العامة المضافة
         let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
         for (let dev in customDB) {
             for (let symp in customDB[dev]) {
