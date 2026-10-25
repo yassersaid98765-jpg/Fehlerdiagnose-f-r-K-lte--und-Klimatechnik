@@ -20,6 +20,15 @@
         .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .prob { color: #d9534f; font-weight: bold; }
         .loading { text-align: center; color: #0275d8; font-weight: bold; display: none; margin-top: 15px; }
+        
+        /* تنسيقات مكتبة الأعطال الجديدة */
+        .history-section { border-top: 2px solid #0275d8; margin-top: 40px; padding-top: 20px; }
+        .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; }
+        .history-date { color: #888; font-size: 12px; margin-bottom: 5px; }
+        .history-text { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .history-result { color: #555; font-size: 13px; background: white; padding: 8px; border-radius: 4px; max-height: 100px; overflow-y: auto; }
+        .clear-btn { background-color: #d9534f; margin-top: 10px; padding: 10px; font-size: 14px; }
+        .clear-btn:hover { background-color: #c9302c; }
     </style>
 </head>
 <body>
@@ -48,9 +57,9 @@
         <h2>🤖 التشخيص بالذكاء الاصطناعي</h2>
         
         <label for="problemText">اكتب تفاصيل العطل هنا:</label>
-        <textarea id="problemText" placeholder="مثال: المكيف يعمل ولكن لا يخرج هواء بارد، وأسمع صوت طقطقة من الوحدة الخارجية..."></textarea>
+        <textarea id="problemText" placeholder="مثال: المكيف يعمل ولكن لا يخرج هواء بارد..."></textarea>
 
-        <label for="imageInput">أو أرفق صورة للعطل (من الكاميرا أو المعرض):</label>
+        <label for="imageInput">أو أرفق صورة للعطل (اختياري):</label>
         <input type="file" id="imageInput" accept="image/*" capture="environment">
 
         <button id="aiBtn" onclick="diagnoseWithAI()">✨ اطلب التشخيص من الذكاء الاصطناعي</button>
@@ -59,10 +68,19 @@
 
     <!-- مكان عرض النتائج -->
     <div id="result"></div>
+
+    <!-- قسم مكتبة الأعطال (السجل) -->
+    <div class="history-section">
+        <h2>📚 مكتبة الأعطال (السجل)</h2>
+        <div id="historyList">
+            <!-- سيتم عرض الأعطال المحفوظة هنا -->
+        </div>
+        <button class="clear-btn" onclick="clearHistory()">🗑️ مسح السجل بالكامل</button>
+    </div>
 </div>
 
 <script>
-    // 1. قاعدة البيانات اليدوية (السريعة)
+    // --- قاعدة البيانات اليدوية ---
     const diagnoseDB = {
         split: {
             not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }] },
@@ -73,6 +91,7 @@
         }
     };
 
+    // --- دالة التشخيص اليدوي ---
     function runDiagnose() {
         const device = document.getElementById("deviceType").value;
         const symptom = document.getElementById("symptom").value;
@@ -86,14 +105,21 @@
         }
 
         let html = `<h3>النتائج السريعة: ${data.label}</h3>`;
+        let textToSave = `نوع العطل: ${data.label}\n`;
+        
         data.causes.forEach(c => {
             html += `<div class="cause-item"><strong>${c.name}</strong> <span class="prob">(${c.prob})</span><ul>${c.checks.map(ch => `<li>${ch}</li>`).join("")}</ul></div>`;
+            textToSave += `- ${c.name} (${c.prob})\n`;
         });
+        
         resultDiv.innerHTML = html;
         resultDiv.style.display = "block";
+
+        // حفظ التشخيص في المكتبة
+        saveToHistory("تشخيص سريع: " + data.label, textToSave);
     }
 
-    // 2. دالة الذكاء الاصطناعي (مربوطة بالخادم الجديد)
+    // --- دالة الذكاء الاصطناعي ---
     async function diagnoseWithAI() {
         const promptText = document.getElementById("problemText").value;
         const fileInput = document.getElementById("imageInput");
@@ -112,26 +138,38 @@
 
         let base64Image = null;
 
-        // تحويل الصورة إلى Base64 إذا وجدت
+        // ضغط الصورة وتحويلها إلى Base64
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             base64Image = await new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result.split(',')[1]); 
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 800; 
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } 
+                        else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+                    };
+                    img.src = e.target.result;
+                };
                 reader.readAsDataURL(file);
             });
         }
 
-        // إعداد النص المرسل للذكاء الاصطناعي
         const fullPrompt = `أنت خبير في هندسة التبريد والتكييف. المستخدم يصف المشكلة التالية: "${promptText}". 
         قم بتحليل المشكلة بناءً على الوصف والصورة (إن وجدت). 
         أعطني: 1. الأسباب المحتملة مرتبة. 2. خطوات الفحص المطلوبة. 3. تحذيرات السلامة. 
         أجب باللغة العربية بأسلوب فني واضح ومختصر.`;
 
         try {
-            // 🌟 هنا التعديل: الرابط أصبح داخلياً في موقعك
             const apiEndpoint = "/api/diagnose"; 
-            
             const response = await fetch(apiEndpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -139,20 +177,81 @@
             });
 
             const data = await response.json();
-            
             if (data.error) throw new Error(data.error);
 
-            resultDiv.innerHTML = `<h3>🤖 تحليل الذكاء الاصطناعي:</h3><p>${data.result.replace(/\n/g, '<br>')}</p>`;
+            let formattedResult = data.result.replace(/\n/g, '<br>');
+            resultDiv.innerHTML = `<h3>🤖 تحليل الذكاء الاصطناعي:</h3><p>${formattedResult}</p>`;
             resultDiv.style.display = "block";
 
+            // حفظ التشخيص في المكتبة
+            saveToHistory("ذكاء اصطناعي: " + promptText, data.result);
+
         } catch (error) {
-            resultDiv.innerHTML = `<p style="color:red;">حدث خطأ: ${error.message}. تأكد من إعدادات الخادم.</p>`;
+            resultDiv.innerHTML = `<p style="color:red;">حدث خطأ: ${error.message}</p>`;
             resultDiv.style.display = "block";
         } finally {
             btn.disabled = false;
             loading.style.display = "none";
         }
     }
+
+    // ==========================================
+    // --- وظائف مكتبة الأعطال (السجل) ---
+    // ==========================================
+
+    // دالة حفظ العطل في الذاكرة
+    function saveToHistory(title, resultText) {
+        let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
+        
+        const newRecord = {
+            id: Date.now(),
+            date: new Date().toLocaleString('ar-EG'), // التاريخ والوقت
+            title: title,
+            result: resultText
+        };
+
+        history.unshift(newRecord); // إضافة العطل في بداية القائمة
+        
+        // الاحتفاظ بآخر 50 عطلاً فقط لتجنب امتلاء الذاكرة
+        if (history.length > 50) history = history.slice(0, 50); 
+
+        localStorage.setItem("hvacHistory", JSON.stringify(history));
+        renderHistory();
+    }
+
+    // دالة عرض السجل
+    function renderHistory() {
+        const historyList = document.getElementById("historyList");
+        let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
+
+        if (history.length === 0) {
+            historyList.innerHTML = "<p style='text-align:center; color:#888;'>لا توجد أعطال محفوظة حتى الآن.</p>";
+            return;
+        }
+
+        let html = "";
+        history.forEach(item => {
+            html += `
+            <div class="history-item">
+                <div class="history-date">🕒 ${item.date}</div>
+                <div class="history-text">${item.title}</div>
+                <div class="history-result">${item.result.replace(/\n/g, '<br>')}</div>
+            </div>`;
+        });
+        historyList.innerHTML = html;
+    }
+
+    // دالة مسح السجل
+    function clearHistory() {
+        if (confirm("هل أنت متأكد من مسح كل سجل الأعطال؟")) {
+            localStorage.removeItem("hvacHistory");
+            renderHistory();
+        }
+    }
+
+    // عرض السجل عند فتح الصفحة
+    window.onload = renderHistory;
+
 </script>
 
 </body>
