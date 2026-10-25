@@ -10,7 +10,7 @@
         h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
         label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
-        select, input[type="text"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        select, input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
         button { width: 100%; padding: 15px; background-color: #0275d8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; font-size: 16px; transition: background 0.3s; }
         button:hover { background-color: #025aa5; }
         
@@ -38,24 +38,26 @@
         .catalog-item a { color: #0275d8; text-decoration: none; font-weight: bold; word-break: break-all; }
         .save-btn { background-color: #f0ad4e; margin-top: 10px; font-size: 14px;}
         .save-btn:hover { background-color: #ec971f; }
+        
+        /* قسم الكتالوج المحلي */
+        .local-catalog-section { background-color: #e2e3e5; border: 1px solid #d6d8db; padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .local-catalog-section h3 { color: #383d41; margin-top: 0; text-align: center; font-size: 16px;}
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>❄ HVAC Diagnose Tool</h1>
-    <p class="subtitle">مرجعك الميداني السريع (يعمل بدون إنترنت)</p>
+    <p class="subtitle">مرجعك الميداني السريع</p>
 
-    <!-- قسم البحث المحلي -->
     <div class="search-section">
         <label for="manualSearchText">🔎 اكتب العطل بكلماتك الخاصة:</label>
-        <input type="text" id="manualSearchText" placeholder="مثال: المكيف يقطر ماء، أو ضغط عالي...">
+        <input type="text" id="manualSearchText" placeholder="مثال: المكيف يقطر ماء...">
         
         <button class="search-btn" onclick="unifiedSearch()">البحث في المكتبة الداخلية</button>
         <button class="google-btn" onclick="searchGoogle()">🌐 ابحث عن هذا العطل في جوجل</button>
     </div>
 
-    <!-- قسم القائمة المنسدلة -->
     <div style="border-top: 1px dashed #ccc; margin-top: 20px; padding-top: 15px;">
         <label>أو اختر من القائمة:</label>
         <select id="deviceType" onchange="updateSymptoms()">
@@ -66,19 +68,24 @@
         <button onclick="runDiagnose()">🔍 تشخيص من القائمة</button>
     </div>
 
-    <!-- مكان عرض النتائج -->
     <div id="result"></div>
 
-    <!-- قسم الكتالوجات -->
+    <!-- قسم الكتالوجات المحفوظة والكتالوج المحلي -->
     <div class="catalog-section">
         <h3>📖 مكتبة الكتالوجات (الروابط)</h3>
-        <input type="text" id="catalogName" placeholder="اسم الكتالوج/الجهاز (مثال: كتالوج LG)">
+        <input type="text" id="catalogName" placeholder="اسم الكتالوج/الجهاز">
         <input type="text" id="catalogLink" placeholder="https://..." style="margin-top:5px;">
         <button class="save-btn" onclick="saveCatalogLink()">💾 حفظ الرابط</button>
         <div id="catalogList" class="catalog-item-list"></div>
     </div>
 
-    <!-- قسم السجل -->
+    <!-- 🌟 قسم فتح الكتالوجات من الهاتف 🌟 -->
+    <div class="local-catalog-section">
+        <h3>📂 فتح كتالوج من ذاكرة الهاتف</h3>
+        <p style="font-size: 12px; color: #555; text-align: center;">اختر ملف PDF من هاتفك لفتحه فوراً:</p>
+        <input type="file" id="localCatalogInput" accept="application/pdf, image/*" onchange="viewLocalCatalog()" style="background: white; cursor: pointer;">
+    </div>
+
     <div class="history-section">
         <h2>📚 سجل التشخيصات</h2>
         <div id="historyList"></div>
@@ -103,7 +110,6 @@
         }
     };
 
-    // خريطة الكلمات المفتاحية
     const keywordMap = [
         { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "قطرات", "يقطر", "تنقيط", "ماء من المكيف"] },
         { device: "split", symptom: "noise", words: ["صوت", "ضجيج", "اهتزاز", "طقطقة", "صوت عالي"] },
@@ -114,6 +120,19 @@
         { device: "coldroom", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور لا يعمل", "مطفي"] },
         { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] }
     ];
+
+    // --- دالة فتح الكتالوج من الهاتف ---
+    function viewLocalCatalog() {
+        const fileInput = document.getElementById("localCatalogInput");
+        const file = fileInput.files[0];
+        
+        if (file) {
+            // إنشاء رابط مؤقت للملف
+            const fileURL = URL.createObjectURL(file);
+            // فتح الرابط في نافذة جديدة (سيقوم الهاتف بفتحه في قارئ PDF أو معرض الصور)
+            window.open(fileURL, '_blank');
+        }
+    }
 
     // البحث المحلي
     function unifiedSearch() {
@@ -222,7 +241,7 @@
         }
     }
 
-    // إدارة الكتالوجات
+    // إدارة الكتالوجات (الروابط)
     function saveCatalogLink() {
         const name = document.getElementById("catalogName").value.trim();
         const link = document.getElementById("catalogLink").value.trim();
