@@ -102,11 +102,11 @@
         <div class="details-content">
             <label id="lblSearch" for="manualSearchText">اكتب العطل بكلماتك الخاصة:</label>
             <input type="text" id="manualSearchText" placeholder="...">
-            <button class="search-btn" style="background-color: #5cb85c;" onclick="unifiedSearch()" id="btnSearchLocal">البحث في المكتبة الداخلية</button>
+            <button class="search-btn" style="background-color: #5cb85c;" onclick="unifiedSearch()" id="btnSearchLocal">البحث في كل الأجهزة</button>
             <button class="google-btn" style="background-color: #4285f4;" onclick="searchGoogle()" id="btnSearchGoogle">🌐 ابحث عن هذا العطل في جوجل</button>
 
             <div style="border-top: 1px dashed #ccc; margin-top: 20px; padding-top: 15px;">
-                <label id="lblSelect">أو اختر من القائمة:</label>
+                <label id="lblSelect">أو اختر الجهاز والعطل:</label>
                 <select id="deviceType" onchange="updateSymptoms()">
                     <option value="all" id="optAll">كل الأجهزة (Alle Geräte)</option>
                     <option value="split" id="optSplit">مكيف سبليت</option>
@@ -362,14 +362,26 @@
     };
 
     function updateDefaultDBLanguage() {
-        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
+        let rawCustomDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
         let baseDB = currentLang === 'ar' ? defaultDB_ar : defaultDB_de;
         
+        // إصلاح الخلل: نقوم بفلترة قاعدة البيانات المخصصة لضمان عدم تداخل الأعطال القديمة مع القائمة الافتراضية
+        let cleanCustomDB = { split: {}, coldroom: {}, chiller: {}, window: {} };
+        for (let dev in rawCustomDB) {
+            if (rawCustomDB[dev]) {
+                for (let key in rawCustomDB[dev]) {
+                    if (key.startsWith("custom_")) {
+                        cleanCustomDB[dev][key] = rawCustomDB[dev][key];
+                    }
+                }
+            }
+        }
+
         diagnoseDB = {
-            split: { ...baseDB.split, ...(customDB.split || {}) },
-            coldroom: { ...baseDB.coldroom, ...(customDB.coldroom || {}) },
-            chiller: { ...baseDB.chiller, ...(customDB.chiller || {}) },
-            window: { ...baseDB.window, ...(customDB.window || {}) }
+            split: { ...baseDB.split, ...(cleanCustomDB.split || {}) },
+            coldroom: { ...baseDB.coldroom, ...(cleanCustomDB.coldroom || {}) },
+            chiller: { ...baseDB.chiller, ...(cleanCustomDB.chiller || {}) },
+            window: { ...baseDB.window, ...(cleanCustomDB.window || {}) }
         };
     }
 
@@ -433,7 +445,6 @@
         for (let dev in diagnoseDB) {
             for (let symp in diagnoseDB[dev]) {
                 let label = diagnoseDB[dev][symp].label.replace(" (مخصص)", "").replace(" (Eigene)", "");
-                // إضافة اسم الجهاز ككلمة مفتاحية
                 let deviceNameAr = translations['ar']['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)];
                 let deviceNameDe = translations['de']['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)];
                 let words = label.split(" ").concat(deviceNameAr.split(" "), deviceNameDe.split(" "));
@@ -565,7 +576,6 @@
         const symptomSelect = document.getElementById("symptom");
         symptomSelect.innerHTML = "";
         
-        // إذا اختار "كل الأجهزة"، نعرض كل الأعطال
         if (device === "all") {
             for (let dev in diagnoseDB) {
                 let deviceLabel = translations[currentLang]['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)] || dev;
