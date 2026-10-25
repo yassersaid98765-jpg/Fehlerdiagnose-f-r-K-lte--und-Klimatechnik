@@ -4,6 +4,11 @@ export async function onRequestPost(context) {
 
   try {
     const { prompt, imageData } = await request.json();
+    
+    if (!env.GEMINI_API_KEY) {
+      return new Response(JSON.stringify({ error: "خطأ: مفتاح GEMINI_API_KEY غير موجود في إعدادات Cloudflare. يرجى إضافته في Environment variables." }), { status: 500, headers: cors });
+    }
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
     
     const parts = [{ text: prompt }];
@@ -16,8 +21,15 @@ export async function onRequestPost(context) {
     });
     
     const data = await res.json();
-    return new Response(JSON.stringify({ result: data.candidates[0].content.parts[0].text }), { headers: cors });
+
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        return new Response(JSON.stringify({ error: "لم يتم استلام رد صالح من الذكاء الاصطناعي. تفاصيل الخطأ من Google: " + JSON.stringify(data) }), { status: 500, headers: cors });
+    }
+
+    const aiText = data.candidates[0].content.parts[0].text;
+    return new Response(JSON.stringify({ result: aiText }), { headers: cors });
+
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: cors });
+    return new Response(JSON.stringify({ error: "حدث خطأ في الخادم: " + e.message }), { status: 500, headers: cors });
   }
 }
