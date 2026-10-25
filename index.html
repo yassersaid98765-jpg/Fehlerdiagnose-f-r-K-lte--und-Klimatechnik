@@ -32,13 +32,16 @@
         
         .sync-bar { background-color: #d4edda; color: #155724; text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; display: none; border: 1px solid #c3e6cb;}
         
-        #result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none; border: 1px solid #ddd; line-height: 1.6; }
+        #result, #codeResult { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none; border: 1px solid #ddd; line-height: 1.6; }
         .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative;}
         html[dir="ltr"] .cause-item { border-right: none; border-left: 4px solid #0275d8; }
         .prob { color: #d9534f; font-weight: bold; }
         
         .add-btn { background-color: #34a853; }
         .add-btn:hover { background-color: #2b8a44; }
+
+        .search-code-btn { background-color: #e83e8c; margin-top: 10px;}
+        .search-code-btn:hover { background-color: #c82333; }
 
         .custom-fault-item { background: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f5c6cb; }
         .custom-fault-item span { font-weight: bold; color: #721c24; font-size: 14px;}
@@ -82,6 +85,14 @@
 
         .google-lens-btn { background-color: #4285f4; color: white; border: none; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 15px; font-size: 16px;}
         .google-lens-btn:hover { background-color: #3367d6; }
+        
+        .data-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .data-btns button { margin-top: 0; flex: 1; font-size: 14px; padding: 10px;}
+        .export-btn { background-color: #17a2b8; }
+        .export-btn:hover { background-color: #138496; }
+        .import-btn { background-color: #6c757d; }
+        .import-btn:hover { background-color: #5a6268; }
+        #importFaultsInput { display: none; }
     </style>
 </head>
 <body>
@@ -97,8 +108,25 @@
 
     <div id="syncStatus" class="sync-bar">☁️ ...</div>
 
+    <!-- 1. قسم البحث عن أكواد الأعطال -->
     <details open>
-        <summary id="sec1Title">🔍 التشخيص والبحث السريع</summary>
+        <summary id="secCodeTitle">🔢 البحث عن أكواد الأعطال (Fehlercodes)</summary>
+        <div class="details-content">
+            <label id="lblBrand">اسم الماركة (الشركة المصنعة):</label>
+            <input type="text" id="searchBrand" placeholder="مثال: LG, Daikin, Samsung...">
+            
+            <label id="lblCode">كود العطل:</label>
+            <input type="text" id="searchCode" placeholder="مثال: E5, CH05, U4...">
+            
+            <button class="search-code-btn" onclick="searchErrorCode()" id="btnSearchCode">🔍 بحث عن الكود</button>
+            
+            <div id="codeResult"></div>
+        </div>
+    </details>
+
+    <!-- 2. التشخيص السريع (القوائم) -->
+    <details>
+        <summary id="sec1Title">🔍 التشخيص السريع (قائمة الأعطال)</summary>
         <div class="details-content">
             <label id="lblSearch" for="manualSearchText">اكتب العطل بكلماتك الخاصة:</label>
             <input type="text" id="manualSearchText" placeholder="...">
@@ -122,28 +150,23 @@
 
     <div id="result"></div>
 
+    <!-- 3. إضافة أكواد وأعطال جديدة -->
     <details>
-        <summary id="sec2Title">📸 البحث بالصورة (Google Lens)</summary>
+        <summary id="sec3Title">➕ إضافة أعطال / أكواد مخصصة</summary>
         <div class="details-content">
-            <p style="font-size: 13px; color: #555;" id="lensDesc">التقط صورة لكود العطل أو القطعة، وسيتم فتح تطبيق جوجل للبحث عنها فوراً.</p>
             
-            <div class="img-buttons">
-                <button type="button" class="btn-cam" onclick="document.getElementById('cameraInput').click()" id="btnCam">📷 التقاط صورة</button>
-                <button type="button" class="btn-gal" onclick="document.getElementById('galleryInput').click()" id="btnGal">🖼️ من الاستديو</button>
-            </div>
-            
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageSelection(this)">
-            <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handleImageSelection(this)">
-            
-            <div id="imgPreviewText" class="img-preview">✅ ...</div>
-            
-            <button class="google-lens-btn" onclick="searchWithGoogleLens()" id="btnLens">🔍 فتح في Google Lens</button>
-        </div>
-    </details>
+            <h3 style="color: #0275d8; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px;" id="lblAddCodeTitle">إضافة كود عطل جديد:</h3>
+            <label id="lblAddBrand">الماركة:</label>
+            <input type="text" id="newBrandName" placeholder="مثال: LG">
+            <label id="lblAddCode">الكود:</label>
+            <input type="text" id="newCodeName" placeholder="مثال: E5">
+            <label id="lblAddCodeDesc">الوصف والأسباب (كل سبب في سطر):</label>
+            <textarea id="newCodeCauses" placeholder="مثال:&#10;ارتفاع حرارة الضاغط&#10;مشكلة في الكابستور - قم بفحصه"></textarea>
+            <button class="add-btn" onclick="addNewCode()" id="btnAddCode">💾 حفظ الكود</button>
 
-    <details>
-        <summary id="sec3Title">➕ إضافة وإدارة الأعطال المخصصة</summary>
-        <div class="details-content">
+            <hr style="margin: 25px 0; border: 1px solid #eee;">
+
+            <h3 style="color: #0275d8; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px;" id="lblAddFaultTitle">إضافة عطل عام (بدون كود):</h3>
             <label id="lblAddDevice">نوع الجهاز:</label>
             <select id="addDeviceType">
                 <option value="split" id="optAddSplit">مكيف سبليت</option>
@@ -151,21 +174,42 @@
                 <option value="chiller" id="optAddChiller">تشيلر (Chiller)</option>
                 <option value="window" id="optAddWindow">مكيف شباك</option>
             </select>
-            
             <label id="lblAddName">اسم العطل:</label>
             <input type="text" id="newFaultName" placeholder="...">
-            
-            <label id="lblAddCauses">الأسباب وخطوات الفحص (كل سبب في سطر جديد):</label>
+            <label id="lblAddCauses">الأسباب وخطوات الفحص:</label>
             <textarea id="newFaultCauses" placeholder="..."></textarea>
-            
             <button class="add-btn" onclick="addNewFault()" id="btnAddFault">💾 حفظ العطل</button>
 
             <hr style="margin: 25px 0; border: 1px solid #eee;">
-            <h3 style="color: #d9534f; font-size: 16px;" id="lblDeleteFaults">🗑️ الأعطال المضافة (لحذفها):</h3>
+            <div class="data-btns">
+                <button class="export-btn" onclick="exportFaults()" id="btnExportFaults">⬇️ تصدير البيانات</button>
+                <button class="import-btn" onclick="document.getElementById('importFaultsInput').click()" id="btnImportFaults">⬆️ استيراد البيانات</button>
+                <input type="file" id="importFaultsInput" accept=".json" onchange="importFaults(event)">
+            </div>
+
+            <hr style="margin: 25px 0; border: 1px solid #eee;">
+            <h3 style="color: #d9534f; font-size: 16px;" id="lblDeleteFaults">🗑️ الأكواد والأعطال المضافة (لحذفها):</h3>
             <div id="customFaultsList"></div>
         </div>
     </details>
 
+    <!-- 4. البحث بالصورة -->
+    <details>
+        <summary id="sec2Title">📸 البحث بالصورة (Google Lens)</summary>
+        <div class="details-content">
+            <p style="font-size: 13px; color: #555;" id="lensDesc">التقط صورة لكود العطل أو القطعة، وسيتم فتح تطبيق جوجل للبحث عنها فوراً.</p>
+            <div class="img-buttons">
+                <button type="button" class="btn-cam" onclick="document.getElementById('cameraInput').click()" id="btnCam">📷 التقاط صورة</button>
+                <button type="button" class="btn-gal" onclick="document.getElementById('galleryInput').click()" id="btnGal">🖼️ من الاستديو</button>
+            </div>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageSelection(this)">
+            <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handleImageSelection(this)">
+            <div id="imgPreviewText" class="img-preview">✅ ...</div>
+            <button class="google-lens-btn" onclick="searchWithGoogleLens()" id="btnLens">🔍 فتح في Google Lens</button>
+        </div>
+    </details>
+
+    <!-- 5. الكتالوجات -->
     <details>
         <summary id="sec4Title">📖 الكتالوجات وقارئ PDF</summary>
         <div class="details-content">
@@ -174,7 +218,6 @@
             <input type="text" id="catalogLink" placeholder="https://..." style="margin-top:5px;">
             <button class="save-btn" onclick="saveCatalogLink()" id="btnSaveCat">💾 حفظ الرابط</button>
             <div id="catalogList" class="catalog-item-list" style="margin-top: 15px;"></div>
-
             <hr style="margin: 25px 0; border: 1px solid #eee;">
             <label id="lblCatFile">فتح كتالوج من ذاكرة الهاتف:</label>
             <input type="file" id="localCatalogInput" accept="application/pdf" onchange="loadLocalPDF()" style="background: #f8f9fa;">
@@ -204,6 +247,7 @@
         </div>
     </details>
 
+    <!-- 6. السجل -->
     <details>
         <summary id="sec5Title">📚 سجل التشخيصات السابقة</summary>
         <div class="details-content">
@@ -220,38 +264,131 @@
     const translations = {
         ar: {
             title: "❄ HVAC Diagnose Tool", subtitle: "مرجعك الميداني السريع",
-            syncBar: "☁️ جاري المزامنة مع السحابة...",
-            sec1Title: "🔍 التشخيص والبحث السريع", lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: ضغط عالي، الكهرباء تفصل...",
+            syncBar: "☁️ جاري المزامنة...",
+            secCodeTitle: "🔢 البحث عن أكواد الأعطال (Fehlercodes)",
+            lblBrand: "اسم الماركة (الشركة المصنعة):", lblCode: "كود العطل:", btnSearchCode: "🔍 بحث عن الكود",
+            sec1Title: "🔍 التشخيص السريع (قائمة الأعطال)", lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: ضغط عالي، الكهرباء تفصل...",
             btnSearchLocal: "البحث في كل الأجهزة", btnSearchGoogle: "🌐 ابحث عن هذا العطل في جوجل",
             lblSelect: "أو اختر الجهاز والعطل:", 
             optAll: "كل الأجهزة (شامل)", optSplit: "مكيف سبليت", optCold: "غرفة تبريد", optChiller: "تشيلر (Chiller)", optWindow: "مكيف شباك",
             btnDiagnose: "🔍 تشخيص",
             sec2Title: "📸 البحث بالصورة (Google Lens)", lensDesc: "التقط صورة لكود العطل أو القطعة، وسيتم فتح تطبيق جوجل للبحث عنها فوراً.",
-            btnCam: "📷 التقاط صورة", btnGal: "🖼️ من الاستديو", imgPreview: "✅ تم اختيار الصورة بنجاح", btnLens: "🔍 فتح في Google Lens",
-            sec3Title: "➕ إضافة وإدارة الأعطال المخصصة", lblAddDevice: "نوع الجهاز:", lblAddName: "اسم العطل:", lblAddCauses: "الأسباب وخطوات الفحص (كل سبب في سطر جديد):", btnAddFault: "💾 حفظ العطل", lblDeleteFaults: "🗑️ الأعطال المضافة (لحذفها):",
+            btnCam: "📷 التقاط صورة", btnGal: "🖼️ من الاستديو", imgPreview: "✅ تم اختيار الصورة", btnLens: "🔍 فتح في Google Lens",
+            sec3Title: "➕ إضافة أعطال / أكواد مخصصة", lblAddCodeTitle: "إضافة كود عطل جديد:", lblAddBrand: "الماركة:", lblAddCode: "الكود:", lblAddCodeDesc: "الوصف والأسباب (كل سبب في سطر):", btnAddCode: "💾 حفظ الكود",
+            lblAddFaultTitle: "إضافة عطل عام (بدون كود):", lblAddDevice: "نوع الجهاز:", lblAddName: "اسم العطل:", lblAddCauses: "الأسباب وخطوات الفحص:", btnAddFault: "💾 حفظ العطل",
+            btnExportFaults: "⬇️ تصدير البيانات", btnImportFaults: "⬆️ استيراد البيانات", lblDeleteFaults: "🗑️ الأكواد والأعطال المضافة (لحذفها):",
             sec4Title: "📖 الكتالوجات وقارئ PDF", lblCatLink: "حفظ رابط كتالوج:", btnSaveCat: "💾 حفظ الرابط", lblCatFile: "فتح كتالوج من ذاكرة الهاتف:",
             btnClosePdf: "× إغلاق", btnExtPdf: "↗️ خارجي", btnTransPdf: "📄 ترجمة سريعة", lblTransTitle: "🌐 النص المترجم:",
             sec5Title: "📚 سجل التشخيصات السابقة", btnClearHistory: "🗑️ مسح السجل بالكامل",
-            noCustomFaults: "لا توجد أعطال مخصصة مضافة حالياً.", noCatalogs: "لا توجد كتالوجات محفوظة.", noHistory: "لا توجد أعطال محفوظة.", noPage: "رقم الصفحة غير صحيح", allDevicesLabel: "الكل"
+            noCustomFaults: "لا توجد إضافات حالياً.", noCatalogs: "لا توجد كتالوجات محفوظة.", noHistory: "لا توجد أعطال محفوظة.", noPage: "رقم الصفحة غير صحيح",
+            codeNotFound: "لم يتم العثور على الكود. جرب البحث في جوجل.", btnGoogleCode: "🌐 ابحث عنه في جوجل"
         },
         de: {
             title: "❄ HVAC Diagnose-Tool", subtitle: "Ihr schneller Außendienst-Leitfaden",
-            syncBar: "☁️ Synchronisierung mit Cloud...",
-            sec1Title: "🔍 Schnelldiagnose & Suche", lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Hochdruck, Sicherung fliegt...",
+            syncBar: "☁️ Synchronisierung...",
+            secCodeTitle: "🔢 Fehlercodes suchen",
+            lblBrand: "Marke (Hersteller):", lblCode: "Fehlercode:", btnSearchCode: "🔍 Code suchen",
+            sec1Title: "🔍 Schnelldiagnose (Fehlerliste)", lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Hochdruck, Sicherung...",
             btnSearchLocal: "In allen Geräten suchen", btnSearchGoogle: "🌐 Bei Google suchen",
             lblSelect: "Oder Gerät & Fehler wählen:", 
-            optAll: "Alle Geräte", optSplit: "Split-Klimaanlage", optCold: "Kühlraum", optChiller: "Kaltwassersatz (Chiller)", optWindow: "Fensterklimaanlage",
+            optAll: "Alle Geräte", optSplit: "Split-Klimaanlage", optCold: "Kühlraum", optChiller: "Kaltwassersatz", optWindow: "Fensterklima",
             btnDiagnose: "🔍 Diagnose",
-            sec2Title: "📸 Bildsuche (Google Lens)", lensDesc: "Machen Sie ein Foto vom Fehlercode oder Bauteil, um es sofort in Google zu suchen.",
-            btnCam: "📷 Foto machen", btnGal: "🖼️ Aus Galerie", imgPreview: "✅ Bild erfolgreich ausgewählt", btnLens: "🔍 In Google Lens öffnen",
-            sec3Title: "➕ Eigene Fehler hinzufügen", lblAddDevice: "Gerätetyp:", lblAddName: "Fehlername:", lblAddCauses: "Ursachen & Prüfschritte (je 1 pro Zeile):", btnAddFault: "💾 Fehler speichern", lblDeleteFaults: "🗑️ Eigene Fehler (zum Löschen):",
+            sec2Title: "📸 Bildsuche (Google Lens)", lensDesc: "Machen Sie ein Foto vom Fehlercode oder Bauteil.",
+            btnCam: "📷 Foto machen", btnGal: "🖼️ Aus Galerie", imgPreview: "✅ Bild ausgewählt", btnLens: "🔍 In Google Lens öffnen",
+            sec3Title: "➕ Fehler / Codes hinzufügen", lblAddCodeTitle: "Neuen Fehlercode hinzufügen:", lblAddBrand: "Marke:", lblAddCode: "Code:", lblAddCodeDesc: "Beschreibung & Ursachen (je 1 pro Zeile):", btnAddCode: "💾 Code speichern",
+            lblAddFaultTitle: "Allgemeinen Fehler hinzufügen (ohne Code):", lblAddDevice: "Gerätetyp:", lblAddName: "Fehlername:", lblAddCauses: "Ursachen & Prüfschritte:", btnAddFault: "💾 Fehler speichern",
+            btnExportFaults: "⬇️ Daten exportieren", btnImportFaults: "⬆️ Daten importieren", lblDeleteFaults: "🗑️ Hinzugefügte Codes/Fehler (löschen):",
             sec4Title: "📖 Kataloge & PDF-Reader", lblCatLink: "Katalog-Link speichern:", btnSaveCat: "💾 Link speichern", lblCatFile: "Katalog vom Handy öffnen:",
-            btnClosePdf: "× Schließen", btnExtPdf: "↗️ Extern", btnTransPdf: "📄 Schnellübersetzung", lblTransTitle: "🌐 Übersetzter Text:",
+            btnClosePdf: "× Schließen", btnExtPdf: "↗️ Extern", btnTransPdf: "📄 Übersetzung", lblTransTitle: "🌐 Übersetzter Text:",
             sec5Title: "📚 Diagnose-Verlauf", btnClearHistory: "🗑️ Verlauf löschen",
-            noCustomFaults: "Noch keine eigenen Fehler vorhanden.", noCatalogs: "Keine Kataloge gespeichert.", noHistory: "Keine Fehler gespeichert.", noPage: "Ungültige Seitenzahl", allDevicesLabel: "Alle"
+            noCustomFaults: "Noch keine Einträge vorhanden.", noCatalogs: "Keine Kataloge gespeichert.", noHistory: "Keine Fehler gespeichert.", noPage: "Ungültige Seitenzahl",
+            codeNotFound: "Code nicht gefunden. Bitte bei Google suchen.", btnGoogleCode: "🌐 Bei Google suchen"
         }
     };
 
+    // ==========================================
+    // قاعدة البيانات الافتراضية للأكواد (يمكن إضافة المزيد)
+    // ==========================================
+    let defaultCodesDB = {
+        "LG": {
+            "E5": { desc: "Kompressor-Überhitzung / ارتفاع حرارة الضاغط", causes: ["Kältemittelmangel - Druck prüfen", "Verstopfter Filter - reinigen"] },
+            "CH05": { desc: "Kommunikationsfehler / خطأ في الاتصال", causes: ["Kabel prüfen", "Platine prüfen"] }
+        },
+        "Daikin": {
+            "E4": { desc: "Niederdruckfehler / خطأ ضغط منخفض", causes: ["Kältemittel prüfen", "Lecksuche"] },
+            "U4": { desc: "Kommunikationsfehler / خطأ اتصال", causes: ["Verkabelung prüfen"] }
+        },
+        "Samsung": {
+            "E1": { desc: "Raumtemperaturfühler defekt / حساس حرارة الغرفة تالف", causes: ["Fühler prüfen", "Kabel prüfen"] }
+        }
+    };
+
+    let customCodesDB = JSON.parse(localStorage.getItem("hvacCustomCodes")) || {}; // يتم سحبها من السحابة لاحقاً
+
+    // دالة البحث عن الكود
+    function searchErrorCode() {
+        const brand = document.getElementById("searchBrand").value.trim().toUpperCase();
+        const code = document.getElementById("searchCode").value.trim().toUpperCase();
+        const resultDiv = document.getElementById("codeResult");
+
+        if (!brand || !code) {
+            alert(currentLang === 'ar' ? "الرجاء إدخال الماركة والكود." : "Bitte Marke und Code eingeben.");
+            return;
+        }
+
+        // البحث في الأكواد المخصصة أولاً، ثم الافتراضية
+        let foundCode = null;
+        if (customCodesDB[brand] && customCodesDB[brand][code]) {
+            foundCode = customCodesDB[brand][code];
+        } else if (defaultCodesDB[brand] && defaultCodesDB[brand][code]) {
+            foundCode = defaultCodesDB[brand][code];
+        }
+
+        if (foundCode) {
+            let html = `<h3>Code: ${brand} - ${code}</h3>`;
+            html += `<p style="color:#d9534f; font-weight:bold; font-size:16px;">${foundCode.desc}</p>`;
+            html += `<ul>`;
+            foundCode.causes.forEach(c => { html += `<li>${c}</li>`; });
+            html += `</ul>`;
+            resultDiv.innerHTML = html;
+            resultDiv.style.display = "block";
+            
+            // حفظ في السجل
+            let textToSave = `Code: ${brand} ${code}\n${foundCode.desc}\n` + foundCode.causes.join('\n');
+            saveToHistory(`Code: ${brand} ${code}`, textToSave);
+
+        } else {
+            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold;">${translations[currentLang].codeNotFound}</p>
+            <button style="background-color: #4285f4;" onclick="window.open('https://www.google.com/search?q=${brand}+${code}+HVAC+error', '_blank')">${translations[currentLang].btnGoogleCode}</button>`;
+            resultDiv.style.display = "block";
+        }
+    }
+
+    // دالة إضافة كود جديد
+    function addNewCode() {
+        const brand = document.getElementById("newBrandName").value.trim().toUpperCase();
+        const code = document.getElementById("newCodeName").value.trim().toUpperCase();
+        const causesText = document.getElementById("newCodeCauses").value.trim();
+
+        if (!brand || !code || !causesText) { alert(currentLang === 'ar' ? "املأ الحقول!" : "Bitte Felder ausfüllen!"); return; }
+
+        const causesArray = causesText.split('\n').filter(line => line.trim() !== "");
+        if (!customCodesDB[brand]) customCodesDB[brand] = {};
+        customCodesDB[brand][code] = { desc: causesArray[0], causes: causesArray.slice(1) };
+
+        localStorage.setItem("hvacCustomCodes", JSON.stringify(customCodesDB));
+        syncToCloud();
+        renderCustomFaults();
+
+        document.getElementById("newBrandName").value = "";
+        document.getElementById("newCodeName").value = "";
+        document.getElementById("newCodeCauses").value = "";
+        alert(currentLang === 'ar' ? "✅ تم حفظ الكود!" : "✅ Code gespeichert!");
+    }
+
+    // ==========================================
+    // نظام الترجمة والتشغيل الأساسي
+    // ==========================================
     function applyLanguage() {
         const t = translations[currentLang];
         document.documentElement.lang = currentLang;
@@ -260,38 +397,52 @@
         document.getElementById("mainTitle").innerText = t.title;
         document.getElementById("subTitle").innerText = t.subtitle;
         document.getElementById("syncStatus").innerText = t.syncBar;
+        document.getElementById("secCodeTitle").innerText = t.secCodeTitle;
+        document.getElementById("lblBrand").innerText = t.lblBrand;
+        document.getElementById("lblCode").innerText = t.lblCode;
+        document.getElementById("btnSearchCode").innerText = t.btnSearchCode;
+        
         document.getElementById("sec1Title").innerText = t.sec1Title;
         document.getElementById("lblSearch").innerText = t.lblSearch;
         document.getElementById("manualSearchText").placeholder = t.searchPlaceholder;
         document.getElementById("btnSearchLocal").innerText = t.btnSearchLocal;
         document.getElementById("btnSearchGoogle").innerText = t.btnSearchGoogle;
         document.getElementById("lblSelect").innerText = t.lblSelect;
-        
         document.getElementById("optAll").innerText = t.optAll;
         document.getElementById("optSplit").innerText = t.optSplit;
         document.getElementById("optCold").innerText = t.optCold;
         document.getElementById("optChiller").innerText = t.optChiller;
         document.getElementById("optWindow").innerText = t.optWindow;
-        
         document.getElementById("btnDiagnose").innerText = t.btnDiagnose;
+        
         document.getElementById("sec2Title").innerText = t.sec2Title;
         document.getElementById("lensDesc").innerText = t.lensDesc;
         document.getElementById("btnCam").innerText = t.btnCam;
         document.getElementById("btnGal").innerText = t.btnGal;
         document.getElementById("imgPreviewText").innerText = t.imgPreview;
         document.getElementById("btnLens").innerText = t.btnLens;
+
         document.getElementById("sec3Title").innerText = t.sec3Title;
+        document.getElementById("lblAddCodeTitle").innerText = t.lblAddCodeTitle;
+        document.getElementById("lblAddBrand").innerText = t.lblAddBrand;
+        document.getElementById("lblAddCode").innerText = t.lblAddCode;
+        document.getElementById("lblAddCodeDesc").innerText = t.lblAddCodeDesc;
+        document.getElementById("btnAddCode").innerText = t.btnAddCode;
+
+        document.getElementById("lblAddFaultTitle").innerText = t.lblAddFaultTitle;
         document.getElementById("lblAddDevice").innerText = t.lblAddDevice;
-        
         document.getElementById("optAddSplit").innerText = t.optSplit;
         document.getElementById("optAddCold").innerText = t.optCold;
         document.getElementById("optAddChiller").innerText = t.optChiller;
         document.getElementById("optAddWindow").innerText = t.optWindow;
-        
         document.getElementById("lblAddName").innerText = t.lblAddName;
         document.getElementById("lblAddCauses").innerText = t.lblAddCauses;
         document.getElementById("btnAddFault").innerText = t.btnAddFault;
+        
+        document.getElementById("btnExportFaults").innerText = t.btnExportFaults;
+        document.getElementById("btnImportFaults").innerText = t.btnImportFaults;
         document.getElementById("lblDeleteFaults").innerText = t.lblDeleteFaults;
+
         document.getElementById("sec4Title").innerText = t.sec4Title;
         document.getElementById("lblCatLink").innerText = t.lblCatLink;
         document.getElementById("btnSaveCat").innerText = t.btnSaveCat;
@@ -300,6 +451,7 @@
         document.getElementById("btnExtPdf").innerText = t.btnExtPdf;
         document.getElementById("btnTransPdf").innerText = t.btnTransPdf;
         document.getElementById("lblTransTitle").innerText = t.lblTransTitle;
+        
         document.getElementById("sec5Title").innerText = t.sec5Title;
         document.getElementById("btnClearHistory").innerText = t.btnClearHistory;
 
@@ -317,66 +469,32 @@
     }
 
     // ==========================================
-    // قاعدة البيانات الضخمة (محدثة وموزعة)
+    // باقي الدوال (السجل، الكتالوج، الأعطال العامة، والمزامنة)
     // ==========================================
     let defaultDB_ar = {
-        split: {
-            not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }] },
-            water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }] },
-            noise: { label: "صوت عالي", causes: [{ name: "اهتزاز القواعد", prob: "40%", checks: ["تثبيت الوحدة"] }] }
-        },
-        coldroom: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }] },
-            ice_buildup: { label: "تراكم ثلج", causes: [{ name: "عطل في إذابة الثلج", prob: "50%", checks: ["فحص المؤقت والسخانات"] }] }
-        },
-        chiller: {
-            low_chw_temp: { label: "درجة حرارة الماء منخفضة", causes: [{ name: "نقص في غاز التبريد", prob: "50%", checks: ["فحص الضغط", "البحث عن تسريب"] }] },
-            high_pressure: { label: "ضغط مرتفع (High Pressure)", causes: [{ name: "انسداد في مبادل الحرارة", prob: "40%", checks: ["تنظيف المبادل"] }, { name: "عطل في مضخة الماء", prob: "40%", checks: ["فحص تدفق المضخة"] }] },
-            pump_fault: { label: "مضخة الماء لا تعمل", causes: [{ name: "عطل كهربائي", prob: "50%", checks: ["قياس جهد المضخة"] }, { name: "انسداد ميكانيكي", prob: "50%", checks: ["فحص المروحة الداخلية"] }] }
-        },
-        window: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "الضاغط لا يعمل", prob: "40%", checks: ["فحص الكابستور"] }] },
-            water_inside: { label: "تسريب ماء للداخل", causes: [{ name: "ميلان خاطئ", prob: "60%", checks: ["تعديل ميل الشباك"] }] }
-        }
+        split: { not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز", prob: "40%", checks: ["قياس الضغط"] }] } },
+        coldroom: { not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }] } },
+        chiller: { high_pressure: { label: "ضغط مرتفع", causes: [{ name: "انسداد مبادل", prob: "40%", checks: ["تنظيف"] }] } },
+        window: { not_cooling: { label: "لا يبرد", causes: [{ name: "الضاغط لا يعمل", prob: "40%", checks: ["الكابستور"] }] } }
     };
-
     let defaultDB_de = {
-        split: {
-            not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kältemittelmangel", prob: "40%", checks: ["Saugdruck messen", "Kupferverbindungen prüfen"] }, { name: "Luftfilter verstopft", prob: "25%", checks: ["Filter prüfen"] }] },
-            water_leak: { label: "Wasserleck", causes: [{ name: "Kondensatablauf verstopft", prob: "50%", checks: ["Ablauf durchblasen"] }] },
-            noise: { label: "Laute Geräusche", causes: [{ name: "Vibrationen", prob: "40%", checks: ["Gerät ausrichten"] }] }
-        },
-        coldroom: {
-            not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kältemittelverlust", prob: "35%", checks: ["Lecksuche"] }] },
-            ice_buildup: { label: "Vereisung", causes: [{ name: "Abtauung defekt", prob: "50%", checks: ["Timer und Heizung prüfen"] }] }
-        },
-        chiller: {
-            low_chw_temp: { label: "Kaltwassertemperatur zu niedrig", causes: [{ name: "Kältemittelmangel", prob: "50%", checks: ["Druck prüfen", "Lecksuche"] }] },
-            high_pressure: { label: "Hochdruck", causes: [{ name: "Wärmetauscher verstopft", prob: "40%", checks: ["Wärmetauscher reinigen"] }, { name: "Wasserpumpe defekt", prob: "40%", checks: ["Pumpendurchfluss prüfen"] }] },
-            pump_fault: { label: "Wasserpumpe läuft nicht", causes: [{ name: "Elektrischer Fehler", prob: "50%", checks: ["Spannung messen"] }, { name: "Blockiert", prob: "50%", checks: ["Laufrad prüfen"] }] }
-        },
-        window: {
-            not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kompressor läuft nicht", prob: "40%", checks: ["Kondensator prüfen"] }] },
-            water_inside: { label: "Wasser läuft ins Zimmer", causes: [{ name: "Falsche Neigung", prob: "60%", checks: ["Gerät neigen"] }] }
-        }
+        split: { not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kältemittelmangel", prob: "40%", checks: ["Druck messen"] }] } },
+        coldroom: { not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kältemittelverlust", prob: "35%", checks: ["Lecksuche"] }] } },
+        chiller: { high_pressure: { label: "Hochdruck", causes: [{ name: "Wärmetauscher verstopft", prob: "40%", checks: ["Reinigen"] }] } },
+        window: { not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kompressor läuft nicht", prob: "40%", checks: ["Kondensator prüfen"] }] } }
     };
 
     function updateDefaultDBLanguage() {
         let rawCustomDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
         let baseDB = currentLang === 'ar' ? defaultDB_ar : defaultDB_de;
-        
-        // إصلاح الخلل: نقوم بفلترة قاعدة البيانات المخصصة لضمان عدم تداخل الأعطال القديمة مع القائمة الافتراضية
         let cleanCustomDB = { split: {}, coldroom: {}, chiller: {}, window: {} };
         for (let dev in rawCustomDB) {
             if (rawCustomDB[dev]) {
                 for (let key in rawCustomDB[dev]) {
-                    if (key.startsWith("custom_")) {
-                        cleanCustomDB[dev][key] = rawCustomDB[dev][key];
-                    }
+                    if (key.startsWith("custom_")) cleanCustomDB[dev][key] = rawCustomDB[dev][key];
                 }
             }
         }
-
         diagnoseDB = {
             split: { ...baseDB.split, ...(cleanCustomDB.split || {}) },
             coldroom: { ...baseDB.coldroom, ...(cleanCustomDB.coldroom || {}) },
@@ -389,31 +507,13 @@
     let selectedImageFile = null;
     let keywordMap = [];
 
-    function handleImageSelection(input) {
-        if (input.files && input.files[0]) {
-            selectedImageFile = input.files[0];
-            document.getElementById("imgPreviewText").style.display = "block";
-        }
-    }
-
-    async function searchWithGoogleLens() {
-        if (!selectedImageFile) {
-            alert(currentLang === 'ar' ? "الرجاء التقاط صورة أولاً." : "Bitte zuerst ein Bild auswählen.");
-            return;
-        }
-        if (navigator.canShare && navigator.canShare({ files: [selectedImageFile] })) {
-            try { await navigator.share({ files: [selectedImageFile], title: 'Search', text: 'Search in Google Lens' }); } catch (e) {}
-        } else {
-            window.open("https://lens.google.com/", "_blank");
-        }
-    }
-
     async function syncToCloud() {
         const syncBar = document.getElementById("syncStatus");
         syncBar.style.display = "block";
         syncBar.style.backgroundColor = "#fff3cd"; syncBar.style.color = "#856404";
         const dataToSync = {
             customDB: localStorage.getItem("hvacCustomDB"),
+            customCodes: localStorage.getItem("hvacCustomCodes"),
             history: localStorage.getItem("hvacHistory"),
             catalogs: localStorage.getItem("hvacCatalogs")
         };
@@ -430,10 +530,12 @@
         try {
             const res = await fetch('/api/sync');
             const cloudData = await res.json();
-            if (cloudData && cloudData.customDB) {
-                localStorage.setItem("hvacCustomDB", cloudData.customDB);
-                localStorage.setItem("hvacHistory", cloudData.history || "[]");
-                localStorage.setItem("hvacCatalogs", cloudData.catalogs || "[]");
+            if (cloudData) {
+                if (cloudData.customDB) localStorage.setItem("hvacCustomDB", cloudData.customDB);
+                if (cloudData.customCodes) { localStorage.setItem("hvacCustomCodes", cloudData.customCodes); customCodesDB = JSON.parse(cloudData.customCodes); }
+                if (cloudData.history) localStorage.setItem("hvacHistory", cloudData.history);
+                if (cloudData.catalogs) localStorage.setItem("hvacCatalogs", cloudData.catalogs);
+                
                 updateDefaultDBLanguage();
                 updateSymptoms(); renderCustomFaults(); renderHistory(); renderCatalogs();
             }
@@ -445,10 +547,7 @@
         for (let dev in diagnoseDB) {
             for (let symp in diagnoseDB[dev]) {
                 let label = diagnoseDB[dev][symp].label.replace(" (مخصص)", "").replace(" (Eigene)", "");
-                let deviceNameAr = translations['ar']['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)];
-                let deviceNameDe = translations['de']['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)];
-                let words = label.split(" ").concat(deviceNameAr.split(" "), deviceNameDe.split(" "));
-                keywordMap.push({ device: dev, symptom: symp, words: words });
+                keywordMap.push({ device: dev, symptom: symp, words: label.split(" ") });
             }
         }
     }
@@ -457,7 +556,7 @@
         const device = document.getElementById("addDeviceType").value;
         const faultName = document.getElementById("newFaultName").value.trim();
         const causesText = document.getElementById("newFaultCauses").value.trim();
-        if (!faultName || !causesText) { alert(currentLang === 'ar' ? "املأ الحقول!" : "Bitte Felder ausfüllen!"); return; }
+        if (!faultName || !causesText) { alert("Bitte Felder ausfüllen!"); return; }
 
         const newKey = "custom_" + Date.now();
         const causesArray = causesText.split('\n').filter(line => line.trim() !== "").map(line => {
@@ -470,17 +569,25 @@
         customDB[device][newKey] = { label: faultName + (currentLang === 'ar' ? " (مخصص)" : " (Eigene)"), causes: causesArray };
         
         localStorage.setItem("hvacCustomDB", JSON.stringify(customDB));
-        
         updateDefaultDBLanguage(); rebuildKeywordMap(); updateSymptoms(); renderCustomFaults(); syncToCloud();
         document.getElementById("newFaultName").value = ""; document.getElementById("newFaultCauses").value = "";
-        alert(currentLang === 'ar' ? "✅ تم الحفظ!" : "✅ Gespeichert!");
+        alert("✅ Gespeichert! / تم الحفظ!");
     }
 
     function renderCustomFaults() {
         const list = document.getElementById("customFaultsList");
         list.innerHTML = ""; let hasCustom = false;
-        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
+        
+        // عرض الأكواد المضافة
+        for (let brand in customCodesDB) {
+            for (let code in customCodesDB[brand]) {
+                hasCustom = true;
+                list.innerHTML += `<div class="custom-fault-item"><span>[Code] ${brand} - ${code}</span><button class="delete-btn" style="position:static; border-radius:5px; width:35px; height:35px; background-color:#d9534f;" onclick="deleteCustomCode('${brand}', '${code}')">×</button></div>`;
+            }
+        }
 
+        // عرض الأعطال العامة المضافة
+        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
         for (let dev in customDB) {
             for (let symp in customDB[dev]) {
                 if (symp.startsWith("custom_")) {
@@ -491,7 +598,18 @@
                 }
             }
         }
+        
         if (!hasCustom) list.innerHTML = `<p style='text-align:center; font-size:12px; color:#555; margin:0;'>${translations[currentLang].noCustomFaults}</p>`;
+    }
+
+    function deleteCustomCode(brand, code) {
+        if (confirm("Löschen? / حذف؟")) {
+            if (customCodesDB[brand] && customCodesDB[brand][code]) {
+                delete customCodesDB[brand][code];
+                localStorage.setItem("hvacCustomCodes", JSON.stringify(customCodesDB));
+                renderCustomFaults(); syncToCloud();
+            }
+        }
     }
 
     function deleteCustomFault(device, key) {
@@ -547,20 +665,13 @@
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) return;
-        rebuildKeywordMap(); // تحديث شامل للبحث في كل الأجهزة
+        rebuildKeywordMap();
         let foundMatch = null;
-        
-        // البحث في كل الأجهزة
-        for (let item of keywordMap) { 
-            if (item.words.some(w => query.toLowerCase().includes(w.toLowerCase()))) { 
-                foundMatch = item; break; 
-            } 
-        }
-        
+        for (let item of keywordMap) { if (item.words.some(w => query.toLowerCase().includes(w.toLowerCase()))) { foundMatch = item; break; } }
         if (foundMatch) { showResults(foundMatch.device, foundMatch.symptom); } 
         else {
             const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold; text-align:center;">${currentLang === 'ar' ? 'لم يتم العثور على العطل محلياً. جرب البحث في جوجل بالزر الأزرق.' : 'Nicht gefunden. Bitte über den blauen Button bei Google suchen.'}</p>`;
+            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold; text-align:center;">${currentLang === 'ar' ? 'لم يتم العثور عليه محلياً. جرب جوجل.' : 'Nicht gefunden. Bitte bei Google suchen.'}</p>`;
             resultDiv.style.display = "block";
         }
     }
@@ -575,7 +686,6 @@
         const device = document.getElementById("deviceType").value;
         const symptomSelect = document.getElementById("symptom");
         symptomSelect.innerHTML = "";
-        
         if (device === "all") {
             for (let dev in diagnoseDB) {
                 let deviceLabel = translations[currentLang]['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)] || dev;
@@ -609,10 +719,8 @@
         const data = diagnoseDB[device][symptom];
         if (!data) return;
         let deviceLabel = translations[currentLang]['opt'+device.charAt(0).toUpperCase() + device.slice(1)] || device;
-        
         let html = `<h3>${currentLang === 'ar' ? 'النتائج' : 'Ergebnisse'} (${deviceLabel}): ${data.label}</h3>`;
         let textToSave = `${currentLang === 'ar' ? 'الجهاز' : 'Gerät'}: ${deviceLabel}\n${currentLang === 'ar' ? 'العطل' : 'Fehler'}: ${data.label}\n`;
-        
         data.causes.forEach(c => {
             html += `<div class="cause-item"><strong>${c.name}</strong> <span class="prob">(${c.prob})</span><ul>${c.checks.map(ch => `<li>${ch}</li>`).join("")}</ul></div>`;
             textToSave += `- ${c.name} (${c.prob})\n`;
@@ -693,12 +801,48 @@
         try {
             const textContent = await (await pdfDoc.getPage(pageNum)).getTextContent();
             const text = textContent.items.map(item => item.str).join(" ").trim();
-            if (text.length < 5) throw new Error(currentLang === 'ar' ? "لا يوجد نص قابل للنسخ." : "Kein kopierbarer Text gefunden.");
+            if (text.length < 5) throw new Error(currentLang === 'ar' ? "لا يوجد نص." : "Kein Text.");
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=en|${currentLang}`);
             const data = await res.json();
             if (data.responseData && data.responseData.translatedText) { txt.innerHTML = data.responseData.translatedText; txt.style.color = "#333"; } 
             else throw new Error("Error");
         } catch (error) { txt.innerHTML = `<span style="color:red;">${error.message}</span>`; }
+    }
+
+    function exportFaults() {
+        let data = { customDB: localStorage.getItem("hvacCustomDB"), customCodes: localStorage.getItem("hvacCustomCodes") };
+        const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `HVAC_Backup.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    function importFaults(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.customDB) localStorage.setItem("hvacCustomDB", data.customDB);
+                if (data.customCodes) { localStorage.setItem("hvacCustomCodes", data.customCodes); customCodesDB = JSON.parse(data.customCodes); }
+                alert("✅ Erfolgreich! / بنجاح!"); location.reload();
+            } catch (error) { alert("❌ Fehler!"); }
+        };
+        reader.readAsText(file);
+    }
+
+    function handleImageSelection(input) {
+        if (input.files && input.files[0]) {
+            selectedImageFile = input.files[0];
+            document.getElementById("imgPreviewText").style.display = "block";
+        }
+    }
+
+    async function searchWithGoogleLens() {
+        if (!selectedImageFile) { alert("Bitte zuerst ein Bild auswählen."); return; }
+        if (navigator.canShare && navigator.canShare({ files: [selectedImageFile] })) {
+            try { await navigator.share({ files: [selectedImageFile], title: 'Search' }); } catch (e) {}
+        } else { window.open("https://lens.google.com/", "_blank"); }
     }
 
     window.onload = () => { 
