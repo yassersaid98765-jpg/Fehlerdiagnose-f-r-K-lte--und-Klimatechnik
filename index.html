@@ -3,28 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HVAC Diagnose AI</title>
+    <title>HVAC Diagnose Tool</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; color: #333; }
         .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
         label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
-        select, textarea, input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
-        textarea { resize: vertical; height: 80px; }
+        select, input[type="text"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
         button { width: 100%; padding: 15px; background-color: #0275d8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; font-size: 16px; transition: background 0.3s; }
         button:hover { background-color: #025aa5; }
-        button:disabled { background-color: #a0c4e8; cursor: not-allowed; }
         
-        .ai-section { border-top: 2px dashed #ccc; margin-top: 30px; padding-top: 20px; }
-        #result { margin-top: 20px; padding: 15px; background: #e9f5ff; border-radius: 8px; display: none; border: 1px solid #bce0fd; white-space: pre-wrap; line-height: 1.6; }
-        .loading { text-align: center; color: #0275d8; font-weight: bold; display: none; margin-top: 15px; }
+        .search-section { background-color: #e8f4fd; padding: 15px; border-radius: 8px; border: 1px solid #bce0fd; }
+        .search-btn { background-color: #5cb85c; }
+        .search-btn:hover { background-color: #4cae4c; }
+        .google-btn { background-color: #4285f4; margin-top: 10px; }
+        .google-btn:hover { background-color: #3367d6; }
         
-        .feedback-btns { display: flex; gap: 10px; margin-top: 15px; }
-        .feedback-btns button { padding: 10px; margin-top: 0; }
-        .btn-correct { background-color: #5cb85c; }
-        .btn-wrong { background-color: #d9534f; }
-
+        #result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none; border: 1px solid #ddd; line-height: 1.6; }
+        .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .prob { color: #d9534f; font-weight: bold; }
+        
         .history-section { border-top: 2px solid #0275d8; margin-top: 40px; padding-top: 20px; }
         .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; position: relative;}
         .history-date { color: #888; font-size: 12px; margin-bottom: 5px; }
@@ -37,63 +36,49 @@
         .catalog-section h3 { color: #856404; margin-top: 0; text-align: center;}
         .catalog-item { background: white; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; }
         .catalog-item a { color: #0275d8; text-decoration: none; font-weight: bold; word-break: break-all; }
-        
-        /* تنسيقات البحث السريع */
-        .browser-section { border: 2px solid #5cb85c; padding: 15px; border-radius: 8px; margin-top: 30px; background: #f4fbf4; }
-        .browser-section h3 { color: #4cae4c; margin-top: 0; }
-        .browser-controls { display: flex; gap: 10px; margin-top: 10px; }
-        .browser-controls input { flex: 1; margin-top: 0; }
-        .browser-controls button { width: auto; margin-top: 0; padding: 10px 20px; background-color: #5cb85c; }
+        .save-btn { background-color: #f0ad4e; margin-top: 10px; font-size: 14px;}
+        .save-btn:hover { background-color: #ec971f; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>❄ HVAC Diagnose AI</h1>
-    <p class="subtitle">مساعدك الذكي الذي يتطور مع الوقت</p>
+    <h1>❄ HVAC Diagnose Tool</h1>
+    <p class="subtitle">مرجعك الميداني السريع (يعمل بدون إنترنت)</p>
 
-    <div class="ai-section">
-        <h2>🤖 التشخيص المتقدم</h2>
-        <label for="problemText">اكتب سؤالك أو وصف العطل:</label>
-        <textarea id="problemText" placeholder="مثال: كود E5 في كتالوج LG..."></textarea>
+    <!-- قسم البحث المحلي -->
+    <div class="search-section">
+        <label for="manualSearchText">🔎 اكتب العطل بكلماتك الخاصة:</label>
+        <input type="text" id="manualSearchText" placeholder="مثال: المكيف يقطر ماء، أو ضغط عالي...">
         
-        <label for="imageInput">أرفق صورة أو كتالوج (PDF):</label>
-        <input type="file" id="imageInput" accept="image/*,application/pdf">
-        
-        <button id="aiBtn" onclick="diagnoseWithAI()">✨ إرسال للذكاء الاصطناعي</button>
-        <div id="loading" class="loading">جاري قراءة الملف والتحليل... ⏳</div>
+        <button class="search-btn" onclick="unifiedSearch()">البحث في المكتبة الداخلية</button>
+        <button class="google-btn" onclick="searchGoogle()">🌐 ابحث عن هذا العطل في جوجل</button>
     </div>
 
-    <div id="result">
-        <div id="aiResponseText"></div>
-        <div class="feedback-btns" id="feedbackArea" style="display:none;">
-            <p style="width:100%; text-align:center; margin-bottom:5px; font-size:14px; font-weight:bold;">هل هذه الإجابة صحيحة؟</p>
-            <button class="btn-correct" onclick="submitFeedback(true)">👍 نعم (تعلم منها)</button>
-            <button class="btn-wrong" onclick="submitFeedback(false)">👎 لا (صححها)</button>
-        </div>
+    <!-- قسم القائمة المنسدلة -->
+    <div style="border-top: 1px dashed #ccc; margin-top: 20px; padding-top: 15px;">
+        <label>أو اختر من القائمة:</label>
+        <select id="deviceType" onchange="updateSymptoms()">
+            <option value="split">مكيف سبليت / Split</option>
+            <option value="coldroom">غرفة تبريد / Cold Room</option>
+        </select>
+        <select id="symptom" style="margin-top: 10px;"></select>
+        <button onclick="runDiagnose()">🔍 تشخيص من القائمة</button>
     </div>
 
-    <!-- 🌟 البحث السريع (يفتح جوجل في نافذة جديدة) 🌟 -->
-    <div class="browser-section">
-        <h3>🌐 البحث السريع عن الأعطال</h3>
-        <p style="font-size: 12px; color: #666;">اكتب كود العطل واضغط بحث لفتحه في جوجل مباشرة.</p>
-        <div class="browser-controls">
-            <input type="text" id="browserSearch" placeholder="مثال: Daikin E4 code...">
-            <button onclick="doBrowserSearch()">بحث في جوجل</button>
-        </div>
-        <p style="font-size: 11px; color: #888; margin-top: 10px; text-align: center;">
-            *سيتم فتح البحث في نافذة جديدة لتجاوز حظر الإطارات من جوجل.
-        </p>
-    </div>
+    <!-- مكان عرض النتائج -->
+    <div id="result"></div>
 
+    <!-- قسم الكتالوجات -->
     <div class="catalog-section">
         <h3>📖 مكتبة الكتالوجات (الروابط)</h3>
-        <input type="text" id="catalogName" placeholder="اسم الكتالوج/الجهاز">
+        <input type="text" id="catalogName" placeholder="اسم الكتالوج/الجهاز (مثال: كتالوج LG)">
         <input type="text" id="catalogLink" placeholder="https://..." style="margin-top:5px;">
-        <button class="save-btn" style="background-color: #f0ad4e;" onclick="saveCatalogLink()">💾 حفظ الرابط</button>
+        <button class="save-btn" onclick="saveCatalogLink()">💾 حفظ الرابط</button>
         <div id="catalogList" class="catalog-item-list"></div>
     </div>
 
+    <!-- قسم السجل -->
     <div class="history-section">
         <h2>📚 سجل التشخيصات</h2>
         <div id="historyList"></div>
@@ -102,149 +87,96 @@
 </div>
 
 <script>
-    let currentAIPrompt = "";
-    let currentAIResponse = "";
+    // قاعدة البيانات الموسعة
+    let diagnoseDB = {
+        split: {
+            not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }, { name: "عطل في الضاغط", prob: "20%", checks: ["قياس تيار الضاغط"] }, { name: "عطل في المروحة الخارجية", prob: "10%", checks: ["فحص دوران المروحة"] }] },
+            high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }, { name: "شحن زائد للغاز", prob: "20%", checks: ["قياس الضغط"] }] },
+            low_pressure: { label: "ضغط منخفض", causes: [{ name: "تسريب غاز", prob: "60%", checks: ["فحص مفاصل النحاس"] }, { name: "انسداد في الفلتر", prob: "40%", checks: ["فحص الفلتر"] }] },
+            water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }, { name: "تجمد المبخر", prob: "30%", checks: ["فحص الفلتر"] }, { name: "ميل الوحدة غير صحيح", prob: "20%", checks: ["تعديل الميل"] }] },
+            noise: { label: "صوت عالي", causes: [{ name: "اهتزاز في الوحدة", prob: "40%", checks: ["فحص القواعد"] }, { name: "تلف في بلوفير المروحة", prob: "30%", checks: ["فحص المروحة"] }, { name: "احتكاك المروحة", prob: "30%", checks: ["فحص المروحة"] }] }
+        },
+        coldroom: {
+            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص إذابة الثلج"] }, { name: "عطل في منظم الحرارة", prob: "20%", checks: ["فحص الحساس"] }, { name: "باب الغرفة غير محكم", prob: "20%", checks: ["فحص المطاط"] }] },
+            ice_buildup: { label: "تراكم ثلج", causes: [{ name: "عطل في مؤقت إذابة الثلج", prob: "40%", checks: ["فحص المؤقت"] }, { name: "عطل في سخانات إذابة الثلج", prob: "30%", checks: ["قياس السخانات"] }, { name: "عطل في حساس الحرارة", prob: "30%", checks: ["فحص الحساس"] }] },
+            compressor_off: { label: "الضاغط لا يعمل", causes: [{ name: "فصل أوفرلود الحماية", prob: "40%", checks: ["انتظار 30 دقيقة"] }, { name: "عطل في الكونتاكتور", prob: "40%", checks: ["فحص الكونتاكتور"] }, { name: "انخفاض الجهد", prob: "20%", checks: ["قياس الفولت"] }] }
+        }
+    };
 
-    // --- 1. دالة البحث السريع (فتح جوجل في نافذة جديدة) ---
-    function doBrowserSearch() {
-        const query = document.getElementById("browserSearch").value.trim();
-        if (!query) { alert("الرجاء كتابة شيء للبحث عنه."); return; }
-        
-        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        window.open(googleUrl, '_blank'); // فتح في نافذة جديدة
-    }
+    // خريطة الكلمات المفتاحية
+    const keywordMap = [
+        { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "قطرات", "يقطر", "تنقيط", "ماء من المكيف"] },
+        { device: "split", symptom: "noise", words: ["صوت", "ضجيج", "اهتزاز", "طقطقة", "صوت عالي"] },
+        { device: "split", symptom: "high_pressure", words: ["ضغط عالي", "ضغط مرتفع"] },
+        { device: "split", symptom: "low_pressure", words: ["ضغط منخفض", "ضغط ضعيف"] },
+        { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "هواء ساخن", "بارد"] },
+        { device: "coldroom", symptom: "ice_buildup", words: ["ثلج", "تجميد", "جليد"] },
+        { device: "coldroom", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور لا يعمل", "مطفي"] },
+        { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] }
+    ];
 
-    // --- 2. دالة الذكاء الاصطناعي مع الذاكرة السياقية ---
-    async function diagnoseWithAI() {
-        const promptText = document.getElementById("problemText").value;
-        const fileInput = document.getElementById("imageInput");
-        const resultDiv = document.getElementById("result");
-        const aiResponseText = document.getElementById("aiResponseText");
-        const btn = document.getElementById("aiBtn");
-        const loading = document.getElementById("loading");
-        const feedbackArea = document.getElementById("feedbackArea");
+    // البحث المحلي
+    function unifiedSearch() {
+        const query = document.getElementById("manualSearchText").value.trim();
+        if (!query) { alert("الرجاء كتابة العطل للبحث عنه."); return; }
 
-        if (!promptText && !fileInput.files[0]) {
-            alert("الرجاء كتابة سؤال أو إرفاق صورة/كتالوج.");
-            return;
+        let foundMatch = null;
+        for (let item of keywordMap) {
+            if (item.words.some(w => query.includes(w))) { foundMatch = item; break; }
         }
 
-        btn.disabled = true;
-        loading.style.display = "block";
-        resultDiv.style.display = "none";
-        feedbackArea.style.display = "none";
-
-        let fileData = null;
-        let fileMimeType = null;
-
-        if (fileInput.files[0]) {
-            const file = fileInput.files[0];
-            // التحقق من حجم الملف (10 ميجابايت كحد أقصى)
-            if (file.size > 10 * 1024 * 1024) {
-                alert("حجم الملف كبير جداً (أكثر من 10 ميجابايت). يرجى ضغطه أو تصوير الصفحة المطلوبة فقط.");
-                btn.disabled = false; loading.style.display = "none"; return;
-            }
-
-            if (file.name.toLowerCase().endsWith('.pdf')) { 
-                fileMimeType = "application/pdf"; 
-            } else { 
-                fileMimeType = file.type; 
-            }
-
-            if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
-                fileData = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
-                    reader.readAsDataURL(file);
-                });
-            } else {
-                // ضغط الصور
-                fileData = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const MAX_SIZE = 800; 
-                            let width = img.width, height = img.height;
-                            if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } 
-                            else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                            canvas.width = width; canvas.height = height;
-                            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                            resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
-                        };
-                        img.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-                fileMimeType = "image/jpeg"; 
-            }
-        }
-
-        // جلب السياق (التعلم من السجل)
-        let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
-        let pastContext = "";
-        if (history.length > 0) {
-            pastContext = "إليك سياق من التشخيصات السابقة لتتعلم منها:\n";
-            history.slice(0, 3).forEach((item, index) => {
-                pastContext += `[سياق ${index+1}]: ${item.title} -> ${item.result.substring(0, 100)}...\n`;
-            });
-        }
-
-        const fullPrompt = `${pastContext}
-        أنت خبير في هندسة التبريد والتكييف. سؤال المستخدم الحالي: "${promptText}". 
-        إذا أرفق المستخدم كتالوج أو صورة، ابحث فيها عن إجابة دقيقة. 
-        أجب باللغة العربية بأسلوب فني واضح ومختصر.`;
-
-        try {
-            const response = await fetch("/api/diagnose", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: fullPrompt, fileData: fileData, mimeType: fileMimeType })
-            });
-
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-
-            currentAIPrompt = promptText;
-            currentAIResponse = data.result;
-
-            aiResponseText.innerHTML = `<h3>🤖 رد الذكاء الاصطناعي:</h3><p>${data.result.replace(/\n/g, '<br>')}</p>`;
-            resultDiv.style.display = "block";
-            feedbackArea.style.display = "flex"; 
-
-            // نسخ السؤال تلقائياً إلى مربع البحث السريع
-            document.getElementById("browserSearch").value = promptText;
-
-        } catch (error) {
-            aiResponseText.innerHTML = `<p style="color:red;">حدث خطأ: ${error.message}</p>`;
-            resultDiv.style.display = "block";
-        } finally {
-            btn.disabled = false;
-            loading.style.display = "none";
-        }
-    }
-
-    // --- 3. دالة التقييم ---
-    function submitFeedback(isCorrect) {
-        if (isCorrect) {
-            saveToHistory("✅ تم تأكيده: " + currentAIPrompt, currentAIResponse);
-            alert("شكراً! تم الحفظ.");
-            document.getElementById("feedbackArea").style.display = "none";
+        if (foundMatch) {
+            showResults(foundMatch.device, foundMatch.symptom);
         } else {
-            const correction = prompt("اكتب الإجابة الصحيحة ليتعلم منها الذكاء الاصطناعي:");
-            if (correction) {
-                let corrections = JSON.parse(localStorage.getItem("hvacCorrections")) || [];
-                corrections.push({ wrong: currentAIResponse, correct: correction });
-                localStorage.setItem("hvacCorrections", JSON.stringify(corrections));
-                saveToHistory("⚠️ تصحيح: " + currentAIPrompt, correction);
-                alert("تم الحفظ.");
-                document.getElementById("feedbackArea").style.display = "none";
-            }
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold; text-align:center;">لم يتم العثور على العطل في المكتبة الداخلية.<br>يمكنك الضغط على الزر الأزرق (ابحث في جوجل) للبحث عنه في الإنترنت.</p>`;
+            resultDiv.style.display = "block";
         }
     }
 
-    // --- 4. إدارة السجل ---
+    // فتح جوجل
+    function searchGoogle() {
+        const query = document.getElementById("manualSearchText").value.trim();
+        if (!query) { alert("الرجاء كتابة العطل أولاً لكي تبحث عنه في جوجل."); return; }
+        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query + " HVAC fault")}`;
+        window.open(googleUrl, '_blank');
+    }
+
+    function updateSymptoms() {
+        const device = document.getElementById("deviceType").value;
+        const symptomSelect = document.getElementById("symptom");
+        symptomSelect.innerHTML = "";
+        for (let key in diagnoseDB[device]) {
+            let option = document.createElement("option");
+            option.value = key;
+            option.text = diagnoseDB[device][key].label;
+            symptomSelect.appendChild(option);
+        }
+    }
+
+    function runDiagnose() {
+        showResults(document.getElementById("deviceType").value, document.getElementById("symptom").value);
+    }
+
+    function showResults(device, symptom) {
+        const resultDiv = document.getElementById("result");
+        const data = diagnoseDB[device][symptom];
+        if (!data) return;
+
+        let html = `<h3>النتائج: ${data.label}</h3>`;
+        let textToSave = `نوع العطل: ${data.label}\n`;
+        
+        data.causes.forEach(c => {
+            html += `<div class="cause-item"><strong>${c.name}</strong> <span class="prob">(${c.prob})</span><ul>${c.checks.map(ch => `<li>${ch}</li>`).join("")}</ul></div>`;
+            textToSave += `- ${c.name} (${c.prob})\n`;
+        });
+        
+        resultDiv.innerHTML = html;
+        resultDiv.style.display = "block";
+        saveToHistory("تشخيص: " + data.label, textToSave);
+    }
+
+    // إدارة السجل
     function saveToHistory(title, resultText) {
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
         const newRecord = { id: Date.now(), date: new Date().toLocaleString('ar-EG'), title: title, result: resultText };
@@ -290,7 +222,7 @@
         }
     }
 
-    // --- 5. إدارة الكتالوجات ---
+    // إدارة الكتالوجات
     function saveCatalogLink() {
         const name = document.getElementById("catalogName").value.trim();
         const link = document.getElementById("catalogLink").value.trim();
@@ -329,6 +261,7 @@
     }
 
     window.onload = () => {
+        updateSymptoms();
         renderHistory();
         renderCatalogs();
     };
