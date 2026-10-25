@@ -108,49 +108,29 @@
 
     <div id="syncStatus" class="sync-bar">☁️ ...</div>
 
-    <!-- 1. قسم البحث عن أكواد الأعطال -->
+    <!-- 1. قسم البحث الشامل (أكواد + أعطال) -->
     <details open>
-        <summary id="secCodeTitle">🔢 البحث عن أكواد الأعطال (Fehlercodes)</summary>
+        <summary id="secCodeTitle">🔢 البحث عن الأكواد والأعطال</summary>
         <div class="details-content">
-            <label id="lblBrand">اسم الماركة (الشركة المصنعة):</label>
-            <input type="text" id="searchBrand" placeholder="LG, Daikin, Samsung...">
             
-            <label id="lblCode">كود العطل:</label>
-            <input type="text" id="searchCode" placeholder="E5, CH05, U4...">
-            
+            <h3 style="color: #e83e8c; font-size: 15px; margin-top:0;">1. البحث بواسطة كود العطل (Fehlercode):</h3>
+            <input type="text" id="searchBrand" placeholder="الماركة (LG, Daikin...)" style="margin-bottom: 5px;">
+            <input type="text" id="searchCode" placeholder="كود العطل (E5, CH05...)" style="margin-bottom: 5px;">
             <button class="search-code-btn" onclick="searchErrorCode()" id="btnSearchCode">🔍 بحث عن الكود</button>
-            
             <div id="codeResult"></div>
-        </div>
-    </details>
 
-    <!-- 2. التشخيص السريع -->
-    <details>
-        <summary id="sec1Title">🔍 التشخيص السريع (قائمة الأعطال)</summary>
-        <div class="details-content">
-            <label id="lblSearch" for="manualSearchText">اكتب العطل بكلماتك الخاصة:</label>
-            <input type="text" id="manualSearchText" placeholder="...">
+            <hr style="margin: 25px 0; border: 1px dashed #ccc;">
+
+            <h3 style="color: #5cb85c; font-size: 15px;">2. البحث بالكلمات (عن أي عطل):</h3>
+            <input type="text" id="manualSearchText" placeholder="مثال: Hochdruck, Wasserleck...">
             <button class="search-btn" style="background-color: #5cb85c;" onclick="unifiedSearch()" id="btnSearchLocal">البحث في كل الأجهزة</button>
-            <button class="google-btn" style="background-color: #4285f4;" onclick="searchGoogle()" id="btnSearchGoogle">🌐 ابحث عن هذا العطل في جوجل</button>
-
-            <div style="border-top: 1px dashed #ccc; margin-top: 20px; padding-top: 15px;">
-                <label id="lblSelect">أو اختر الجهاز والعطل:</label>
-                <select id="deviceType" onchange="updateSymptoms()">
-                    <option value="all" id="optAll">كل الأجهزة (Alle Geräte)</option>
-                    <option value="split" id="optSplit">مكيف سبليت</option>
-                    <option value="coldroom" id="optCold">غرفة تبريد</option>
-                    <option value="chiller" id="optChiller">تشيلر (Chiller)</option>
-                    <option value="window" id="optWindow">مكيف شباك</option>
-                </select>
-                <select id="symptom" style="margin-top: 10px;"></select>
-                <button onclick="runDiagnose()" id="btnDiagnose">🔍 تشخيص</button>
-            </div>
+            <button class="google-btn" style="background-color: #4285f4;" onclick="searchGoogle()" id="btnSearchGoogle">🌐 ابحث في جوجل</button>
+            
+            <div id="result"></div>
         </div>
     </details>
 
-    <div id="result"></div>
-
-    <!-- 3. إضافة أكواد وأعطال جديدة -->
+    <!-- 2. إضافة أكواد وأعطال جديدة -->
     <details>
         <summary id="sec3Title">➕ إضافة أعطال / أكواد مخصصة</summary>
         <div class="details-content">
@@ -193,7 +173,7 @@
         </div>
     </details>
 
-    <!-- 4. البحث بالصورة -->
+    <!-- 3. البحث بالصورة -->
     <details>
         <summary id="sec2Title">📸 البحث بالصورة (Google Lens)</summary>
         <div class="details-content">
@@ -209,7 +189,7 @@
         </div>
     </details>
 
-    <!-- 5. الكتالوجات -->
+    <!-- 4. الكتالوجات -->
     <details>
         <summary id="sec4Title">📖 الكتالوجات وقارئ PDF</summary>
         <div class="details-content">
@@ -247,7 +227,7 @@
         </div>
     </details>
 
-    <!-- 6. السجل -->
+    <!-- 5. السجل -->
     <details>
         <summary id="sec5Title">📚 سجل التشخيصات السابقة</summary>
         <div class="details-content">
@@ -265,17 +245,14 @@
         ar: {
             title: "❄ HVAC Diagnose Tool", subtitle: "مرجعك الميداني السريع",
             syncBar: "☁️ جاري المزامنة...",
-            secCodeTitle: "🔢 البحث عن أكواد الأعطال (Fehlercodes)",
-            lblBrand: "اسم الماركة (الشركة المصنعة):", lblCode: "كود العطل:", btnSearchCode: "🔍 بحث عن الكود",
-            sec1Title: "🔍 التشخيص السريع (قائمة الأعطال)", lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: ضغط عالي...",
-            btnSearchLocal: "البحث في كل الأجهزة", btnSearchGoogle: "🌐 ابحث عن هذا العطل في جوجل",
-            lblSelect: "أو اختر الجهاز والعطل:", 
-            optAll: "كل الأجهزة (شامل)", optSplit: "مكيف سبليت", optCold: "غرفة تبريد", optChiller: "تشيلر (Chiller)", optWindow: "مكيف شباك",
-            btnDiagnose: "🔍 تشخيص",
+            secCodeTitle: "🔢 البحث عن الأكواد والأعطال",
+            lblBrand: "الماركة:", lblCode: "كود العطل:", btnSearchCode: "🔍 بحث عن الكود",
+            lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: ضغط عالي...",
+            btnSearchLocal: "البحث في كل الأجهزة", btnSearchGoogle: "🌐 ابحث في جوجل",
             sec2Title: "📸 البحث بالصورة (Google Lens)", lensDesc: "التقط صورة لكود العطل أو القطعة، وسيتم فتح تطبيق جوجل للبحث عنها فوراً.",
             btnCam: "📷 التقاط صورة", btnGal: "🖼️ من الاستديو", imgPreview: "✅ تم اختيار الصورة", btnLens: "🔍 فتح في Google Lens",
             sec3Title: "➕ إضافة أعطال / أكواد مخصصة", lblAddCodeTitle: "إضافة كود عطل جديد:", lblAddBrand: "الماركة:", lblAddCode: "الكود:", lblAddCodeDesc: "الوصف والأسباب (كل سبب في سطر):", btnAddCode: "💾 حفظ الكود",
-            lblAddFaultTitle: "إضافة عطل عام (بدون كود):", lblAddDevice: "نوع الجهاز:", lblAddName: "اسم العطل:", lblAddCauses: "الأسباب وخطوات الفحص:", btnAddFault: "💾 حفظ العطل",
+            lblAddFaultTitle: "إضافة عطل عام (بدون كود):", lblAddDevice: "نوع الجهاز:", optAddSplit: "مكيف سبليت", optAddCold: "غرفة تبريد", optAddChiller: "تشيلر", optAddWindow: "مكيف شباك", lblAddName: "اسم العطل:", lblAddCauses: "الأسباب وخطوات الفحص:", btnAddFault: "💾 حفظ العطل",
             btnExportFaults: "⬇️ تصدير البيانات", btnImportFaults: "⬆️ استيراد البيانات", lblDeleteFaults: "🗑️ الأكواد والأعطال المضافة (لحذفها):",
             sec4Title: "📖 الكتالوجات وقارئ PDF", lblCatLink: "حفظ رابط كتالوج:", btnSaveCat: "💾 حفظ الرابط", lblCatFile: "فتح كتالوج من ذاكرة الهاتف:",
             btnClosePdf: "× إغلاق", btnExtPdf: "↗️ خارجي", btnTransPdf: "📄 ترجمة سريعة", lblTransTitle: "🌐 النص المترجم:",
@@ -286,17 +263,14 @@
         de: {
             title: "❄ HVAC Diagnose-Tool", subtitle: "Ihr schneller Außendienst-Leitfaden",
             syncBar: "☁️ Synchronisierung...",
-            secCodeTitle: "🔢 Fehlercodes suchen",
-            lblBrand: "Marke (Hersteller):", lblCode: "Fehlercode:", btnSearchCode: "🔍 Code suchen",
-            sec1Title: "🔍 Schnelldiagnose (Fehlerliste)", lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Hochdruck...",
+            secCodeTitle: "🔢 Fehlercodes & Fehler suchen",
+            lblBrand: "Marke:", lblCode: "Fehlercode:", btnSearchCode: "🔍 Code suchen",
+            lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Hochdruck...",
             btnSearchLocal: "In allen Geräten suchen", btnSearchGoogle: "🌐 Bei Google suchen",
-            lblSelect: "Oder Gerät & Fehler wählen:", 
-            optAll: "Alle Geräte", optSplit: "Split-Klimaanlage", optCold: "Kühlraum", optChiller: "Kaltwassersatz", optWindow: "Fensterklima",
-            btnDiagnose: "🔍 Diagnose",
             sec2Title: "📸 Bildsuche (Google Lens)", lensDesc: "Machen Sie ein Foto vom Fehlercode oder Bauteil.",
             btnCam: "📷 Foto machen", btnGal: "🖼️ Aus Galerie", imgPreview: "✅ Bild ausgewählt", btnLens: "🔍 In Google Lens öffnen",
             sec3Title: "➕ Fehler / Codes hinzufügen", lblAddCodeTitle: "Neuen Fehlercode hinzufügen:", lblAddBrand: "Marke:", lblAddCode: "Code:", lblAddCodeDesc: "Beschreibung & Ursachen:", btnAddCode: "💾 Code speichern",
-            lblAddFaultTitle: "Allgemeinen Fehler hinzufügen:", lblAddDevice: "Gerätetyp:", lblAddName: "Fehlername:", lblAddCauses: "Ursachen & Prüfschritte:", btnAddFault: "💾 Fehler speichern",
+            lblAddFaultTitle: "Allgemeinen Fehler hinzufügen:", lblAddDevice: "Gerätetyp:", optAddSplit: "Split-Klimaanlage", optAddCold: "Kühlraum", optAddChiller: "Kaltwassersatz", optAddWindow: "Fensterklima", lblAddName: "Fehlername:", lblAddCauses: "Ursachen & Prüfschritte:", btnAddFault: "💾 Fehler speichern",
             btnExportFaults: "⬇️ Daten exportieren", btnImportFaults: "⬆️ Daten importieren", lblDeleteFaults: "🗑️ Hinzugefügte Codes/Fehler (löschen):",
             sec4Title: "📖 Kataloge & PDF-Reader", lblCatLink: "Katalog-Link speichern:", btnSaveCat: "💾 Link speichern", lblCatFile: "Katalog vom Handy öffnen:",
             btnClosePdf: "× Schließen", btnExtPdf: "↗️ Extern", btnTransPdf: "📄 Übersetzung", lblTransTitle: "🌐 Übersetzter Text:",
@@ -306,9 +280,7 @@
         }
     };
 
-    // ==========================================
     // قاعدة البيانات الافتراضية للأكواد
-    // ==========================================
     let defaultCodesDB = {
         "LG": {
             "E5": { desc: "Kompressor-Überhitzung / ارتفاع حرارة الضاغط", causes: ["Kältemittelmangel - Druck prüfen", "Verstopfter Filter - reinigen"] },
@@ -324,8 +296,11 @@
     };
 
     let customCodesDB = JSON.parse(localStorage.getItem("hvacCustomCodes")) || {};
+    let diagnoseDB = {}; // للأعطال العامة
+    let selectedImageFile = null;
+    let keywordMap = [];
 
-    // دالة البحث عن الكود
+    // البحث عن كود
     function searchErrorCode() {
         const brand = document.getElementById("searchBrand").value.trim().toUpperCase();
         const code = document.getElementById("searchCode").value.trim().toUpperCase();
@@ -369,7 +344,6 @@
         }
     }
 
-    // دالة حفظ الكود من البحث
     function saveCodeFromSearch(brand, code) {
         const descText = document.getElementById("foundCodeDesc").value.trim();
         if (!descText) { alert("Bitte Beschreibung eingeben / الرجاء كتابة الوصف."); return; }
@@ -382,97 +356,59 @@
         customCodesDB[brand][code] = { desc: desc, causes: causes };
 
         localStorage.setItem("hvacCustomCodes", JSON.stringify(customCodesDB));
-        syncToCloud();
-        renderCustomFaults();
-
+        syncToCloud(); renderCustomFaults();
         alert(currentLang === 'ar' ? "✅ تم الحفظ بنجاح!" : "✅ Erfolgreich gespeichert!");
-        searchErrorCode(); // تحديث العرض
+        searchErrorCode(); 
+    }
+
+    // البحث النصي
+    function unifiedSearch() {
+        const query = document.getElementById("manualSearchText").value.trim();
+        if (!query) return;
+        rebuildKeywordMap();
+        let foundMatch = null;
+        for (let item of keywordMap) { if (item.words.some(w => query.toLowerCase().includes(w.toLowerCase()))) { foundMatch = item; break; } }
+        if (foundMatch) { showResults(foundMatch.device, foundMatch.symptom); } 
+        else {
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold; text-align:center;">${currentLang === 'ar' ? 'لم يتم العثور عليه محلياً. جرب جوجل.' : 'Nicht gefunden. Bitte bei Google suchen.'}</p>`;
+            resultDiv.style.display = "block";
+        }
+    }
+
+    function searchGoogle() {
+        const query = document.getElementById("manualSearchText").value.trim();
+        if (!query) return;
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query + " HVAC fault")}`, '_blank');
+    }
+
+    function showResults(device, symptom) {
+        const resultDiv = document.getElementById("result");
+        const data = diagnoseDB[device][symptom];
+        if (!data) return;
+        let deviceLabel = translations[currentLang]['optAdd'+device.charAt(0).toUpperCase() + device.slice(1)] || device;
+        let html = `<h3>${currentLang === 'ar' ? 'النتائج' : 'Ergebnisse'} (${deviceLabel}): ${data.label}</h3>`;
+        let textToSave = `${currentLang === 'ar' ? 'الجهاز' : 'Gerät'}: ${deviceLabel}\n${currentLang === 'ar' ? 'العطل' : 'Fehler'}: ${data.label}\n`;
+        data.causes.forEach(c => {
+            html += `<div class="cause-item"><strong>${c.name}</strong> <span class="prob">(${c.prob})</span><ul>${c.checks.map(ch => `<li>${ch}</li>`).join("")}</ul></div>`;
+            textToSave += `- ${c.name} (${c.prob})\n`;
+        });
+        resultDiv.innerHTML = html; resultDiv.style.display = "block";
+        saveToHistory((currentLang === 'ar' ? "تشخيص: " : "Diagnose: ") + data.label, textToSave);
+    }
+
+    function rebuildKeywordMap() {
+        keywordMap = [];
+        for (let dev in diagnoseDB) {
+            for (let symp in diagnoseDB[dev]) {
+                let label = diagnoseDB[dev][symp].label.replace(" (مخصص)", "").replace(" (Eigene)", "");
+                keywordMap.push({ device: dev, symptom: symp, words: label.split(" ") });
+            }
+        }
     }
 
     // ==========================================
-    // نظام الترجمة
-    // ==========================================
-    function applyLanguage() {
-        const t = translations[currentLang];
-        document.documentElement.lang = currentLang;
-        document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-
-        document.getElementById("mainTitle").innerText = t.title;
-        document.getElementById("subTitle").innerText = t.subtitle;
-        document.getElementById("syncStatus").innerText = t.syncBar;
-        document.getElementById("secCodeTitle").innerText = t.secCodeTitle;
-        document.getElementById("lblBrand").innerText = t.lblBrand;
-        document.getElementById("lblCode").innerText = t.lblCode;
-        document.getElementById("btnSearchCode").innerText = t.btnSearchCode;
-        
-        document.getElementById("sec1Title").innerText = t.sec1Title;
-        document.getElementById("lblSearch").innerText = t.lblSearch;
-        document.getElementById("manualSearchText").placeholder = t.searchPlaceholder;
-        document.getElementById("btnSearchLocal").innerText = t.btnSearchLocal;
-        document.getElementById("btnSearchGoogle").innerText = t.btnSearchGoogle;
-        document.getElementById("lblSelect").innerText = t.lblSelect;
-        document.getElementById("optAll").innerText = t.optAll;
-        document.getElementById("optSplit").innerText = t.optSplit;
-        document.getElementById("optCold").innerText = t.optCold;
-        document.getElementById("optChiller").innerText = t.optChiller;
-        document.getElementById("optWindow").innerText = t.optWindow;
-        document.getElementById("btnDiagnose").innerText = t.btnDiagnose;
-        
-        document.getElementById("sec2Title").innerText = t.sec2Title;
-        document.getElementById("lensDesc").innerText = t.lensDesc;
-        document.getElementById("btnCam").innerText = t.btnCam;
-        document.getElementById("btnGal").innerText = t.btnGal;
-        document.getElementById("imgPreviewText").innerText = t.imgPreview;
-        document.getElementById("btnLens").innerText = t.btnLens;
-
-        document.getElementById("sec3Title").innerText = t.sec3Title;
-        document.getElementById("lblAddCodeTitle").innerText = t.lblAddCodeTitle;
-        document.getElementById("lblAddBrand").innerText = t.lblAddBrand;
-        document.getElementById("lblAddCode").innerText = t.lblAddCode;
-        document.getElementById("lblAddCodeDesc").innerText = t.lblAddCodeDesc;
-        document.getElementById("btnAddCode").innerText = t.btnAddCode;
-
-        document.getElementById("lblAddFaultTitle").innerText = t.lblAddFaultTitle;
-        document.getElementById("lblAddDevice").innerText = t.lblAddDevice;
-        document.getElementById("optAddSplit").innerText = t.optSplit;
-        document.getElementById("optAddCold").innerText = t.optCold;
-        document.getElementById("optAddChiller").innerText = t.optChiller;
-        document.getElementById("optAddWindow").innerText = t.optWindow;
-        document.getElementById("lblAddName").innerText = t.lblAddName;
-        document.getElementById("lblAddCauses").innerText = t.lblAddCauses;
-        document.getElementById("btnAddFault").innerText = t.btnAddFault;
-        
-        document.getElementById("btnExportFaults").innerText = t.btnExportFaults;
-        document.getElementById("btnImportFaults").innerText = t.btnImportFaults;
-        document.getElementById("lblDeleteFaults").innerText = t.lblDeleteFaults;
-
-        document.getElementById("sec4Title").innerText = t.sec4Title;
-        document.getElementById("lblCatLink").innerText = t.lblCatLink;
-        document.getElementById("btnSaveCat").innerText = t.btnSaveCat;
-        document.getElementById("lblCatFile").innerText = t.lblCatFile;
-        document.getElementById("btnClosePdf").innerText = t.btnClosePdf;
-        document.getElementById("btnExtPdf").innerText = t.btnExtPdf;
-        document.getElementById("btnTransPdf").innerText = t.btnTransPdf;
-        document.getElementById("lblTransTitle").innerText = t.lblTransTitle;
-        
-        document.getElementById("sec5Title").innerText = t.sec5Title;
-        document.getElementById("btnClearHistory").innerText = t.btnClearHistory;
-
-        updateDefaultDBLanguage();
-        updateSymptoms();
-        renderCustomFaults();
-        renderHistory();
-        renderCatalogs();
-    }
-
-    function toggleLanguage() {
-        currentLang = currentLang === 'ar' ? 'de' : 'ar';
-        localStorage.setItem("hvacLang", currentLang);
-        applyLanguage();
-    }
-
-    // ==========================================
-    // الأعطال العامة وقاعدة البيانات
+    // (باقي الدوال الأساسية من الترجمة والإضافة والسجل والكتالوج - كما هي)
     // ==========================================
     let defaultDB_ar = {
         split: { not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز", prob: "40%", checks: ["قياس الضغط"] }] } },
@@ -506,55 +442,6 @@
         };
     }
 
-    let diagnoseDB = {};
-    let selectedImageFile = null;
-    let keywordMap = [];
-
-    async function syncToCloud() {
-        const syncBar = document.getElementById("syncStatus");
-        syncBar.style.display = "block";
-        syncBar.style.backgroundColor = "#fff3cd"; syncBar.style.color = "#856404";
-        const dataToSync = {
-            customDB: localStorage.getItem("hvacCustomDB"),
-            customCodes: localStorage.getItem("hvacCustomCodes"),
-            history: localStorage.getItem("hvacHistory"),
-            catalogs: localStorage.getItem("hvacCatalogs")
-        };
-        try {
-            await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSync) });
-            syncBar.style.backgroundColor = "#d4edda"; syncBar.style.color = "#155724";
-            setTimeout(() => { syncBar.style.display = "none"; }, 3000); 
-        } catch (e) {
-            syncBar.style.backgroundColor = "#f8d7da"; syncBar.style.color = "#721c24";
-        }
-    }
-
-    async function loadFromCloud() {
-        try {
-            const res = await fetch('/api/sync');
-            const cloudData = await res.json();
-            if (cloudData) {
-                if (cloudData.customDB) localStorage.setItem("hvacCustomDB", cloudData.customDB);
-                if (cloudData.customCodes) { localStorage.setItem("hvacCustomCodes", cloudData.customCodes); customCodesDB = JSON.parse(cloudData.customCodes); }
-                if (cloudData.history) localStorage.setItem("hvacHistory", cloudData.history);
-                if (cloudData.catalogs) localStorage.setItem("hvacCatalogs", cloudData.catalogs);
-                
-                updateDefaultDBLanguage();
-                updateSymptoms(); renderCustomFaults(); renderHistory(); renderCatalogs();
-            }
-        } catch (e) { }
-    }
-
-    function rebuildKeywordMap() {
-        keywordMap = [];
-        for (let dev in diagnoseDB) {
-            for (let symp in diagnoseDB[dev]) {
-                let label = diagnoseDB[dev][symp].label.replace(" (مخصص)", "").replace(" (Eigene)", "");
-                keywordMap.push({ device: dev, symptom: symp, words: label.split(" ") });
-            }
-        }
-    }
-
     function addNewCode() {
         const brand = document.getElementById("newBrandName").value.trim().toUpperCase();
         const code = document.getElementById("newCodeName").value.trim().toUpperCase();
@@ -567,10 +454,7 @@
 
         localStorage.setItem("hvacCustomCodes", JSON.stringify(customCodesDB));
         syncToCloud(); renderCustomFaults();
-
-        document.getElementById("newBrandName").value = "";
-        document.getElementById("newCodeName").value = "";
-        document.getElementById("newCodeCauses").value = "";
+        document.getElementById("newBrandName").value = ""; document.getElementById("newCodeName").value = ""; document.getElementById("newCodeCauses").value = "";
         alert("✅ Gespeichert!");
     }
 
@@ -591,7 +475,7 @@
         customDB[device][newKey] = { label: faultName + (currentLang === 'ar' ? " (مخصص)" : " (Eigene)"), causes: causesArray };
         
         localStorage.setItem("hvacCustomDB", JSON.stringify(customDB));
-        updateDefaultDBLanguage(); rebuildKeywordMap(); updateSymptoms(); renderCustomFaults(); syncToCloud();
+        updateDefaultDBLanguage(); rebuildKeywordMap(); renderCustomFaults(); syncToCloud();
         document.getElementById("newFaultName").value = ""; document.getElementById("newFaultCauses").value = "";
         alert("✅ Gespeichert!");
     }
@@ -599,50 +483,29 @@
     function renderCustomFaults() {
         const list = document.getElementById("customFaultsList");
         list.innerHTML = ""; let hasCustom = false;
-        
         for (let brand in customCodesDB) {
             for (let code in customCodesDB[brand]) {
                 hasCustom = true;
                 list.innerHTML += `<div class="custom-fault-item"><span>[Code] ${brand} - ${code}</span><button class="delete-btn" style="position:static; border-radius:5px; width:35px; height:35px; background-color:#d9534f;" onclick="deleteCustomCode('${brand}', '${code}')">×</button></div>`;
             }
         }
-
         let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
         for (let dev in customDB) {
             for (let symp in customDB[dev]) {
                 if (symp.startsWith("custom_")) {
                     hasCustom = true;
                     let faultName = customDB[dev][symp].label;
-                    let deviceName = translations[currentLang]['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)] || dev;
+                    let deviceName = translations[currentLang]['optAdd'+dev.charAt(0).toUpperCase() + dev.slice(1)] || dev;
                     list.innerHTML += `<div class="custom-fault-item"><span>[${deviceName}] ${faultName}</span><button class="delete-btn" style="position:static; border-radius:5px; width:35px; height:35px; background-color:#d9534f;" onclick="deleteCustomFault('${dev}', '${symp}')">×</button></div>`;
                 }
             }
         }
-        
         if (!hasCustom) list.innerHTML = `<p style='text-align:center; font-size:12px; color:#555; margin:0;'>${translations[currentLang].noCustomFaults}</p>`;
     }
 
-    function deleteCustomCode(brand, code) {
-        if (confirm("Löschen? / حذف؟")) {
-            if (customCodesDB[brand] && customCodesDB[brand][code]) {
-                delete customCodesDB[brand][code];
-                localStorage.setItem("hvacCustomCodes", JSON.stringify(customCodesDB));
-                renderCustomFaults(); syncToCloud();
-            }
-        }
-    }
-
-    function deleteCustomFault(device, key) {
-        if (confirm("Löschen? / حذف؟")) {
-            let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
-            if (customDB[device] && customDB[device][key]) {
-                delete customDB[device][key];
-                localStorage.setItem("hvacCustomDB", JSON.stringify(customDB));
-                updateDefaultDBLanguage(); rebuildKeywordMap(); updateSymptoms(); renderCustomFaults(); syncToCloud();
-            }
-        }
-    }
-
+    function deleteCustomCode(brand, code) { if (confirm("Löschen? / حذف؟")) { if (customCodesDB[brand] && customCodesDB[brand][code]) { delete customCodesDB[brand][code]; localStorage.setItem("hvacCustomCodes", JSON.stringify(customCodesDB)); renderCustomFaults(); syncToCloud(); } } }
+    function deleteCustomFault(device, key) { if (confirm("Löschen? / حذف؟")) { let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} }; if (customDB[device] && customDB[device][key]) { delete customDB[device][key]; localStorage.setItem("hvacCustomDB", JSON.stringify(customDB)); updateDefaultDBLanguage(); rebuildKeywordMap(); renderCustomFaults(); syncToCloud(); } } }
+    
     function saveToHistory(title, resultText) {
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
         history.unshift({ id: Date.now(), date: new Date().toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'de-DE'), title: title, result: resultText }); 
@@ -650,25 +513,11 @@
         localStorage.setItem("hvacHistory", JSON.stringify(history));
         renderHistory(); syncToCloud(); 
     }
-
-    function deleteHistory(id) { 
-        if (confirm("Löschen? / حذف؟")) { 
-            let history = JSON.parse(localStorage.getItem("hvacHistory")) || []; 
-            history = history.filter(item => item.id !== id); 
-            localStorage.setItem("hvacHistory", JSON.stringify(history)); 
-            renderHistory(); syncToCloud(); 
-        } 
-    }
+    function deleteHistory(id) { if (confirm("Löschen? / حذف؟")) { let history = JSON.parse(localStorage.getItem("hvacHistory")) || []; history = history.filter(item => item.id !== id); localStorage.setItem("hvacHistory", JSON.stringify(history)); renderHistory(); syncToCloud(); } }
+    function clearHistory() { if (confirm("Alles löschen? / مسح الكل؟")) { localStorage.removeItem("hvacHistory"); renderHistory(); syncToCloud(); } }
     
-    function clearHistory() { 
-        if (confirm("Alles löschen? / مسح الكل؟")) { 
-            localStorage.removeItem("hvacHistory"); renderHistory(); syncToCloud(); 
-        } 
-    }
-
     function saveCatalogLink() {
-        const name = document.getElementById("catalogName").value.trim();
-        const link = document.getElementById("catalogLink").value.trim();
+        const name = document.getElementById("catalogName").value.trim(); const link = document.getElementById("catalogLink").value.trim();
         if (!name || !link) return;
         let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
         catalogs.push({ name: name, link: link });
@@ -676,95 +525,62 @@
         document.getElementById("catalogName").value = ""; document.getElementById("catalogLink").value = "";
         renderCatalogs(); syncToCloud(); 
     }
+    function deleteCatalog(index) { let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || []; catalogs.splice(index, 1); localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs)); renderCatalogs(); syncToCloud(); }
 
-    function deleteCatalog(index) {
-        let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
-        catalogs.splice(index, 1); localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs)); renderCatalogs(); syncToCloud(); 
+    async function syncToCloud() {
+        const syncBar = document.getElementById("syncStatus");
+        syncBar.style.display = "block"; syncBar.style.backgroundColor = "#fff3cd"; syncBar.style.color = "#856404";
+        const dataToSync = { customDB: localStorage.getItem("hvacCustomDB"), customCodes: localStorage.getItem("hvacCustomCodes"), history: localStorage.getItem("hvacHistory"), catalogs: localStorage.getItem("hvacCatalogs") };
+        try {
+            await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSync) });
+            syncBar.style.backgroundColor = "#d4edda"; syncBar.style.color = "#155724";
+            setTimeout(() => { syncBar.style.display = "none"; }, 3000); 
+        } catch (e) { syncBar.style.backgroundColor = "#f8d7da"; syncBar.style.color = "#721c24"; }
     }
 
-    function unifiedSearch() {
-        const query = document.getElementById("manualSearchText").value.trim();
-        if (!query) return;
-        rebuildKeywordMap();
-        let foundMatch = null;
-        for (let item of keywordMap) { if (item.words.some(w => query.toLowerCase().includes(w.toLowerCase()))) { foundMatch = item; break; } }
-        if (foundMatch) { showResults(foundMatch.device, foundMatch.symptom); } 
-        else {
-            const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold; text-align:center;">${currentLang === 'ar' ? 'لم يتم العثور عليه محلياً. جرب جوجل.' : 'Nicht gefunden. Bitte bei Google suchen.'}</p>`;
-            resultDiv.style.display = "block";
-        }
-    }
-
-    function searchGoogle() {
-        const query = document.getElementById("manualSearchText").value.trim();
-        if (!query) return;
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query + " HVAC fault")}`, '_blank');
-    }
-
-    function updateSymptoms() {
-        const device = document.getElementById("deviceType").value;
-        const symptomSelect = document.getElementById("symptom");
-        symptomSelect.innerHTML = "";
-        if (device === "all") {
-            for (let dev in diagnoseDB) {
-                let deviceLabel = translations[currentLang]['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)] || dev;
-                for (let key in diagnoseDB[dev]) {
-                    let option = document.createElement("option"); 
-                    option.value = dev + "||" + key; 
-                    option.text = `[${deviceLabel}] ${diagnoseDB[dev][key].label}`; 
-                    symptomSelect.appendChild(option);
-                }
+    async function loadFromCloud() {
+        try {
+            const res = await fetch('/api/sync'); const cloudData = await res.json();
+            if (cloudData) {
+                if (cloudData.customDB) localStorage.setItem("hvacCustomDB", cloudData.customDB);
+                if (cloudData.customCodes) { localStorage.setItem("hvacCustomCodes", cloudData.customCodes); customCodesDB = JSON.parse(cloudData.customCodes); }
+                if (cloudData.history) localStorage.setItem("hvacHistory", cloudData.history);
+                if (cloudData.catalogs) localStorage.setItem("hvacCatalogs", cloudData.catalogs);
+                updateDefaultDBLanguage(); renderCustomFaults(); renderHistory(); renderCatalogs();
             }
-        } else {
-            if(!diagnoseDB[device]) return;
-            for (let key in diagnoseDB[device]) {
-                let option = document.createElement("option"); 
-                option.value = device + "||" + key; 
-                option.text = diagnoseDB[device][key].label; 
-                symptomSelect.appendChild(option);
-            }
-        }
+        } catch (e) { }
     }
 
-    function runDiagnose() { 
-        const val = document.getElementById("symptom").value;
-        if(!val) return;
-        const parts = val.split("||");
-        showResults(parts[0], parts[1]); 
+    // الترجمة
+    function applyLanguage() {
+        const t = translations[currentLang];
+        document.documentElement.lang = currentLang; document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+        document.getElementById("mainTitle").innerText = t.title; document.getElementById("subTitle").innerText = t.subtitle;
+        document.getElementById("syncStatus").innerText = t.syncBar; document.getElementById("secCodeTitle").innerText = t.secCodeTitle;
+        document.getElementById("searchBrand").placeholder = t.lblBrand; document.getElementById("searchCode").placeholder = t.lblCode; document.getElementById("btnSearchCode").innerText = t.btnSearchCode;
+        document.getElementById("manualSearchText").placeholder = t.searchPlaceholder; document.getElementById("btnSearchLocal").innerText = t.btnSearchLocal; document.getElementById("btnSearchGoogle").innerText = t.btnSearchGoogle;
+        document.getElementById("sec2Title").innerText = t.sec2Title; document.getElementById("lensDesc").innerText = t.lensDesc; document.getElementById("btnCam").innerText = t.btnCam; document.getElementById("btnGal").innerText = t.btnGal; document.getElementById("imgPreviewText").innerText = t.imgPreview; document.getElementById("btnLens").innerText = t.btnLens;
+        document.getElementById("sec3Title").innerText = t.sec3Title; document.getElementById("lblAddCodeTitle").innerText = t.lblAddCodeTitle; document.getElementById("lblAddBrand").innerText = t.lblAddBrand; document.getElementById("lblAddCode").innerText = t.lblAddCode; document.getElementById("lblAddCodeDesc").innerText = t.lblAddCodeDesc; document.getElementById("btnAddCode").innerText = t.btnAddCode;
+        document.getElementById("lblAddFaultTitle").innerText = t.lblAddFaultTitle; document.getElementById("lblAddDevice").innerText = t.lblAddDevice; document.getElementById("optAddSplit").innerText = t.optAddSplit; document.getElementById("optAddCold").innerText = t.optAddCold; document.getElementById("optAddChiller").innerText = t.optAddChiller; document.getElementById("optAddWindow").innerText = t.optAddWindow; document.getElementById("lblAddName").innerText = t.lblAddName; document.getElementById("lblAddCauses").innerText = t.lblAddCauses; document.getElementById("btnAddFault").innerText = t.btnAddFault;
+        document.getElementById("btnExportFaults").innerText = t.btnExportFaults; document.getElementById("btnImportFaults").innerText = t.btnImportFaults; document.getElementById("lblDeleteFaults").innerText = t.lblDeleteFaults;
+        document.getElementById("sec4Title").innerText = t.sec4Title; document.getElementById("lblCatLink").innerText = t.lblCatLink; document.getElementById("btnSaveCat").innerText = t.btnSaveCat; document.getElementById("lblCatFile").innerText = t.lblCatFile; document.getElementById("btnClosePdf").innerText = t.btnClosePdf; document.getElementById("btnExtPdf").innerText = t.btnExtPdf; document.getElementById("btnTransPdf").innerText = t.btnTransPdf; document.getElementById("lblTransTitle").innerText = t.lblTransTitle;
+        document.getElementById("sec5Title").innerText = t.sec5Title; document.getElementById("btnClearHistory").innerText = t.btnClearHistory;
+        
+        updateDefaultDBLanguage(); rebuildKeywordMap(); renderCustomFaults(); renderHistory(); renderCatalogs();
     }
-    
-    function showResults(device, symptom) {
-        const resultDiv = document.getElementById("result");
-        const data = diagnoseDB[device][symptom];
-        if (!data) return;
-        let deviceLabel = translations[currentLang]['opt'+device.charAt(0).toUpperCase() + device.slice(1)] || device;
-        let html = `<h3>${currentLang === 'ar' ? 'النتائج' : 'Ergebnisse'} (${deviceLabel}): ${data.label}</h3>`;
-        let textToSave = `${currentLang === 'ar' ? 'الجهاز' : 'Gerät'}: ${deviceLabel}\n${currentLang === 'ar' ? 'العطل' : 'Fehler'}: ${data.label}\n`;
-        data.causes.forEach(c => {
-            html += `<div class="cause-item"><strong>${c.name}</strong> <span class="prob">(${c.prob})</span><ul>${c.checks.map(ch => `<li>${ch}</li>`).join("")}</ul></div>`;
-            textToSave += `- ${c.name} (${c.prob})\n`;
-        });
-        resultDiv.innerHTML = html; resultDiv.style.display = "block";
-        saveToHistory((currentLang === 'ar' ? "تشخيص: " : "Diagnose: ") + data.label, textToSave);
-    }
+
+    function toggleLanguage() { currentLang = currentLang === 'ar' ? 'de' : 'ar'; localStorage.setItem("hvacLang", currentLang); applyLanguage(); }
 
     function renderHistory() {
-        const historyList = document.getElementById("historyList");
-        let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
+        const historyList = document.getElementById("historyList"); let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
         if (history.length === 0) { historyList.innerHTML = `<p style='text-align:center; color:#888;'>${translations[currentLang].noHistory}</p>`; return; }
-        let html = "";
-        history.forEach(item => { html += `<div class="history-item"><button class="delete-btn" onclick="deleteHistory(${item.id})">×</button><div class="history-date">🕒 ${item.date}</div><div class="history-text">${item.title}</div><div class="history-result">${item.result.replace(/\n/g, '<br>')}</div></div>`; });
-        historyList.innerHTML = html;
+        let html = ""; history.forEach(item => { html += `<div class="history-item"><button class="delete-btn" onclick="deleteHistory(${item.id})">×</button><div class="history-date">🕒 ${item.date}</div><div class="history-text">${item.title}</div><div class="history-result">${item.result.replace(/\n/g, '<br>')}</div></div>`; }); historyList.innerHTML = html;
     }
 
     function renderCatalogs() {
-        const catalogList = document.getElementById("catalogList");
-        let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
+        const catalogList = document.getElementById("catalogList"); let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
         if (catalogs.length === 0) { catalogList.innerHTML = `<p style='text-align:center; font-size:12px; color:#888;'>${translations[currentLang].noCatalogs}</p>`; return; }
-        let html = "";
-        catalogs.forEach((item, index) => { html += `<div class="catalog-item"><a href="${item.link}" target="_blank">📄 ${item.name}</a><button class="delete-btn" style="position:static; border-radius:5px; width:30px; height:30px; background-color:#d9534f;" onclick="deleteCatalog(${index})">×</button></div>`; });
-        catalogList.innerHTML = html;
+        let html = ""; catalogs.forEach((item, index) => { html += `<div class="catalog-item"><a href="${item.link}" target="_blank">📄 ${item.name}</a><button class="delete-btn" style="position:static; border-radius:5px; width:30px; height:30px; background-color:#d9534f;" onclick="deleteCatalog(${index})">×</button></div>`; }); catalogList.innerHTML = html;
     }
 
     // PDF
@@ -772,38 +588,21 @@
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
 
     function loadLocalPDF() {
-        const fileInput = document.getElementById("localCatalogInput");
-        const file = fileInput.files[0];
-        if (!file) return;
-        currentPdfBlobUrl = URL.createObjectURL(file);
-        document.getElementById("translationBox").style.display = "none";
-        const reader = new FileReader();
-        reader.onload = function(e) {
+        const fileInput = document.getElementById("localCatalogInput"); const file = fileInput.files[0]; if (!file) return;
+        currentPdfBlobUrl = URL.createObjectURL(file); document.getElementById("translationBox").style.display = "none";
+        const reader = new FileReader(); reader.onload = function(e) {
             const typedarray = new Uint8Array(e.target.result);
-            pdfjsLib.getDocument(typedarray).promise.then(function(pdfDoc_) {
-                pdfDoc = pdfDoc_;
-                document.getElementById("pageCount").textContent = pdfDoc.numPages;
-                document.getElementById("pdfViewerContainer").style.display = "block";
-                pageNum = 1; scale = 1.5; renderPage(pageNum);
-            }).catch(function(error) { alert("Error: " + error.message); });
-        };
-        reader.readAsArrayBuffer(file);
+            pdfjsLib.getDocument(typedarray).promise.then(function(pdfDoc_) { pdfDoc = pdfDoc_; document.getElementById("pageCount").textContent = pdfDoc.numPages; document.getElementById("pdfViewerContainer").style.display = "block"; pageNum = 1; scale = 1.5; renderPage(pageNum); }).catch(function(error) { alert("Error: " + error.message); });
+        }; reader.readAsArrayBuffer(file);
     }
 
     function renderPage(num) {
         pageRendering = true;
         pdfDoc.getPage(num).then(function(page) {
-            const viewport = page.getViewport({scale: scale});
-            const canvas = document.getElementById('pdfCanvas');
-            const ctx = canvas.getContext('2d');
-            canvas.height = viewport.height; canvas.width = viewport.width;
-            const renderContext = { canvasContext: ctx, viewport: viewport };
-            page.render(renderContext).promise.then(function() {
-                pageRendering = false;
-                if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
-            });
-        });
-        document.getElementById('pageInput').value = num; document.getElementById("translationBox").style.display = "none"; 
+            const viewport = page.getViewport({scale: scale}); const canvas = document.getElementById('pdfCanvas'); const ctx = canvas.getContext('2d');
+            canvas.height = viewport.height; canvas.width = viewport.width; const renderContext = { canvasContext: ctx, viewport: viewport };
+            page.render(renderContext).promise.then(function() { pageRendering = false; if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; } });
+        }); document.getElementById('pageInput').value = num; document.getElementById("translationBox").style.display = "none"; 
     }
 
     function queueRenderPage(num) { if (pageRendering) { pageNumPending = num; } else { renderPage(num); } }
@@ -815,61 +614,31 @@
     function closePdfViewer() { document.getElementById("pdfViewerContainer").style.display = "none"; document.getElementById("localCatalogInput").value = ""; document.getElementById("translationBox").style.display = "none"; pdfDoc = null; if (currentPdfBlobUrl) { URL.revokeObjectURL(currentPdfBlobUrl); currentPdfBlobUrl = null; } }
 
     async function translateTextFree() {
-        if (!pdfDoc) return;
-        const box = document.getElementById("translationBox"); const txt = document.getElementById("translationText");
-        box.style.display = "block"; txt.innerHTML = "..."; txt.style.color = "#0275d8";
+        if (!pdfDoc) return; const box = document.getElementById("translationBox"); const txt = document.getElementById("translationText"); box.style.display = "block"; txt.innerHTML = "..."; txt.style.color = "#0275d8";
         try {
-            const textContent = await (await pdfDoc.getPage(pageNum)).getTextContent();
-            const text = textContent.items.map(item => item.str).join(" ").trim();
+            const textContent = await (await pdfDoc.getPage(pageNum)).getTextContent(); const text = textContent.items.map(item => item.str).join(" ").trim();
             if (text.length < 5) throw new Error(currentLang === 'ar' ? "لا يوجد نص." : "Kein Text.");
-            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=en|${currentLang}`);
-            const data = await res.json();
-            if (data.responseData && data.responseData.translatedText) { txt.innerHTML = data.responseData.translatedText; txt.style.color = "#333"; } 
-            else throw new Error("Error");
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=en|${currentLang}`); const data = await res.json();
+            if (data.responseData && data.responseData.translatedText) { txt.innerHTML = data.responseData.translatedText; txt.style.color = "#333"; } else throw new Error("Error");
         } catch (error) { txt.innerHTML = `<span style="color:red;">${error.message}</span>`; }
     }
 
     function exportFaults() {
         let data = { customDB: localStorage.getItem("hvacCustomDB"), customCodes: localStorage.getItem("hvacCustomCodes") };
-        const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `HVAC_Backup.json`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        const blob = new Blob([JSON.stringify(data)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `HVAC_Backup.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 
     function importFaults(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
+        const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
         reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                if (data.customDB) localStorage.setItem("hvacCustomDB", data.customDB);
-                if (data.customCodes) { localStorage.setItem("hvacCustomCodes", data.customCodes); customCodesDB = JSON.parse(data.customCodes); }
-                alert("✅ Erfolgreich! / بنجاح!"); location.reload();
-            } catch (error) { alert("❌ Fehler!"); }
-        };
-        reader.readAsText(file);
+            try { const data = JSON.parse(e.target.result); if (data.customDB) localStorage.setItem("hvacCustomDB", data.customDB); if (data.customCodes) { localStorage.setItem("hvacCustomCodes", data.customCodes); customCodesDB = JSON.parse(data.customCodes); } alert("✅ Erfolgreich! / بنجاح!"); location.reload(); } catch (error) { alert("❌ Fehler!"); }
+        }; reader.readAsText(file);
     }
 
-    function handleImageSelection(input) {
-        if (input.files && input.files[0]) {
-            selectedImageFile = input.files[0];
-            document.getElementById("imgPreviewText").style.display = "block";
-        }
-    }
+    function handleImageSelection(input) { if (input.files && input.files[0]) { selectedImageFile = input.files[0]; document.getElementById("imgPreviewText").style.display = "block"; } }
+    async function searchWithGoogleLens() { if (!selectedImageFile) { alert("Bitte zuerst ein Bild auswählen."); return; } if (navigator.canShare && navigator.canShare({ files: [selectedImageFile] })) { try { await navigator.share({ files: [selectedImageFile], title: 'Search' }); } catch (e) {} } else { window.open("https://lens.google.com/", "_blank"); } }
 
-    async function searchWithGoogleLens() {
-        if (!selectedImageFile) { alert("Bitte zuerst ein Bild auswählen."); return; }
-        if (navigator.canShare && navigator.canShare({ files: [selectedImageFile] })) {
-            try { await navigator.share({ files: [selectedImageFile], title: 'Search' }); } catch (e) {}
-        } else { window.open("https://lens.google.com/", "_blank"); }
-    }
-
-    window.onload = () => { 
-        applyLanguage();
-        rebuildKeywordMap();
-        updateSymptoms(); renderCustomFaults(); renderHistory(); renderCatalogs(); loadFromCloud(); 
-    };
+    window.onload = () => { applyLanguage(); rebuildKeywordMap(); renderCustomFaults(); renderHistory(); renderCatalogs(); loadFromCloud(); };
 </script>
 </body>
 </html>
