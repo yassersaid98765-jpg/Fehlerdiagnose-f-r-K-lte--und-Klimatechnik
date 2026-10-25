@@ -6,7 +6,7 @@ export async function onRequestPost(context) {
     const { prompt, fileData, mimeType } = await request.json();
     
     if (!env.GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "خطأ: مفتاح GEMINI_API_KEY غير موجود." }), { status: 500, headers: cors });
+      return new Response(JSON.stringify({ error: "مفتاح GEMINI_API_KEY غير موجود." }), { status: 500, headers: cors });
     }
 
     const parts = [{ text: prompt }];
@@ -23,35 +23,16 @@ export async function onRequestPost(context) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
           
-          // هنا أضفنا ميزة البحث في جوجل (Google Search Grounding)
-          const payload = {
-            contents: [{ parts }],
-            tools: [{ google_search: {} }] 
-          };
-          
           const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ contents: [{ parts }] })
           });
           
           const data = await res.json();
 
           if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-            const aiText = data.candidates[0].content.parts[0].text;
-            
-            // استخراج الروابط التي اعتمد عليها الذكاء الاصطناعي (إن وجدت)
-            let sources = [];
-            const metadata = data.candidates[0].groundingMetadata;
-            if (metadata && metadata.groundingChunks) {
-               metadata.groundingChunks.forEach(chunk => {
-                   if(chunk.web && chunk.web.uri) {
-                       sources.push({ title: chunk.web.title, uri: chunk.web.uri });
-                   }
-               });
-            }
-
-            return new Response(JSON.stringify({ result: aiText, sources: sources }), { headers: cors });
+            return new Response(JSON.stringify({ result: data.candidates[0].content.parts[0].text }), { headers: cors });
           }
 
           if (data.error && data.error.code === 503) {
