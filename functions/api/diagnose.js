@@ -9,8 +9,8 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: "خطأ: مفتاح GEMINI_API_KEY غير موجود في إعدادات Cloudflare." }), { status: 500, headers: cors });
     }
 
-    // استخدام النموذج المدعوم حالياً بدلاً من النموذج القديم
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`;
+    // تم التحديث إلى النموذج المدعوم حالياً
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${env.GEMINI_API_KEY}`;
     
     const parts = [{ text: prompt }];
     if (imageData) {
