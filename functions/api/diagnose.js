@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
     }
 
     // استخدام أسماء النماذج المتوافقة مع الإصدار الحالي
-    const models = ["gemini-2.0-flash", "gemini-2.5-flash"];
+    const models = ["gemini-3.8-flash"];
     let lastError = null;
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
