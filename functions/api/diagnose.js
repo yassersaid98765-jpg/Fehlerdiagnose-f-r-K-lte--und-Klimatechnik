@@ -1,56 +1,62 @@
-export async function onRequestPost(context) {
-  const { request, env } = context;
-  const cors = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" };
+const DATA_KEY = "hvac_state";
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store"
+    }
+  });
+}
+
+export async function onRequestGet({ env }) {
+  if (!env.HVAC_DATA) {
+    return json({ error: "KV binding HVAC_DATA غير موجود" }, 500);
+  }
+
+  const data = await env.HVAC_DATA.get(DATA_KEY, "json");
+
+  return json(data || {
+    customDB: "{}",
+    customCodes: "{}",
+    history: "[]",
+    catalogs: "[]",
+    updatedAt: 0
+  });
+}
+
+export async function onRequestPost({ request, env }) {
+  if (!env.HVAC_DATA) {
+    return json({ error: "KV binding HVAC_DATA غير موجود" }, 500);
+  }
 
   try {
-    const { prompt, fileData, mimeType } = await request.json();
-    
-    if (!env.GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "مفتاح GEMINI_API_KEY غير موجود." }), { status: 500, headers: cors });
-    }
+    const body = await request.json();
 
-    const parts = [{ text: prompt }];
-    if (fileData) {
-      parts.push({ inline_data: { mime_type: mimeType || "image/jpeg", data: fileData } });
-    }
+    const data = {
+      customDB: typeof body.customDB === "string"
+        ? body.customDB
+        : JSON.stringify(body.customDB || {}),
+      customCodes: typeof body.customCodes === "string"
+        ? body.customCodes
+        : JSON.stringify(body.customCodes || {}),
+      history: typeof body.history === "string"
+        ? body.history
+        : JSON.stringify(body.history || []),
+      catalogs: typeof body.catalogs === "string"
+        ? body.catalogs
+        : JSON.stringify(body.catalogs || []),
+      updatedAt: Number(body.updatedAt) || Date.now()
+    };
 
-    // استخدام أسماء النماذج المتوافقة مع الإصدار الحالي
-    const models = ["gemini-3.8-flash"];
-    let lastError = null;
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    await env.HVAC_DATA.put(DATA_KEY, JSON.stringify(data));
 
-    for (const model of models) {
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
-          
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts }] })
-          });
-          
-          const data = await res.json();
-
-          if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-            return new Response(JSON.stringify({ result: data.candidates[0].content.parts[0].text }), { headers: cors });
-          }
-
-          if (data.error && data.error.code === 503) {
-            lastError = data.error.message;
-            await sleep(2000); 
-            continue; 
-          }
-          lastError = data.error ? data.error.message : "خطأ غير معروف";
-          break;
-        } catch (e) {
-          lastError = e.message;
-          await sleep(1000);
-        }
-      }
-    }
-    return new Response(JSON.stringify({ error: "السيرفرات مشغولة: " + lastError }), { status: 500, headers: cors });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: "حدث خطأ في الخادم: " + e.message }), { status: 500, headers: cors });
+    return json({ ok: true, updatedAt: data.updatedAt });
+  } catch (error) {
+    return json({
+      error: "بيانات غير صالحة",
+      details: error.message
+    }, 400);
   }
 }
