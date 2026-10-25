@@ -113,16 +113,16 @@
         <summary id="secCodeTitle">🔢 البحث عن الأكواد والأعطال</summary>
         <div class="details-content">
             
-            <h3 style="color: #e83e8c; font-size: 15px; margin-top:0;">1. البحث بواسطة كود العطل (Fehlercode):</h3>
-            <input type="text" id="searchBrand" placeholder="الماركة (LG, Daikin...)" style="margin-bottom: 5px;">
-            <input type="text" id="searchCode" placeholder="كود العطل (E5, CH05...)" style="margin-bottom: 5px;">
+            <h3 style="color: #e83e8c; font-size: 15px; margin-top:0;" id="lblAddCodeTitle1">1. البحث بواسطة كود العطل:</h3>
+            <input type="text" id="searchBrand" placeholder="..." style="margin-bottom: 5px;">
+            <input type="text" id="searchCode" placeholder="..." style="margin-bottom: 5px;">
             <button class="search-code-btn" onclick="searchErrorCode()" id="btnSearchCode">🔍 بحث عن الكود</button>
             <div id="codeResult"></div>
 
             <hr style="margin: 25px 0; border: 1px dashed #ccc;">
 
-            <h3 style="color: #5cb85c; font-size: 15px;">2. البحث بالكلمات (عن أي عطل):</h3>
-            <input type="text" id="manualSearchText" placeholder="مثال: Hochdruck, Wasserleck...">
+            <h3 style="color: #5cb85c; font-size: 15px;" id="lblSearchText">2. البحث بالكلمات (عن أي عطل):</h3>
+            <input type="text" id="manualSearchText" placeholder="...">
             <button class="search-btn" style="background-color: #5cb85c;" onclick="unifiedSearch()" id="btnSearchLocal">البحث في كل الأجهزة</button>
             <button class="google-btn" style="background-color: #4285f4;" onclick="searchGoogle()" id="btnSearchGoogle">🌐 ابحث في جوجل</button>
             
@@ -141,7 +141,7 @@
             <label id="lblAddCode">الكود:</label>
             <input type="text" id="newCodeName" placeholder="E5">
             <label id="lblAddCodeDesc">الوصف والأسباب (كل سبب في سطر):</label>
-            <textarea id="newCodeCauses" placeholder="مثال:&#10;ارتفاع حرارة الضاغط&#10;مشكلة في الكابستور"></textarea>
+            <textarea id="newCodeCauses" placeholder="..."></textarea>
             <button class="add-btn" onclick="addNewCode()" id="btnAddCode">💾 حفظ الكود</button>
 
             <hr style="margin: 25px 0; border: 1px solid #eee;">
@@ -177,7 +177,7 @@
     <details>
         <summary id="sec2Title">📸 البحث بالصورة (Google Lens)</summary>
         <div class="details-content">
-            <p style="font-size: 13px; color: #555;" id="lensDesc">التقط صورة لكود العطل أو القطعة، وسيتم فتح تطبيق جوجل للبحث عنها فوراً.</p>
+            <p style="font-size: 13px; color: #555;" id="lensDesc">...</p>
             <div class="img-buttons">
                 <button type="button" class="btn-cam" onclick="document.getElementById('cameraInput').click()" id="btnCam">📷 التقاط صورة</button>
                 <button type="button" class="btn-gal" onclick="document.getElementById('galleryInput').click()" id="btnGal">🖼️ من الاستديو</button>
@@ -245,42 +245,39 @@
         ar: {
             title: "❄ HVAC Diagnose Tool", subtitle: "مرجعك الميداني السريع",
             syncBar: "☁️ جاري المزامنة...",
-            secCodeTitle: "🔢 البحث عن الأكواد والأعطال",
+            secCodeTitle: "🔢 البحث عن الأكواد والأعطال", lblAddCodeTitle1: "1. البحث بواسطة كود العطل:", lblSearchText: "2. البحث بالكلمات (عن أي عطل):",
             lblBrand: "الماركة:", lblCode: "كود العطل:", btnSearchCode: "🔍 بحث عن الكود",
-            lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: ضغط عالي...",
-            btnSearchLocal: "البحث في كل الأجهزة", btnSearchGoogle: "🌐 ابحث في جوجل",
-            sec2Title: "📸 البحث بالصورة (Google Lens)", lensDesc: "التقط صورة لكود العطل أو القطعة، وسيتم فتح تطبيق جوجل للبحث عنها فوراً.",
+            searchPlaceholder: "مثال: ضغط عالي...", btnSearchLocal: "البحث في كل الأجهزة", btnSearchGoogle: "🌐 ابحث في جوجل",
+            sec2Title: "📸 البحث بالصورة (Google Lens)", lensDesc: "التقط صورة للعطل أو الكود، وسيتم فتح جوجل للبحث.",
             btnCam: "📷 التقاط صورة", btnGal: "🖼️ من الاستديو", imgPreview: "✅ تم اختيار الصورة", btnLens: "🔍 فتح في Google Lens",
-            sec3Title: "➕ إضافة أعطال / أكواد مخصصة", lblAddCodeTitle: "إضافة كود عطل جديد:", lblAddBrand: "الماركة:", lblAddCode: "الكود:", lblAddCodeDesc: "الوصف والأسباب (كل سبب في سطر):", btnAddCode: "💾 حفظ الكود",
-            lblAddFaultTitle: "إضافة عطل عام (بدون كود):", lblAddDevice: "نوع الجهاز:", optAddSplit: "مكيف سبليت", optAddCold: "غرفة تبريد", optAddChiller: "تشيلر", optAddWindow: "مكيف شباك", lblAddName: "اسم العطل:", lblAddCauses: "الأسباب وخطوات الفحص:", btnAddFault: "💾 حفظ العطل",
-            btnExportFaults: "⬇️ تصدير البيانات", btnImportFaults: "⬆️ استيراد البيانات", lblDeleteFaults: "🗑️ الأكواد والأعطال المضافة (لحذفها):",
-            sec4Title: "📖 الكتالوجات وقارئ PDF", lblCatLink: "حفظ رابط كتالوج:", btnSaveCat: "💾 حفظ الرابط", lblCatFile: "فتح كتالوج من ذاكرة الهاتف:",
-            btnClosePdf: "× إغلاق", btnExtPdf: "↗️ خارجي", btnTransPdf: "📄 ترجمة سريعة", lblTransTitle: "🌐 النص المترجم:",
-            sec5Title: "📚 سجل التشخيصات السابقة", btnClearHistory: "🗑️ مسح السجل بالكامل",
-            noCustomFaults: "لا توجد إضافات حالياً.", noCatalogs: "لا توجد كتالوجات محفوظة.", noHistory: "لا توجد أعطال محفوظة.", noPage: "رقم الصفحة غير صحيح",
-            codeNotFound: "لم يتم العثور على الكود. ابحث عنه في جوجل:", btnGoogleCode: "🌐 البحث في جوجل", saveLabel: "هل وجدت الحل؟ الصقه هنا واحفظه:", saveBtn: "💾 حفظ الكود", savePlaceholder: "مثال: نقص غاز، يجب فحص الضغط..."
+            sec3Title: "➕ إضافة أعطال / أكواد مخصصة", lblAddCodeTitle: "إضافة كود عطل جديد:", lblAddBrand: "الماركة:", lblAddCode: "الكود:", lblAddCodeDesc: "الوصف والأسباب:", btnAddCode: "💾 حفظ الكود",
+            lblAddFaultTitle: "إضافة عطل عام:", lblAddDevice: "نوع الجهاز:", optAddSplit: "مكيف سبليت", optAddCold: "غرفة تبريد", optAddChiller: "تشيلر", optAddWindow: "شباك", lblAddName: "اسم العطل:", lblAddCauses: "الأسباب:", btnAddFault: "💾 حفظ العطل",
+            btnExportFaults: "⬇️ تصدير البيانات", btnImportFaults: "⬆️ استيراد البيانات", lblDeleteFaults: "🗑️ الإضافات (لحذفها):",
+            sec4Title: "📖 الكتالوجات وقارئ PDF", lblCatLink: "حفظ رابط كتالوج:", btnSaveCat: "💾 حفظ الرابط", lblCatFile: "فتح كتالوج من الهاتف:",
+            btnClosePdf: "× إغلاق", btnExtPdf: "↗️ خارجي", btnTransPdf: "📄 ترجمة", lblTransTitle: "🌐 النص المترجم:",
+            sec5Title: "📚 سجل التشخيصات", btnClearHistory: "🗑️ مسح السجل",
+            noCustomFaults: "لا توجد إضافات حالياً.", noCatalogs: "لا توجد كتالوجات.", noHistory: "لا يوجد سجل.", noPage: "رقم الصفحة غير صحيح",
+            codeNotFound: "لم يتم العثور على الكود. ابحث عنه في جوجل:", btnGoogleCode: "🌐 البحث في جوجل", saveLabel: "هل وجدت الحل؟ الصقه هنا:", saveBtn: "💾 حفظ الكود", savePlaceholder: "..."
         },
         de: {
             title: "❄ HVAC Diagnose-Tool", subtitle: "Ihr schneller Außendienst-Leitfaden",
             syncBar: "☁️ Synchronisierung...",
-            secCodeTitle: "🔢 Fehlercodes & Fehler suchen",
+            secCodeTitle: "🔢 Fehlercodes & Fehler suchen", lblAddCodeTitle1: "1. Suche nach Fehlercode:", lblSearchText: "2. Suche nach Stichworten:",
             lblBrand: "Marke:", lblCode: "Fehlercode:", btnSearchCode: "🔍 Code suchen",
-            lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Hochdruck...",
-            btnSearchLocal: "In allen Geräten suchen", btnSearchGoogle: "🌐 Bei Google suchen",
+            searchPlaceholder: "z.B.: Hochdruck...", btnSearchLocal: "In allen Geräten suchen", btnSearchGoogle: "🌐 Bei Google suchen",
             sec2Title: "📸 Bildsuche (Google Lens)", lensDesc: "Machen Sie ein Foto vom Fehlercode oder Bauteil.",
             btnCam: "📷 Foto machen", btnGal: "🖼️ Aus Galerie", imgPreview: "✅ Bild ausgewählt", btnLens: "🔍 In Google Lens öffnen",
             sec3Title: "➕ Fehler / Codes hinzufügen", lblAddCodeTitle: "Neuen Fehlercode hinzufügen:", lblAddBrand: "Marke:", lblAddCode: "Code:", lblAddCodeDesc: "Beschreibung & Ursachen:", btnAddCode: "💾 Code speichern",
-            lblAddFaultTitle: "Allgemeinen Fehler hinzufügen:", lblAddDevice: "Gerätetyp:", optAddSplit: "Split-Klimaanlage", optAddCold: "Kühlraum", optAddChiller: "Kaltwassersatz", optAddWindow: "Fensterklima", lblAddName: "Fehlername:", lblAddCauses: "Ursachen & Prüfschritte:", btnAddFault: "💾 Fehler speichern",
-            btnExportFaults: "⬇️ Daten exportieren", btnImportFaults: "⬆️ Daten importieren", lblDeleteFaults: "🗑️ Hinzugefügte Codes/Fehler (löschen):",
+            lblAddFaultTitle: "Allgemeinen Fehler hinzufügen:", lblAddDevice: "Gerätetyp:", optAddSplit: "Split-Klimaanlage", optAddCold: "Kühlraum", optAddChiller: "Kaltwassersatz", optAddWindow: "Fensterklima", lblAddName: "Fehlername:", lblAddCauses: "Ursachen:", btnAddFault: "💾 Fehler speichern",
+            btnExportFaults: "⬇️ Daten exportieren", btnImportFaults: "⬆️ Daten importieren", lblDeleteFaults: "🗑️ Einträge (löschen):",
             sec4Title: "📖 Kataloge & PDF-Reader", lblCatLink: "Katalog-Link speichern:", btnSaveCat: "💾 Link speichern", lblCatFile: "Katalog vom Handy öffnen:",
             btnClosePdf: "× Schließen", btnExtPdf: "↗️ Extern", btnTransPdf: "📄 Übersetzung", lblTransTitle: "🌐 Übersetzter Text:",
             sec5Title: "📚 Diagnose-Verlauf", btnClearHistory: "🗑️ Verlauf löschen",
-            noCustomFaults: "Noch keine Einträge vorhanden.", noCatalogs: "Keine Kataloge gespeichert.", noHistory: "Keine Fehler gespeichert.", noPage: "Ungültige Seitenzahl",
-            codeNotFound: "Code nicht gefunden. Bitte bei Google suchen:", btnGoogleCode: "🌐 Bei Google suchen", saveLabel: "Lösung gefunden? Hier einfügen:", saveBtn: "💾 Code speichern", savePlaceholder: "z.B.: Kältemittelmangel, Druck prüfen..."
+            noCustomFaults: "Noch keine Einträge.", noCatalogs: "Keine Kataloge.", noHistory: "Kein Verlauf.", noPage: "Ungültige Seitenzahl",
+            codeNotFound: "Code nicht gefunden. Bitte bei Google suchen:", btnGoogleCode: "🌐 Bei Google suchen", saveLabel: "Lösung gefunden? Hier einfügen:", saveBtn: "💾 Code speichern", savePlaceholder: "..."
         }
     };
 
-    // قاعدة البيانات الافتراضية للأكواد
     let defaultCodesDB = {
         "LG": {
             "E5": { desc: "Kompressor-Überhitzung / ارتفاع حرارة الضاغط", causes: ["Kältemittelmangel - Druck prüfen", "Verstopfter Filter - reinigen"] },
@@ -296,11 +293,10 @@
     };
 
     let customCodesDB = JSON.parse(localStorage.getItem("hvacCustomCodes")) || {};
-    let diagnoseDB = {}; // للأعطال العامة
+    let diagnoseDB = {}; 
     let selectedImageFile = null;
     let keywordMap = [];
 
-    // البحث عن كود
     function searchErrorCode() {
         const brand = document.getElementById("searchBrand").value.trim().toUpperCase();
         const code = document.getElementById("searchCode").value.trim().toUpperCase();
@@ -361,7 +357,6 @@
         searchErrorCode(); 
     }
 
-    // البحث النصي
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) return;
@@ -407,9 +402,6 @@
         }
     }
 
-    // ==========================================
-    // (باقي الدوال الأساسية من الترجمة والإضافة والسجل والكتالوج - كما هي)
-    // ==========================================
     let defaultDB_ar = {
         split: { not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز", prob: "40%", checks: ["قياس الضغط"] }] } },
         coldroom: { not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }] } },
@@ -551,12 +543,12 @@
         } catch (e) { }
     }
 
-    // الترجمة
     function applyLanguage() {
         const t = translations[currentLang];
         document.documentElement.lang = currentLang; document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
         document.getElementById("mainTitle").innerText = t.title; document.getElementById("subTitle").innerText = t.subtitle;
         document.getElementById("syncStatus").innerText = t.syncBar; document.getElementById("secCodeTitle").innerText = t.secCodeTitle;
+        document.getElementById("lblAddCodeTitle1").innerText = t.lblAddCodeTitle1; document.getElementById("lblSearchText").innerText = t.lblSearchText;
         document.getElementById("searchBrand").placeholder = t.lblBrand; document.getElementById("searchCode").placeholder = t.lblCode; document.getElementById("btnSearchCode").innerText = t.btnSearchCode;
         document.getElementById("manualSearchText").placeholder = t.searchPlaceholder; document.getElementById("btnSearchLocal").innerText = t.btnSearchLocal; document.getElementById("btnSearchGoogle").innerText = t.btnSearchGoogle;
         document.getElementById("sec2Title").innerText = t.sec2Title; document.getElementById("lensDesc").innerText = t.lensDesc; document.getElementById("btnCam").innerText = t.btnCam; document.getElementById("btnGal").innerText = t.btnGal; document.getElementById("imgPreviewText").innerText = t.imgPreview; document.getElementById("btnLens").innerText = t.btnLens;
@@ -638,7 +630,13 @@
     function handleImageSelection(input) { if (input.files && input.files[0]) { selectedImageFile = input.files[0]; document.getElementById("imgPreviewText").style.display = "block"; } }
     async function searchWithGoogleLens() { if (!selectedImageFile) { alert("Bitte zuerst ein Bild auswählen."); return; } if (navigator.canShare && navigator.canShare({ files: [selectedImageFile] })) { try { await navigator.share({ files: [selectedImageFile], title: 'Search' }); } catch (e) {} } else { window.open("https://lens.google.com/", "_blank"); } }
 
-    window.onload = () => { applyLanguage(); rebuildKeywordMap(); renderCustomFaults(); renderHistory(); renderCatalogs(); loadFromCloud(); };
+    window.onload = () => { 
+        applyLanguage(); 
+        renderCustomFaults(); 
+        renderHistory(); 
+        renderCatalogs(); 
+        loadFromCloud(); 
+    };
 </script>
 </body>
 </html>
