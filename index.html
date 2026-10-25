@@ -1,926 +1,299 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HVAC Diagnose Tool</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-
-        .lang-switch { text-align: left; margin-bottom: 10px; }
-        .lang-btn { padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: auto; margin: 0; font-size: 14px; }
-        .lang-btn:hover { background-color: #5a6268; }
-
-        h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
-
-        details { background: #fff; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
-        summary { padding: 15px; font-weight: bold; font-size: 16px; cursor: pointer; background-color: #f8f9fa; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #0275d8; }
-        summary::-webkit-details-marker { display: none; }
-        summary::after { content: '➕'; font-size: 14px; color: #888; }
-        details[open] summary::after { content: '➖'; }
-        details[open] summary { border-bottom: 1px solid #ddd; background-color: #e2eafc; color: #025aa5; }
-        .details-content { padding: 15px; background: white; }
-
-        label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
-        select, input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
-        textarea { resize: vertical; height: 80px; }
-        button { width: 100%; padding: 15px; background-color: #0275d8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; font-size: 16px; transition: background 0.3s; }
-        button:hover { background-color: #025aa5; }
-
-        .sync-bar { text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; display: none; border: 1px solid transparent; }
-        .sync-busy { background-color: #fff3cd; color: #856404; border-color: #ffeeba; }
-        .sync-ok { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .sync-err { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-
-        #result, #codeResult { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none; border: 1px solid #ddd; line-height: 1.6; }
-        .code-desc { color: #d9534f; font-weight: bold; font-size: 16px; }
-        .code-block { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
-        .code-block:last-child { border-bottom: none; margin-bottom: 0; }
-        .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        html[dir="ltr"] .cause-item { border-right: none; border-left: 4px solid #0275d8; }
-        .prob { color: #d9534f; font-weight: bold; }
-        .badge { display: inline-block; background: #e83e8c; color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 10px; vertical-align: middle; }
-
-        .add-btn { background-color: #34a853; }
-        .add-btn:hover { background-color: #2b8a44; }
-        .search-code-btn { background-color: #e83e8c; margin-top: 10px; }
-        .search-code-btn:hover { background-color: #c82333; }
-        .search-btn { background-color: #5cb85c; }
-        .google-btn { background-color: #4285f4; }
-
-        .custom-fault-item { background: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f5c6cb; gap: 8px; }
-        .custom-fault-item span { font-weight: bold; color: #721c24; font-size: 14px; word-break: break-word; }
-        .mini-del { width: 35px; height: 35px; margin: 0; padding: 0; background-color: #d9534f; border-radius: 5px; flex-shrink: 0; }
-
-        .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; position: relative; }
-        .history-date { color: #888; font-size: 12px; margin-bottom: 5px; }
-        .history-text { font-weight: bold; color: #333; margin-bottom: 5px; padding-left: 25px; }
-        html[dir="rtl"] .history-text { padding-left: 0; padding-right: 25px; }
-        .history-result { color: #555; font-size: 13px; background: white; padding: 8px; border-radius: 4px; max-height: 120px; overflow-y: auto; }
-        .delete-btn { position: absolute; top: 10px; left: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; padding: 0; line-height: 1; margin: 0; }
-        html[dir="rtl"] .delete-btn { left: auto; right: 10px; }
-        .clear-btn { background-color: #d9534f; margin-top: 10px; padding: 10px; font-size: 14px; }
-
-        .catalog-item { background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ffeeba; gap: 8px; }
-        .catalog-item a { color: #856404; text-decoration: none; font-weight: bold; word-break: break-all; }
-        .save-btn { background-color: #f0ad4e; margin-top: 10px; font-size: 14px; }
-        .save-btn:hover { background-color: #ec971f; }
-
-        #pdfViewerContainer { display: none; margin-top: 15px; border: 2px solid #0275d8; border-radius: 8px; overflow: hidden; background: #525659; }
-        .pdf-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd; gap: 5px; }
-        .pdf-controls button { width: auto; margin: 0; padding: 8px 12px; font-size: 12px; background-color: #0275d8; }
-        .pdf-controls input { width: 60px; padding: 5px; margin: 0; text-align: center; font-size: 14px; }
-        .pdf-controls span { font-weight: bold; color: #333; font-size: 14px; }
-        #canvasContainer { width: 100%; text-align: center; padding: 10px 0; max-height: 500px; overflow: auto; }
-        canvas { max-width: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-
-        .zoom-controls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; background: #eee; padding: 8px; border-bottom: 1px solid #ddd; }
-        .zoom-controls button { background-color: #6c757d; margin: 0; padding: 5px 15px; font-size: 14px; width: auto; }
-        .zoom-controls select { width: auto; margin: 0; padding: 5px; font-size: 14px; }
-        .external-btn { background-color: #28a745 !important; }
-        .translate-free-btn { background-color: #f39c12 !important; }
-
-        #translationBox { display: none; background: #fff3cd; border: 2px solid #f0ad4e; padding: 15px; margin-top: 15px; border-radius: 8px; color: #333; line-height: 1.6; white-space: pre-wrap; }
-
-        .img-buttons { display: flex; gap: 10px; margin-top: 10px; }
-        .img-buttons button { margin-top: 0; flex: 1; }
-        .btn-cam { background-color: #17a2b8; }
-        .btn-cam:hover { background-color: #138496; }
-        .btn-gal { background-color: #5a6268; }
-        .btn-gal:hover { background-color: #4a5155; }
-        .img-preview { font-size: 12px; color: #28a745; margin-top: 5px; display: none; font-weight: bold; }
-
-        .google-lens-btn { background-color: #4285f4; color: white; border: none; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 15px; font-size: 16px; }
-        .google-lens-btn:hover { background-color: #3367d6; }
-
-        .data-btns { display: flex; gap: 10px; margin-top: 15px; }
-        .data-btns button { margin-top: 0; flex: 1; font-size: 14px; padding: 10px; }
-        .export-btn { background-color: #17a2b8; }
-        .export-btn:hover { background-color: #138496; }
-        .import-btn { background-color: #6c757d; }
-        .import-btn:hover { background-color: #5a6268; }
-        #importFaultsInput { display: none; }
-
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 14px; z-index: 99; display: none; max-width: 90%; text-align: center; }
-        #toast.err { background: #d9534f; }
-        #toast.ok { background: #28a745; }
-    </style>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HVAC Diagnose Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<style>
+body{font-family:'Segoe UI',Tahoma,sans-serif;margin:0;padding:20px;background:#f0f4f8;color:#333}
+.container{max-width:650px;margin:auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.lang-switch{text-align:left;margin-bottom:10px}
+.lang-btn{padding:8px 15px;background:#6c757d;color:#fff;border:none;border-radius:5px;font-weight:bold;cursor:pointer;width:auto;font-size:14px}
+h1,h2,h3{color:#0275d8;text-align:center;margin-bottom:10px}
+.subtitle{text-align:center;color:#666;margin-bottom:20px;font-size:14px}
+details{background:#fff;border-radius:8px;margin-bottom:15px;border:1px solid #ddd;box-shadow:0 2px 5px rgba(0,0,0,.05);overflow:hidden}
+summary{padding:15px;font-weight:bold;font-size:16px;cursor:pointer;background:#f8f9fa;list-style:none;display:flex;justify-content:space-between;align-items:center;color:#0275d8}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'➕';font-size:14px;color:#888}
+details[open] summary::after{content:'➖'}
+details[open] summary{border-bottom:1px solid #ddd;background:#e2eafc}
+.details-content{padding:15px;background:#fff}
+label{font-weight:bold;display:block;margin-top:15px;color:#444}
+select,input[type=text],input[type=number],textarea{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:1px solid #ccc;font-size:16px;box-sizing:border-box;font-family:inherit}
+textarea{resize:vertical;height:80px}
+button{width:100%;padding:15px;background:#0275d8;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-top:15px;font-weight:bold;font-size:16px;transition:.2s}
+button:hover{background:#025aa5}
+#result,#codeResult{margin-top:20px;padding:15px;background:#f8f9fa;border-radius:8px;display:none;border:1px solid #ddd;line-height:1.6}
+.code-desc{color:#d9534f;font-weight:bold;font-size:16px}
+.code-block{margin-bottom:15px;padding-bottom:10px;border-bottom:1px dashed #ccc}
+.cause-item{background:#fff;padding:10px;margin-bottom:10px;border-right:4px solid #0275d8;border-radius:4px;box-shadow:0 2px 5px rgba(0,0,0,.05)}
+html[dir=ltr] .cause-item{border-right:none;border-left:4px solid #0275d8}
+.prob{color:#d9534f;font-weight:bold}
+.badge{display:inline-block;background:#e83e8c;color:#fff;font-size:11px;padding:1px 6px;border-radius:10px;vertical-align:middle}
+.add-btn{background:#34a853}.add-btn:hover{background:#2b8a44}
+.search-code-btn{background:#e83e8c;margin-top:10px}.search-code-btn:hover{background:#c82333}
+.search-btn{background:#5cb85c}.google-btn{background:#4285f4}
+.custom-fault-item{background:#f8d7da;padding:10px;border-radius:5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5c6cb;gap:8px}
+.custom-fault-item span{font-weight:bold;color:#721c24;font-size:14px;word-break:break-word}
+.mini-del{width:35px;height:35px;margin:0;padding:0;background:#d9534f;border-radius:5px;flex-shrink:0}
+.history-item{background:#f8f9fa;border:1px solid #ddd;padding:10px;margin-bottom:10px;border-radius:8px;font-size:14px;position:relative}
+.history-date{color:#888;font-size:12px;margin-bottom:5px}
+.history-text{font-weight:bold;color:#333;margin-bottom:5px;padding-right:25px}
+html[dir=ltr] .history-text{padding-right:0;padding-left:25px}
+.history-result{color:#555;font-size:13px;background:#fff;padding:8px;border-radius:4px;max-height:120px;overflow-y:auto}
+.delete-btn{position:absolute;top:10px;right:10px;background:#ff4d4d;color:#fff;border:none;border-radius:50%;width:25px;height:25px;cursor:pointer;font-weight:bold;padding:0;margin:0}
+html[dir=ltr] .delete-btn{right:auto;left:10px}
+.clear-btn{background:#d9534f;margin-top:10px;padding:10px;font-size:14px}
+.catalog-item{background:#fff3cd;padding:10px;border-radius:5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid #ffeeba;gap:8px}
+.catalog-item a{color:#856404;text-decoration:none;font-weight:bold;word-break:break-all}
+.save-btn{background:#f0ad4e;margin-top:10px;font-size:14px}
+#pdfViewerContainer{display:none;margin-top:15px;border:2px solid #0275d8;border-radius:8px;overflow:hidden;background:#525659}
+.pdf-controls{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;background:#f8f9fa;padding:10px;border-bottom:1px solid #ddd;gap:5px}
+.pdf-controls button{width:auto;margin:0;padding:8px 12px;font-size:12px}
+.pdf-controls input{width:60px;padding:5px;margin:0;text-align:center;font-size:14px}
+.pdf-controls span{font-weight:bold;color:#333;font-size:14px}
+#canvasContainer{width:100%;text-align:center;padding:10px 0;max-height:500px;overflow:auto}
+canvas{max-width:none;box-shadow:0 0 10px rgba(0,0,0,.5)}
+.zoom-controls{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;background:#eee;padding:8px;border-bottom:1px solid #ddd}
+.zoom-controls button{background:#6c757d;margin:0;padding:5px 15px;font-size:14px;width:auto}
+.zoom-controls select{width:auto;margin:0;padding:5px;font-size:14px}
+.external-btn{background:#28a745!important}
+.translate-free-btn{background:#f39c12!important}
+#translationBox{display:none;background:#fff3cd;border:2px solid #f0ad4e;padding:15px;margin-top:15px;border-radius:8px;line-height:1.6;white-space:pre-wrap}
+.img-buttons{display:flex;gap:10px;margin-top:10px}
+.img-buttons button{margin-top:0;flex:1}
+.btn-cam{background:#17a2b8}.btn-gal{background:#5a6268}
+.img-preview{font-size:12px;color:#28a745;margin-top:5px;display:none;font-weight:bold}
+.google-lens-btn{background:#4285f4;display:flex;justify-content:center;align-items:center;gap:8px}
+.data-btns{display:flex;gap:10px;margin-top:15px}
+.data-btns button{margin-top:0;flex:1;font-size:14px;padding:10px}
+.export-btn{background:#17a2b8}.import-btn{background:#6c757d}
+#importFaultsInput{display:none}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 18px;border-radius:8px;font-size:14px;z-index:99;display:none;max-width:90%;text-align:center}
+#toast.err{background:#d9534f}#toast.ok{background:#28a745}
+</style>
 </head>
 <body>
-
 <div class="container">
+<div class="lang-switch"><button class="lang-btn" id="langBtn" type="button">DE</button></div>
+<h1 data-i18n="title">❄ HVAC Diagnose Tool</h1>
+<p class="subtitle" data-i18n="subtitle"></p>
 
-    <div class="lang-switch">
-        <button class="lang-btn" id="langBtn" type="button">DE</button>
-    </div>
+<details open><summary data-i18n="secCode"></summary><div class="details-content">
+<h3 style="color:#e83e8c;font-size:15px;margin-top:0" data-i18n="lblCodeSearch"></h3>
+<input type="text" id="searchBrand" data-i18n-ph="phBrand" style="margin-bottom:5px" autocomplete="off">
+<input type="text" id="searchCode" data-i18n-ph="phCode" style="margin-bottom:5px" autocomplete="off">
+<button class="search-code-btn" id="btnSearchCode" type="button" data-i18n="btnSearchCode"></button>
+<div id="codeResult"></div>
+<hr style="margin:25px 0;border:1px dashed #ccc">
+<h3 style="color:#5cb85c;font-size:15px" data-i18n="lblTextSearch"></h3>
+<input type="text" id="manualSearchText" data-i18n-ph="phSearch" autocomplete="off">
+<button class="search-btn" id="btnSearchLocal" type="button" data-i18n="btnSearchLocal"></button>
+<button class="google-btn" id="btnSearchGoogle" type="button" data-i18n="btnSearchGoogle"></button>
+<div id="result"></div>
+</div></details>
 
-    <h1 data-i18n="title">❄ HVAC Diagnose Tool</h1>
-    <p class="subtitle" data-i18n="subtitle"></p>
+<details><summary data-i18n="secAdd"></summary><div class="details-content">
+<h3 style="font-size:16px;border-bottom:1px solid #eee;padding-bottom:5px" data-i18n="lblAddCodeTitle"></h3>
+<label data-i18n="lblBrand"></label><input type="text" id="newBrandName" placeholder="LG">
+<label data-i18n="lblCode"></label><input type="text" id="newCodeName" placeholder="E5">
+<label data-i18n="lblCodeDesc"></label><textarea id="newCodeCauses" data-i18n-ph="phCodeCauses"></textarea>
+<button class="add-btn" id="btnAddCode" type="button" data-i18n="btnAddCode"></button>
+<hr style="margin:25px 0;border:1px solid #eee">
+<h3 style="font-size:16px;border-bottom:1px solid #eee;padding-bottom:5px" data-i18n="lblAddFaultTitle"></h3>
+<label data-i18n="lblDevice"></label><select id="addDeviceType">
+<option value="split" data-i18n="optSplit"></option>
+<option value="coldroom" data-i18n="optCold"></option>
+<option value="chiller" data-i18n="optChiller"></option>
+<option value="window" data-i18n="optWindow"></option>
+</select>
+<label data-i18n="lblFaultName"></label><input type="text" id="newFaultName">
+<label data-i18n="lblCauses"></label><textarea id="newFaultCauses" data-i18n-ph="phCausesFault"></textarea>
+<button class="add-btn" id="btnAddFault" type="button" data-i18n="btnAddFault"></button>
+<hr style="margin:25px 0;border:1px solid #eee">
+<div class="data-btns">
+<button class="export-btn" id="btnExport" type="button" data-i18n="btnExport"></button>
+<button class="import-btn" id="btnImport" type="button" data-i18n="btnImport"></button>
+<input type="file" id="importFaultsInput" accept=".json,application/json">
+</div>
+<hr style="margin:25px 0;border:1px solid #eee">
+<h3 style="color:#d9534f;font-size:16px" data-i18n="lblDelete"></h3>
+<div id="customFaultsList"></div>
+</div></details>
 
-    <div id="syncStatus" class="sync-bar"></div>
+<details><summary data-i18n="secLens"></summary><div class="details-content">
+<p style="font-size:13px;color:#555" data-i18n="lensDesc"></p>
+<div class="img-buttons">
+<button type="button" class="btn-cam" id="btnCam" data-i18n="btnCam"></button>
+<button type="button" class="btn-gal" id="btnGal" data-i18n="btnGal"></button>
+</div>
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="galleryInput" accept="image/*" style="display:none">
+<div id="imgPreviewText" class="img-preview" data-i18n="imgPreview"></div>
+<button class="google-lens-btn" id="btnLens" type="button" data-i18n="btnLens"></button>
+</div></details>
 
-    <!-- 1. بحث -->
-    <details open>
-        <summary data-i18n="secCode"></summary>
-        <div class="details-content">
-            <h3 style="color:#e83e8c; font-size:15px; margin-top:0;" data-i18n="lblCodeSearch"></h3>
-            <input type="text" id="searchBrand" data-i18n-ph="phBrand" style="margin-bottom:5px;" autocomplete="off">
-            <input type="text" id="searchCode" data-i18n-ph="phCode" style="margin-bottom:5px;" autocomplete="off">
-            <button class="search-code-btn" id="btnSearchCode" type="button" data-i18n="btnSearchCode"></button>
-            <div id="codeResult"></div>
+<details><summary data-i18n="secCat"></summary><div class="details-content">
+<label data-i18n="lblCatLink"></label>
+<input type="text" id="catalogName" data-i18n-ph="phCatName">
+<input type="text" id="catalogLink" placeholder="https://..." style="margin-top:5px" dir="ltr">
+<button class="save-btn" id="btnSaveCat" type="button" data-i18n="btnSaveCat"></button>
+<div id="catalogList" style="margin-top:15px"></div>
+<hr style="margin:25px 0;border:1px solid #eee">
+<label data-i18n="lblCatFile"></label>
+<input type="file" id="localCatalogInput" accept="application/pdf" style="background:#f8f9fa">
+<div id="pdfViewerContainer">
+<div class="pdf-controls">
+<div style="display:flex;align-items:center;gap:5px">
+<button type="button" id="btnPrev">⬅️</button>
+<input type="number" id="pageInput" min="1">
+<span>/ <span id="pageCount">?</span></span>
+</div>
+<button type="button" id="btnNext">➡️</button>
+<button type="button" style="background:#d9534f" id="btnClosePdf" data-i18n="btnClosePdf"></button>
+</div>
+<div class="zoom-controls">
+<button type="button" id="btnZoomIn">➕</button>
+<button type="button" id="btnZoomOut">➖</button>
+<button type="button" class="external-btn" id="btnExtPdf" data-i18n="btnExtPdf"></button>
+<select id="transSrc"><option value="en">EN →</option><option value="de">DE →</option></select>
+<button type="button" class="translate-free-btn" id="btnTransPdf" data-i18n="btnTransPdf"></button>
+</div>
+<div id="canvasContainer"><canvas id="pdfCanvas"></canvas></div>
+</div>
+<div id="translationBox"><h4 style="margin-top:0" data-i18n="lblTransTitle"></h4><p id="translationText"></p></div>
+</div></details>
 
-            <hr style="margin:25px 0; border:1px dashed #ccc;">
-
-            <h3 style="color:#5cb85c; font-size:15px;" data-i18n="lblTextSearch"></h3>
-            <input type="text" id="manualSearchText" data-i18n-ph="phSearch" autocomplete="off">
-            <button class="search-btn" id="btnSearchLocal" type="button" data-i18n="btnSearchLocal"></button>
-            <button class="google-btn" id="btnSearchGoogle" type="button" data-i18n="btnSearchGoogle"></button>
-            <div id="result"></div>
-        </div>
-    </details>
-
-    <!-- 2. إضافة -->
-    <details>
-        <summary data-i18n="secAdd"></summary>
-        <div class="details-content">
-            <h3 style="font-size:16px; border-bottom:1px solid #eee; padding-bottom:5px;" data-i18n="lblAddCodeTitle"></h3>
-            <label data-i18n="lblBrand"></label>
-            <input type="text" id="newBrandName" placeholder="LG">
-            <label data-i18n="lblCode"></label>
-            <input type="text" id="newCodeName" placeholder="E5">
-            <label data-i18n="lblCodeDesc"></label>
-            <textarea id="newCodeCauses" data-i18n-ph="phCodeCauses"></textarea>
-            <button class="add-btn" id="btnAddCode" type="button" data-i18n="btnAddCode"></button>
-
-            <hr style="margin:25px 0; border:1px solid #eee;">
-
-            <h3 style="font-size:16px; border-bottom:1px solid #eee; padding-bottom:5px;" data-i18n="lblAddFaultTitle"></h3>
-            <label data-i18n="lblDevice"></label>
-            <select id="addDeviceType">
-                <option value="split" data-i18n="optSplit"></option>
-                <option value="coldroom" data-i18n="optCold"></option>
-                <option value="chiller" data-i18n="optChiller"></option>
-                <option value="window" data-i18n="optWindow"></option>
-            </select>
-            <label data-i18n="lblFaultName"></label>
-            <input type="text" id="newFaultName">
-            <label data-i18n="lblCauses"></label>
-            <textarea id="newFaultCauses" data-i18n-ph="phCausesFault"></textarea>
-            <button class="add-btn" id="btnAddFault" type="button" data-i18n="btnAddFault"></button>
-
-            <hr style="margin:25px 0; border:1px solid #eee;">
-            <div class="data-btns">
-                <button class="export-btn" id="btnExport" type="button" data-i18n="btnExport"></button>
-                <button class="import-btn" id="btnImport" type="button" data-i18n="btnImport"></button>
-                <input type="file" id="importFaultsInput" accept=".json,application/json">
-            </div>
-
-            <hr style="margin:25px 0; border:1px solid #eee;">
-            <h3 style="color:#d9534f; font-size:16px;" data-i18n="lblDelete"></h3>
-            <div id="customFaultsList"></div>
-        </div>
-    </details>
-
-    <!-- 3. صورة -->
-    <details>
-        <summary data-i18n="secLens"></summary>
-        <div class="details-content">
-            <p style="font-size:13px; color:#555;" data-i18n="lensDesc"></p>
-            <div class="img-buttons">
-                <button type="button" class="btn-cam" id="btnCam" data-i18n="btnCam"></button>
-                <button type="button" class="btn-gal" id="btnGal" data-i18n="btnGal"></button>
-            </div>
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-            <input type="file" id="galleryInput" accept="image/*" style="display:none;">
-            <div id="imgPreviewText" class="img-preview" data-i18n="imgPreview"></div>
-            <button class="google-lens-btn" id="btnLens" type="button" data-i18n="btnLens"></button>
-        </div>
-    </details>
-
-    <!-- 4. كتالوجات -->
-    <details>
-        <summary data-i18n="secCat"></summary>
-        <div class="details-content">
-            <label data-i18n="lblCatLink"></label>
-            <input type="text" id="catalogName" data-i18n-ph="phCatName">
-            <input type="text" id="catalogLink" placeholder="https://..." style="margin-top:5px;" dir="ltr">
-            <button class="save-btn" id="btnSaveCat" type="button" data-i18n="btnSaveCat"></button>
-            <div id="catalogList" style="margin-top:15px;"></div>
-            <hr style="margin:25px 0; border:1px solid #eee;">
-            <label data-i18n="lblCatFile"></label>
-            <input type="file" id="localCatalogInput" accept="application/pdf" style="background:#f8f9fa;">
-
-            <div id="pdfViewerContainer">
-                <div class="pdf-controls">
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <button type="button" id="btnPrev">⬅️</button>
-                        <input type="number" id="pageInput" min="1">
-                        <span>/ <span id="pageCount">?</span></span>
-                    </div>
-                    <button type="button" id="btnNext">➡️</button>
-                    <button type="button" style="background-color:#d9534f;" id="btnClosePdf" data-i18n="btnClosePdf"></button>
-                </div>
-                <div class="zoom-controls">
-                    <button type="button" id="btnZoomIn">➕</button>
-                    <button type="button" id="btnZoomOut">➖</button>
-                    <button type="button" class="external-btn" id="btnExtPdf" data-i18n="btnExtPdf"></button>
-                    <select id="transSrc" title="PDF language">
-                        <option value="en">EN →</option>
-                        <option value="de">DE →</option>
-                    </select>
-                    <button type="button" class="translate-free-btn" id="btnTransPdf" data-i18n="btnTransPdf"></button>
-                </div>
-                <div id="canvasContainer"><canvas id="pdfCanvas"></canvas></div>
-            </div>
-            <div id="translationBox">
-                <h4 style="margin-top:0;" data-i18n="lblTransTitle"></h4>
-                <p id="translationText"></p>
-            </div>
-        </div>
-    </details>
-
-    <!-- 5. سجل -->
-    <details>
-        <summary data-i18n="secHist"></summary>
-        <div class="details-content">
-            <div id="historyList"></div>
-            <button class="clear-btn" id="btnClearHistory" type="button" data-i18n="btnClearHistory"></button>
-        </div>
-    </details>
-
+<details><summary data-i18n="secHist"></summary><div class="details-content">
+<div id="historyList"></div>
+<button class="clear-btn" id="btnClearHistory" type="button" data-i18n="btnClearHistory"></button>
+</div></details>
 </div>
 <div id="toast"></div>
-
 <script>
-(function () {
-    "use strict";
-
-    /* ---------- Helpers ---------- */
-    const $ = id => document.getElementById(id);
-    const LS = { lang: "hvacLang", db: "hvacCustomDB", codes: "hvacCustomCodes", history: "hvacHistory", catalogs: "hvacCatalogs", ts: "hvacUpdatedAt" };
-
-    const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-    const isObj = v => v && typeof v === "object" && !Array.isArray(v);
-    const canon = s => String(s || "").toUpperCase().replace(/[\s\-_.]/g, "");
-    const norm = s => String(s || "").toLowerCase().replace(/ß/g, "ss").normalize("NFKD")
-        .replace(/[\u0300-\u036f\u064b-\u065f\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
-    const flat = v => typeof v === "string" ? v : Array.isArray(v) ? v.map(flat).join(" ") : isObj(v) ? Object.values(v).map(flat).join(" ") : "";
-    const decodeEntities = s => { const t = document.createElement("textarea"); t.innerHTML = s; return t.value; };
-
-    function readJSON(key, fallback) {
-        try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
-    }
-
-    let toastTimer = null;
-    function toast(msg, type) {
-        const el = $("toast");
-        el.textContent = msg; el.className = type || "";
-        el.style.display = "block";
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => { el.style.display = "none"; }, 2800);
-    }
-
-    /* ---------- Translations ---------- */
-    let currentLang = localStorage.getItem(LS.lang) === "de" ? "de" : "ar";
-
-    const translations = {
-        ar: {
-            title: "❄ HVAC Diagnose Tool", subtitle: "مرجعك الميداني السريع",
-            syncing: "☁️ جاري المزامنة...", syncOk: "☁️ تمت المزامنة", syncErr: "⚠️ فشلت المزامنة (البيانات محفوظة على الجهاز)",
-            secCode: "🔢 البحث عن الأكواد والأعطال", lblCodeSearch: "1. البحث بواسطة كود العطل:", lblTextSearch: "2. البحث بالكلمات (عن أي عطل):",
-            phBrand: "الماركة (اختياري) مثال: Daikin", phCode: "كود العطل مثال: E4", btnSearchCode: "🔍 بحث عن الكود",
-            phSearch: "مثال: ضغط عالي، لا يبرد، تجمد...", btnSearchLocal: "البحث في كل الأجهزة", btnSearchGoogle: "🌐 ابحث في جوجل",
-            secLens: "📸 البحث بالصورة (Google Lens)", lensDesc: "التقط صورة للعطل أو الكود، ثم شاركها مع Google Lens.",
-            btnCam: "📷 التقاط صورة", btnGal: "🖼️ من الاستديو", imgPreview: "✅ تم اختيار الصورة", btnLens: "🔍 فتح في Google Lens",
-            secAdd: "➕ إضافة أعطال / أكواد مخصصة", lblAddCodeTitle: "إضافة كود عطل جديد:", lblBrand: "الماركة:", lblCode: "الكود:",
-            lblCodeDesc: "الوصف والأسباب (السطر الأول = الوصف، وكل سطر بعده سبب):", phCodeCauses: "ضغط منخفض\nنقص غاز\nحساس ضغط تالف",
-            btnAddCode: "💾 حفظ الكود", lblAddFaultTitle: "إضافة عطل عام (بدون كود):", lblDevice: "نوع الجهاز:",
-            optSplit: "مكيف سبليت", optCold: "غرفة تبريد", optChiller: "تشيلر (Chiller)", optWindow: "مكيف شباك",
-            lblFaultName: "اسم العطل:", lblCauses: "الأسباب وخطوات الفحص:", phCausesFault: "كل سبب في سطر بالشكل:\nالسبب - طريقة الفحص",
-            btnAddFault: "💾 حفظ العطل", btnExport: "⬇️ تصدير البيانات", btnImport: "⬆️ استيراد البيانات", lblDelete: "🗑️ الأكواد والأعطال المضافة (لحذفها):",
-            secCat: "📖 الكتالوجات وقارئ PDF", lblCatLink: "حفظ رابط كتالوج:", phCatName: "اسم الكتالوج", btnSaveCat: "💾 حفظ الرابط", lblCatFile: "فتح كتالوج من ذاكرة الهاتف:",
-            btnClosePdf: "× إغلاق", btnExtPdf: "↗️ خارجي", btnTransPdf: "📄 ترجمة", lblTransTitle: "🌐 النص المترجم:",
-            secHist: "📚 سجل التشخيصات السابقة", btnClearHistory: "🗑️ مسح السجل بالكامل",
-            noCustom: "لا توجد إضافات حالياً.", noCatalogs: "لا توجد كتالوجات.", noHistory: "لا يوجد سجل.", noPage: "رقم الصفحة غير صحيح",
-            codeNotFound: "لم يتم العثور على الكود. ابحث عنه في جوجل:", btnGoogleCode: "🌐 البحث في جوجل", saveLabel: "هل وجدت الحل؟ الصقه هنا (السطر الأول = الوصف):", saveBtn: "💾 حفظ الكود",
-            fillCode: "أدخل كود العطل.", fillBrandCode: "أدخل الماركة والكود.", fillFields: "الرجاء تعبئة كل الحقول.", fillDesc: "الرجاء كتابة الوصف.",
-            saved: "✅ تم الحفظ", confirmDelete: "حذف؟", confirmClear: "مسح السجل بالكامل؟",
-            noResults: "لم يتم العثور عليه محلياً. جرب جوجل.", resultsFor: "النتائج", codePrefix: "كود", searchPrefix: "بحث",
-            probHigh: "شائع", probMid: "متوسط", probLow: "نادر", custom: "مخصص",
-            badLink: "رابط غير صالح (يجب أن يبدأ بـ http أو https).", pickImage: "اختر صورة أولاً.", pdfLibMissing: "قارئ PDF غير متاح (لا يوجد إنترنت) – تم فتح الملف خارجياً.",
-            noText: "لا يوجد نص في هذه الصفحة.", transFail: "فشلت الترجمة.", transSame: "اختر لغة مصدر مختلفة عن لغة الواجهة.",
-            importOk: "✅ تم الاستيراد", importFail: "❌ ملف غير صالح", deviceSplit: "سبليت"
-        },
-        de: {
-            title: "❄ HVAC Diagnose-Tool", subtitle: "Ihr schneller Außendienst-Leitfaden",
-            syncing: "☁️ Synchronisierung...", syncOk: "☁️ Synchronisiert", syncErr: "⚠️ Sync fehlgeschlagen (Daten sind lokal gespeichert)",
-            secCode: "🔢 Fehlercodes & Fehler suchen", lblCodeSearch: "1. Suche nach Fehlercode:", lblTextSearch: "2. Suche nach Stichworten:",
-            phBrand: "Marke (optional), z.B. Daikin", phCode: "Fehlercode, z.B. E4", btnSearchCode: "🔍 Code suchen",
-            phSearch: "z.B.: Hochdruck, kühlt nicht, vereist...", btnSearchLocal: "In allen Geräten suchen", btnSearchGoogle: "🌐 Bei Google suchen",
-            secLens: "📸 Bildsuche (Google Lens)", lensDesc: "Foto vom Fehlercode oder Bauteil machen und mit Google Lens teilen.",
-            btnCam: "📷 Foto machen", btnGal: "🖼️ Aus Galerie", imgPreview: "✅ Bild ausgewählt", btnLens: "🔍 In Google Lens öffnen",
-            secAdd: "➕ Fehler / Codes hinzufügen", lblAddCodeTitle: "Neuen Fehlercode hinzufügen:", lblBrand: "Marke:", lblCode: "Code:",
-            lblCodeDesc: "Beschreibung & Ursachen (1. Zeile = Beschreibung, danach je Zeile eine Ursache):", phCodeCauses: "Niederdruckfehler\nKältemittelmangel\nDruckfühler defekt",
-            btnAddCode: "💾 Code speichern", lblAddFaultTitle: "Allgemeinen Fehler hinzufügen:", lblDevice: "Gerätetyp:",
-            optSplit: "Split-Klimaanlage", optCold: "Kühlraum", optChiller: "Kaltwassersatz", optWindow: "Fensterklima",
-            lblFaultName: "Fehlername:", lblCauses: "Ursachen & Prüfschritte:", phCausesFault: "Eine Ursache pro Zeile:\nUrsache - Prüfschritt",
-            btnAddFault: "💾 Fehler speichern", btnExport: "⬇️ Daten exportieren", btnImport: "⬆️ Daten importieren", lblDelete: "🗑️ Eigene Einträge (löschen):",
-            secCat: "📖 Kataloge & PDF-Reader", lblCatLink: "Katalog-Link speichern:", phCatName: "Katalogname", btnSaveCat: "💾 Link speichern", lblCatFile: "Katalog vom Handy öffnen:",
-            btnClosePdf: "× Schließen", btnExtPdf: "↗️ Extern", btnTransPdf: "📄 Übersetzen", lblTransTitle: "🌐 Übersetzter Text:",
-            secHist: "📚 Diagnose-Verlauf", btnClearHistory: "🗑️ Verlauf löschen",
-            noCustom: "Noch keine Einträge.", noCatalogs: "Keine Kataloge.", noHistory: "Kein Verlauf.", noPage: "Ungültige Seitenzahl",
-            codeNotFound: "Code nicht gefunden. Bitte bei Google suchen:", btnGoogleCode: "🌐 Bei Google suchen", saveLabel: "Lösung gefunden? Hier einfügen (1. Zeile = Beschreibung):", saveBtn: "💾 Code speichern",
-            fillCode: "Bitte Fehlercode eingeben.", fillBrandCode: "Bitte Marke und Code eingeben.", fillFields: "Bitte alle Felder ausfüllen.", fillDesc: "Bitte Beschreibung eingeben.",
-            saved: "✅ Gespeichert", confirmDelete: "Löschen?", confirmClear: "Gesamten Verlauf löschen?",
-            noResults: "Nicht gefunden. Bitte bei Google suchen.", resultsFor: "Ergebnisse", codePrefix: "Code", searchPrefix: "Suche",
-            probHigh: "häufig", probMid: "mittel", probLow: "selten", custom: "eigen",
-            badLink: "Ungültiger Link (muss mit http oder https beginnen).", pickImage: "Bitte zuerst ein Bild auswählen.", pdfLibMissing: "PDF-Reader nicht verfügbar (offline) – Datei extern geöffnet.",
-            noText: "Kein Text auf dieser Seite.", transFail: "Übersetzung fehlgeschlagen.", transSame: "Quellsprache muss sich von der Oberflächensprache unterscheiden.",
-            importOk: "✅ Import erfolgreich", importFail: "❌ Ungültige Datei", deviceSplit: "Split"
-        }
-    };
-    const t = k => (translations[currentLang][k] != null ? translations[currentLang][k] : (translations.ar[k] != null ? translations.ar[k] : k));
-    const DEVICE_KEY = { split: "optSplit", coldroom: "optCold", chiller: "optChiller", window: "optWindow" };
-    const devLabel = d => (DEVICE_KEY[d] ? t(DEVICE_KEY[d]) : d);
-    const tr = v => isObj(v) ? (v[currentLang] != null ? v[currentLang] : (v.ar != null ? v.ar : (v.de || ""))) : (v == null ? "" : v);
-    const trList = v => Array.isArray(v) ? v : (isObj(v) ? (v[currentLang] || v.ar || v.de || []) : []);
-
-    /* ---------- Default data ---------- */
-    const defaultCodesDB = {
-        "LG": {
-            "E5": { desc: "Kompressor-Überhitzung / ارتفاع حرارة الضاغط", causes: ["Kältemittelmangel - Druck prüfen", "Verstopfter Filter - reinigen"] },
-            "CH05": { desc: "Kommunikationsfehler / خطأ في الاتصال", causes: ["Kabel prüfen", "Platine prüfen"] }
-        },
-        "DAIKIN": {
-            "E4": { desc: "Niederdruckfehler / خطأ ضغط منخفض", causes: ["Kältemittel prüfen", "Lecksuche"] },
-            "U4": { desc: "Kommunikationsfehler / خطأ اتصال", causes: ["Verkabelung prüfen"] }
-        },
-        "SAMSUNG": {
-            "E1": { desc: "Raumtemperaturfühler defekt / حساس حرارة الغرفة تالف", causes: ["Fühler prüfen", "Kabel prüfen"] }
-        }
-    };
-
-    // Bilingual defaults: label / name / checks as {ar, de}
-    const DEFAULT_DB = {
-        split: {
-            not_cooling: {
-                label: { ar: "لا يبرد", de: "Kühlt nicht" },
-                causes: [
-                    { name: { ar: "نقص غاز / تسرب", de: "Kältemittelmangel / Leck" }, prob: "high",
-                      checks: { ar: ["قياس ضغط الشفط والدفع مع Superheat / Subcooling", "فحص التسرب (كاشف / رغوة) خصوصاً الفلير والوصلات"], de: ["Saug-/Hochdruck sowie Überhitzung/Unterkühlung messen", "Lecksuche (Lecksucher/Spray), v.a. Bördel- und Lötstellen"] } },
-                    { name: { ar: "اتساخ الفلتر / المبخر / المكثف", de: "Filter, Verdampfer oder Verflüssiger verschmutzt" }, prob: "high",
-                      checks: { ar: ["تنظيف الفلتر والمبخر والمكثف", "فحص تدفق الهواء"], de: ["Filter, Verdampfer, Verflüssiger reinigen", "Luftvolumenstrom prüfen"] } },
-                    { name: { ar: "مكثف التشغيل (كابستور) ضعيف", de: "Betriebskondensator schwach" }, prob: "mid",
-                      checks: { ar: ["قياس السعة ومقارنتها بالقيمة المطبوعة"], de: ["Kapazität messen und mit Typenschild vergleichen"] } },
-                    { name: { ar: "حساس / بوردة / صمام تمدد إلكتروني", de: "Fühler / Platine / EEV" }, prob: "mid",
-                      checks: { ar: ["قياس مقاومة الحساس مقابل جدول الشركة", "فحص خرج الأوامر من البوردة"], de: ["Fühlerwiderstand mit Herstellertabelle vergleichen", "Ausgänge der Platine prüfen"] } }
-                ]
-            },
-            water_leak: {
-                label: { ar: "تنقيط ماء من الوحدة الداخلية", de: "Innengerät tropft" },
-                causes: [
-                    { name: { ar: "انسداد تصريف المياه / ميلان خاطئ", de: "Kondensatablauf verstopft / Gefälle falsch" }, prob: "high",
-                      checks: { ar: ["تنظيف خرطوم التصريف وفحص الميلان", "فحص مضخة التكثيف إن وجدت"], de: ["Ablaufschlauch reinigen, Gefälle prüfen", "Kondensatpumpe prüfen (falls vorhanden)"] } },
-                    { name: { ar: "تجمد المبخر", de: "Verdampfer vereist" }, prob: "mid",
-                      checks: { ar: ["فحص تدفق الهواء والفلتر", "قياس ضغط الشفط (نقص غاز؟)"], de: ["Luftstrom und Filter prüfen", "Saugdruck messen (Mangel?)"] } },
-                    { name: { ar: "عزل الأنبوب تالف", de: "Leitungsdämmung beschädigt" }, prob: "low",
-                      checks: { ar: ["فحص العزل عند الوصلات"], de: ["Dämmung an Anschlüssen prüfen"] } }
-                ]
-            }
-        },
-        coldroom: {
-            not_cooling: {
-                label: { ar: "لا يبرد", de: "Kühlt nicht" },
-                causes: [
-                    { name: { ar: "نقص غاز / تسرب", de: "Kältemittelverlust / Leck" }, prob: "high",
-                      checks: { ar: ["فحص زجاجة البيان (Schauglas) والضغوط", "فحص التسرب حسب F-Gas"], de: ["Schauglas und Drücke prüfen", "Dichtheitsprüfung gemäß F-Gas"] } },
-                    { name: { ar: "تجمد المبخر / عطل إذابة الجليد", de: "Verdampfer vereist / Abtauung defekt" }, prob: "high",
-                      checks: { ar: ["فحص سخان الإذابة والمؤقت/المنظم", "فحص حساس إنهاء الإذابة"], de: ["Abtauheizung und Abtauuhr/Regler prüfen", "Abtaubeendigungsfühler prüfen"] } },
-                    { name: { ar: "مكثف متسخ / مروحة لا تعمل", de: "Verflüssiger verschmutzt / Lüfter defekt" }, prob: "mid",
-                      checks: { ar: ["تنظيف المكثف", "فحص المروحة والكابستور"], de: ["Verflüssiger reinigen", "Lüfter und Kondensator prüfen"] } },
-                    { name: { ar: "صمام التمدد / الضاغط / الكونتاكتور", de: "Expansionsventil / Verdichter / Schütz" }, prob: "mid",
-                      checks: { ar: ["قياس Superheat", "فحص تيار الضاغط والكونتاكتور"], de: ["Überhitzung messen", "Stromaufnahme und Schütz prüfen"] } }
-                ]
-            },
-            iced_evaporator: {
-                label: { ar: "تجمد المبخر", de: "Verdampfer vereist" },
-                causes: [
-                    { name: { ar: "عطل نظام الإذابة", de: "Abtausystem defekt" }, prob: "high",
-                      checks: { ar: ["قياس مقاومة/تيار سخان الإذابة", "فحص المؤقت وحساس الإنهاء"], de: ["Widerstand/Strom der Abtauheizung messen", "Abtauuhr und Beendigungsfühler prüfen"] } },
-                    { name: { ar: "تسرب هواء من الباب / فتح متكرر", de: "Türdichtung undicht / häufiges Öffnen" }, prob: "mid",
-                      checks: { ar: ["فحص جوان الباب وستارة الهواء"], de: ["Türdichtung und Lamellenvorhang prüfen"] } },
-                    { name: { ar: "مروحة المبخر لا تعمل", de: "Verdampferlüfter ausgefallen" }, prob: "mid",
-                      checks: { ar: ["فحص المحرك والكابستور"], de: ["Motor und Kondensator prüfen"] } },
-                    { name: { ar: "تجمد خط تصريف الماء", de: "Abtauwasserablauf eingefroren" }, prob: "low",
-                      checks: { ar: ["فحص سخان خط التصريف"], de: ["Begleitheizung des Ablaufs prüfen"] } }
-                ]
-            }
-        },
-        chiller: {
-            high_pressure: {
-                label: { ar: "ضغط مرتفع", de: "Hochdruck" },
-                causes: [
-                    { name: { ar: "انسداد/اتساخ المبادل أو المكثف", de: "Wärmetauscher / Verflüssiger verschmutzt" }, prob: "high",
-                      checks: { ar: ["تنظيف المكثف/المبادل", "قياس فرق الحرارة على جانب الماء/الهواء"], de: ["Verflüssiger/Wärmetauscher reinigen", "Temperaturspreizung messen"] } },
-                    { name: { ar: "تدفق ماء/هواء ناقص", de: "Wasser-/Luftmenge zu gering" }, prob: "mid",
-                      checks: { ar: ["فحص المضخة والمراوح والمرشحات"], de: ["Pumpe, Lüfter und Filter prüfen"] } },
-                    { name: { ar: "غازات غير قابلة للتكثف / شحنة زائدة", de: "Inertgase / Überfüllung" }, prob: "low",
-                      checks: { ar: ["مقارنة Subcooling مع القيمة المطلوبة"], de: ["Unterkühlung mit Sollwert vergleichen"] } }
-                ]
-            }
-        },
-        window: {
-            not_cooling: {
-                label: { ar: "لا يبرد", de: "Kühlt nicht" },
-                causes: [
-                    { name: { ar: "الضاغط لا يعمل / كابستور", de: "Kompressor läuft nicht / Kondensator" }, prob: "high",
-                      checks: { ar: ["فحص الكابستور والريلاي والأوفرلود"], de: ["Kondensator, Relais und Überlastschutz prüfen"] } },
-                    { name: { ar: "محرك المروحة", de: "Lüftermotor" }, prob: "mid",
-                      checks: { ar: ["فحص دوران المروحة وتيار المحرك"], de: ["Lüfterlauf und Motorstrom prüfen"] } },
-                    { name: { ar: "نقص غاز / انسداد الشعرية", de: "Kältemittelmangel / Kapillare verstopft" }, prob: "mid",
-                      checks: { ar: ["قياس الضغط وفحص التسرب"], de: ["Druck messen, Lecksuche"] } },
-                    { name: { ar: "ثرموستات", de: "Thermostat" }, prob: "low",
-                      checks: { ar: ["فحص استمرارية الملامسات"], de: ["Kontakte auf Durchgang prüfen"] } }
-                ]
-            }
-        }
-    };
-
-    /* ---------- State / storage ---------- */
-    const state = { codes: {}, faults: {}, history: [], catalogs: [] };
-    let selectedImageFile = null;
-    let pendingCode = null;
-
-    function loadState() {
-        const c = readJSON(LS.codes, {}), f = readJSON(LS.db, {}), h = readJSON(LS.history, []), k = readJSON(LS.catalogs, []);
-        state.codes = isObj(c) ? c : {};
-        state.faults = isObj(f) ? f : {};
-        state.history = Array.isArray(h) ? h : [];
-        state.catalogs = Array.isArray(k) ? k : [];
-    }
-    function persist() {
-        try {
-            localStorage.setItem(LS.codes, JSON.stringify(state.codes));
-            localStorage.setItem(LS.db, JSON.stringify(state.faults));
-            localStorage.setItem(LS.history, JSON.stringify(state.history));
-            localStorage.setItem(LS.catalogs, JSON.stringify(state.catalogs));
-            localStorage.setItem(LS.ts, String(Date.now()));
-        } catch (e) { toast("Storage error: " + e.message, "err"); }
-        scheduleSync();
-    }
-
-    /* ---------- Cloud sync ---------- */
-    let syncTimer = null;
-    function setSync(kind) {
-        const bar = $("syncStatus");
-        bar.className = "sync-bar sync-" + kind; bar.style.display = "block";
-        bar.textContent = t(kind === "busy" ? "syncing" : kind === "ok" ? "syncOk" : "syncErr");
-        if (kind === "ok") setTimeout(() => { bar.style.display = "none"; }, 2500);
-    }
-    function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(syncToCloud, 700); }
-
-    async function syncToCloud() {
-        setSync("busy");
-        try {
-            const res = await fetch("/api/sync", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    customDB: JSON.stringify(state.faults), customCodes: JSON.stringify(state.codes),
-                    history: JSON.stringify(state.history), catalogs: JSON.stringify(state.catalogs),
-                    updatedAt: Number(localStorage.getItem(LS.ts)) || Date.now()
-                })
-            });
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            setSync("ok");
-        } catch (e) { setSync("err"); }
-    }
-
-    async function loadFromCloud() {
-        try {
-            const res = await fetch("/api/sync");
-            if (!res.ok) return;
-            const cloud = await res.json();
-            if (!isObj(cloud)) return;
-            const localTs = Number(localStorage.getItem(LS.ts)) || 0;
-            const cloudTs = Number(cloud.updatedAt) || 0;
-            const hasCloud = cloud.customDB || cloud.customCodes || cloud.history || cloud.catalogs;
-            if (!hasCloud) { if (localTs) scheduleSync(); return; }
-            if (cloudTs > localTs || (!cloudTs && !localTs)) {
-                const parse = v => { try { return typeof v === "string" ? JSON.parse(v) : v; } catch (e) { return null; } };
-                const f = parse(cloud.customDB), c = parse(cloud.customCodes), h = parse(cloud.history), k = parse(cloud.catalogs);
-                if (isObj(f)) state.faults = f;
-                if (isObj(c)) state.codes = c;
-                if (Array.isArray(h)) state.history = h;
-                if (Array.isArray(k)) state.catalogs = k;
-                try {
-                    localStorage.setItem(LS.codes, JSON.stringify(state.codes));
-                    localStorage.setItem(LS.db, JSON.stringify(state.faults));
-                    localStorage.setItem(LS.history, JSON.stringify(state.history));
-                    localStorage.setItem(LS.catalogs, JSON.stringify(state.catalogs));
-                    localStorage.setItem(LS.ts, String(cloudTs || 1));
-                } catch (e) { /* ignore */ }
-                renderAll();
-            } else if (localTs > cloudTs) {
-                scheduleSync();   // local is newer (e.g. edited offline / imported)
-            }
-        } catch (e) { /* offline or no backend */ }
-    }
-
-    /* ---------- History ---------- */
-    function saveToHistory(title, resultText) {
-        const top = state.history[0];
-        if (top && top.title === title && top.result === resultText) return;
-        state.history.unshift({ id: Date.now(), date: new Date().toLocaleString(currentLang === "ar" ? "ar-EG" : "de-DE"), title: title, result: resultText });
-        if (state.history.length > 50) state.history.length = 50;
-        persist(); renderHistory();
-    }
-    function renderHistory() {
-        const box = $("historyList");
-        if (!state.history.length) { box.innerHTML = `<p style="text-align:center;color:#888;">${esc(t("noHistory"))}</p>`; return; }
-        box.innerHTML = state.history.map(i =>
-            `<div class="history-item"><button class="delete-btn" type="button" data-act="delhist" data-id="${esc(i.id)}">×</button>
-            <div class="history-date">🕒 ${esc(i.date)}</div><div class="history-text">${esc(i.title)}</div>
-            <div class="history-result">${esc(i.result).replace(/\n/g, "<br>")}</div></div>`).join("");
-    }
-
-    /* ---------- Code search ---------- */
-    function findCodes(brandIn, codeIn) {
-        const cb = canon(brandIn), cc = canon(codeIn), hits = [], seen = new Set();
-        const scan = (db, custom) => {
-            for (const b in db) {
-                if (cb && !canon(b).includes(cb)) continue;
-                for (const c in db[b]) {
-                    if (canon(c) !== cc) continue;
-                    const key = canon(b) + "|" + canon(c);
-                    if (seen.has(key)) continue;
-                    seen.add(key);
-                    const v = db[b][c];
-                    hits.push({ brand: b, code: c, desc: v.desc || "", causes: Array.isArray(v.causes) ? v.causes : [], custom: custom });
-                }
-            }
-        };
-        scan(state.codes, true);          // custom entries override defaults
-        scan(defaultCodesDB, false);
-        return hits;
-    }
-
-    function searchErrorCode() {
-        const brandIn = $("searchBrand").value.trim(), codeIn = $("searchCode").value.trim();
-        const out = $("codeResult");
-        if (!codeIn) { toast(t("fillCode"), "err"); return; }
-        const hits = findCodes(brandIn, codeIn);
-        if (hits.length) {
-            out.innerHTML = hits.map(h =>
-                `<div class="code-block"><h3>${esc(h.brand)} – ${esc(h.code)} ${h.custom ? `<span class="badge">${esc(t("custom"))}</span>` : ""}</h3>
-                <p class="code-desc">${esc(h.desc)}</p><ul>${h.causes.map(c => `<li>${esc(c)}</li>`).join("")}</ul></div>`).join("");
-            out.style.display = "block";
-            saveToHistory(`${t("codePrefix")}: ${hits[0].brand} ${hits[0].code}`,
-                hits.map(h => `${h.brand} ${h.code}\n${h.desc}\n${h.causes.join("\n")}`).join("\n\n"));
-        } else {
-            const b = brandIn.toUpperCase(), c = codeIn.toUpperCase();
-            pendingCode = { brand: b, code: c };
-            out.innerHTML = `<p style="color:#d9534f;font-weight:bold;">${esc(t("codeNotFound"))}</p>
-                <button type="button" style="background-color:#4285f4;margin-bottom:15px;" id="btnGoogleCode">${esc(t("btnGoogleCode"))}</button>
-                <div style="padding:10px;background:#fff;border:1px solid #ddd;border-radius:8px;">
-                <label style="font-size:13px;">${esc(t("saveLabel"))}</label>
-                <textarea id="foundCodeDesc" style="height:60px;font-size:14px;"></textarea>
-                <button class="add-btn" type="button" style="margin-top:5px;padding:10px;" id="btnSaveFound">${esc(t("saveBtn"))}</button></div>`;
-            out.style.display = "block";
-            $("btnGoogleCode").addEventListener("click", () =>
-                window.open("https://www.google.com/search?q=" + encodeURIComponent(`${b} ${c} error code HVAC`), "_blank", "noopener"));
-            $("btnSaveFound").addEventListener("click", saveCodeFromSearch);
-        }
-    }
-
-    function saveCodeFromSearch() {
-        if (!pendingCode) return;
-        if (!pendingCode.brand) { toast(t("fillBrandCode"), "err"); return; }
-        const lines = $("foundCodeDesc").value.split("\n").map(s => s.trim()).filter(Boolean);
-        if (!lines.length) { toast(t("fillDesc"), "err"); return; }
-        if (!state.codes[pendingCode.brand]) state.codes[pendingCode.brand] = {};
-        state.codes[pendingCode.brand][pendingCode.code] = { desc: lines[0], causes: lines.length > 1 ? lines.slice(1) : [] };
-        persist(); renderCustomFaults();
-        toast(t("saved"), "ok");
-        searchErrorCode();
-    }
-
-    /* ---------- Fault search ---------- */
-    function getEntries() {
-        const out = [];
-        for (const dev in DEFAULT_DB) for (const k in DEFAULT_DB[dev]) out.push({ device: dev, key: k, custom: false, data: DEFAULT_DB[dev][k] });
-        for (const dev in state.faults) {
-            if (!isObj(state.faults[dev])) continue;
-            for (const k in state.faults[dev]) if (k.indexOf("custom_") === 0) out.push({ device: dev, key: k, custom: true, data: state.faults[dev][k] });
-        }
-        return out;
-    }
-
-    function probText(p) {
-        if (p === "high") return t("probHigh");
-        if (p === "mid") return t("probMid");
-        if (p === "low") return t("probLow");
-        return p || "";
-    }
-
-    function entryHtml(e) {
-        const d = e.data;
-        let html = `<h3>${esc(devLabel(e.device))}: ${esc(tr(d.label))} ${e.custom ? `<span class="badge">${esc(t("custom"))}</span>` : ""}</h3>`;
-        (d.causes || []).forEach(c => {
-            const p = probText(c.prob);
-            html += `<div class="cause-item"><strong>${esc(tr(c.name))}</strong> ${p ? `<span class="prob">(${esc(p)})</span>` : ""}
-                <ul>${trList(c.checks).map(ch => `<li>${esc(ch)}</li>`).join("")}</ul></div>`;
-        });
-        return html;
-    }
-    function entryText(e) {
-        return `${devLabel(e.device)}: ${tr(e.data.label)}\n` + (e.data.causes || []).map(c => `- ${tr(c.name)}`).join("\n");
-    }
-
-    function unifiedSearch() {
-        const query = $("manualSearchText").value.trim();
-        if (!query) return;
-        let tokens = norm(query).split(/[^\p{L}\p{N}]+/u).map(w => w.replace(/^ال/, "")).filter(Boolean);
-        const long = tokens.filter(w => w.length >= 3);
-        if (long.length) tokens = long;
-        const devWords = d => norm(flat([translations.ar[DEVICE_KEY[d]], translations.de[DEVICE_KEY[d]]]));
-        const scored = getEntries().map(e => {
-            const hay = norm(flat(e.data)) + " " + devWords(e.device);
-            return { e: e, score: tokens.filter(w => hay.includes(w)).length };
-        }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
-
-        const out = $("result");
-        if (!scored.length) {
-            out.innerHTML = `<p style="color:#d9534f;font-weight:bold;text-align:center;">${esc(t("noResults"))}</p>`;
-            out.style.display = "block"; return;
-        }
-        out.innerHTML = scored.map(x => entryHtml(x.e)).join("");
-        out.style.display = "block";
-        saveToHistory(`${t("searchPrefix")}: ${query}`, scored.map(x => entryText(x.e)).join("\n\n"));
-    }
-
-    function searchGoogle() {
-        const q = $("manualSearchText").value.trim();
-        if (!q) return;
-        window.open("https://www.google.com/search?q=" + encodeURIComponent(q + " HVAC fault"), "_blank", "noopener");
-    }
-
-    /* ---------- Add / delete custom ---------- */
-    function addNewCode() {
-        const brand = $("newBrandName").value.trim().toUpperCase();
-        const code = $("newCodeName").value.trim().toUpperCase();
-        const lines = $("newCodeCauses").value.split("\n").map(s => s.trim()).filter(Boolean);
-        if (!brand || !code || !lines.length) { toast(t("fillFields"), "err"); return; }
-        if (!state.codes[brand]) state.codes[brand] = {};
-        state.codes[brand][code] = { desc: lines[0], causes: lines.slice(1) };
-        persist(); renderCustomFaults();
-        $("newBrandName").value = ""; $("newCodeName").value = ""; $("newCodeCauses").value = "";
-        toast(t("saved"), "ok");
-    }
-
-    function addNewFault() {
-        const device = $("addDeviceType").value;
-        const name = $("newFaultName").value.trim();
-        const lines = $("newFaultCauses").value.split("\n").map(s => s.trim()).filter(Boolean);
-        if (!name || !lines.length) { toast(t("fillFields"), "err"); return; }
-        const causes = lines.map(line => {
-            const i = line.indexOf(" - ");            // split only on " - " so hyphenated words survive
-            return i > 0 ? { name: line.slice(0, i).trim(), prob: "", checks: [line.slice(i + 3).trim()] }
-                         : { name: line, prob: "", checks: [] };
-        });
-        if (!isObj(state.faults[device])) state.faults[device] = {};
-        state.faults[device]["custom_" + Date.now()] = { label: name, causes: causes };
-        persist(); renderCustomFaults();
-        $("newFaultName").value = ""; $("newFaultCauses").value = "";
-        toast(t("saved"), "ok");
-    }
-
-    function renderCustomFaults() {
-        const list = $("customFaultsList");
-        let html = "";
-        for (const b in state.codes) for (const c in state.codes[b])
-            html += `<div class="custom-fault-item"><span>[${esc(t("codePrefix"))}] ${esc(b)} - ${esc(c)}</span>
-                <button type="button" class="mini-del" data-act="delcode" data-brand="${esc(b)}" data-code="${esc(c)}">×</button></div>`;
-        for (const dev in state.faults) {
-            if (!isObj(state.faults[dev])) continue;
-            for (const k in state.faults[dev]) if (k.indexOf("custom_") === 0)
-                html += `<div class="custom-fault-item"><span>[${esc(devLabel(dev))}] ${esc(tr(state.faults[dev][k].label))}</span>
-                    <button type="button" class="mini-del" data-act="delfault" data-dev="${esc(dev)}" data-key="${esc(k)}">×</button></div>`;
-        }
-        list.innerHTML = html || `<p style="text-align:center;font-size:12px;color:#555;margin:0;">${esc(t("noCustom"))}</p>`;
-    }
-
-    /* ---------- Catalogs ---------- */
-    function saveCatalogLink() {
-        const name = $("catalogName").value.trim();
-        let link = $("catalogLink").value.trim();
-        if (!name || !link) { toast(t("fillFields"), "err"); return; }
-        if (!/^[a-z][a-z0-9+.-]*:/i.test(link)) link = "https://" + link;
-        try { const u = new URL(link); if (u.protocol !== "http:" && u.protocol !== "https:") throw 0; link = u.href; }
-        catch (e) { toast(t("badLink"), "err"); return; }
-        state.catalogs.push({ name: name, link: link });
-        persist(); renderCatalogs();
-        $("catalogName").value = ""; $("catalogLink").value = "";
-    }
-    function renderCatalogs() {
-        const box = $("catalogList");
-        if (!state.catalogs.length) { box.innerHTML = `<p style="text-align:center;font-size:12px;color:#888;">${esc(t("noCatalogs"))}</p>`; return; }
-        box.innerHTML = state.catalogs.map((i, idx) =>
-            `<div class="catalog-item"><a href="${esc(i.link)}" target="_blank" rel="noopener noreferrer">📄 ${esc(i.name)}</a>
-            <button type="button" class="mini-del" data-act="delcat" data-i="${idx}">×</button></div>`).join("");
-    }
-
-    /* ---------- Delegated delete handling ---------- */
-    document.addEventListener("click", e => {
-        const b = e.target.closest("button[data-act]");
-        if (!b) return;
-        const act = b.dataset.act;
-        if (act === "clear") { if (confirm(t("confirmClear"))) { state.history = []; persist(); renderHistory(); } return; }
-        if (!confirm(t("confirmDelete"))) return;
-        if (act === "delcode") { if (state.codes[b.dataset.brand]) { delete state.codes[b.dataset.brand][b.dataset.code]; if (!Object.keys(state.codes[b.dataset.brand]).length) delete state.codes[b.dataset.brand]; } }
-        else if (act === "delfault") { if (state.faults[b.dataset.dev]) delete state.faults[b.dataset.dev][b.dataset.key]; }
-        else if (act === "delhist") { state.history = state.history.filter(i => String(i.id) !== b.dataset.id); }
-        else if (act === "delcat") { state.catalogs.splice(Number(b.dataset.i), 1); }
-        persist(); renderAll();
-    });
-
-    /* ---------- Export / Import ---------- */
-    function exportFaults() {
-        const data = { customDB: state.faults, customCodes: state.codes, catalogs: state.catalogs, history: state.history };
-        const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = "HVAC_Backup_" + new Date().toISOString().slice(0, 10) + ".json";
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-    function importFaults(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            try {
-                const parse = v => typeof v === "string" ? JSON.parse(v) : v;
-                const d = JSON.parse(e.target.result);
-                if (!isObj(d)) throw new Error("bad");
-                const f = parse(d.customDB), c = parse(d.customCodes), k = parse(d.catalogs), h = parse(d.history);
-                if (isObj(f)) for (const dev in f) if (isObj(f[dev])) state.faults[dev] = Object.assign({}, state.faults[dev], f[dev]);
-                if (isObj(c)) for (const b in c) if (isObj(c[b])) state.codes[b] = Object.assign({}, state.codes[b], c[b]);
-                if (Array.isArray(k)) k.forEach(i => { if (i && i.link && !state.catalogs.some(x => x.link === i.link)) state.catalogs.push({ name: String(i.name || i.link), link: String(i.link) }); });
-                if (Array.isArray(h)) h.forEach(i => { if (i && i.id && !state.history.some(x => x.id === i.id)) state.history.push(i); });
-                state.history = state.history.sort((a, b) => b.id - a.id).slice(0, 50);
-                persist(); renderAll();
-                toast(t("importOk"), "ok");
-            } catch (err) { toast(t("importFail"), "err"); }
-            event.target.value = "";
-        };
-        reader.readAsText(file);
-    }
-
-    /* ---------- Image / Lens ---------- */
-    function handleImageSelection(input) {
-        if (input.files && input.files[0]) { selectedImageFile = input.files[0]; $("imgPreviewText").style.display = "block"; }
-        input.value = "";
-    }
-    async function searchWithGoogleLens() {
-        if (!selectedImageFile) { toast(t("pickImage"), "err"); return; }
-        if (navigator.canShare && navigator.canShare({ files: [selectedImageFile] })) {
-            try { await navigator.share({ files: [selectedImageFile], title: "Search" }); } catch (e) { /* user cancelled */ }
-        } else { window.open("https://lens.google.com/", "_blank", "noopener"); }
-    }
-
-    /* ---------- PDF ---------- */
-    const pdfReady = typeof pdfjsLib !== "undefined";
-    if (pdfReady) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
-    let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = 1.5, currentPdfBlobUrl = null;
-
-    function revokePdfUrl() { if (currentPdfBlobUrl) { URL.revokeObjectURL(currentPdfBlobUrl); currentPdfBlobUrl = null; } }
-
-    function loadLocalPDF() {
-        const file = $("localCatalogInput").files[0];
-        if (!file) return;
-        revokePdfUrl();
-        currentPdfBlobUrl = URL.createObjectURL(file);
-        $("translationBox").style.display = "none";
-        if (!pdfReady) { toast(t("pdfLibMissing"), "err"); window.open(currentPdfBlobUrl, "_blank"); return; }
-        const reader = new FileReader();
-        reader.onload = e => {
-            pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise.then(doc => {
-                pdfDoc = doc; $("pageCount").textContent = doc.numPages;
-                $("pdfViewerContainer").style.display = "block";
-                pageNum = 1; scale = 1.5; renderPage(1);
-            }).catch(err => toast("PDF: " + err.message, "err"));
-        };
-        reader.readAsArrayBuffer(file);
-    }
-    function renderPage(num) {
-        pageRendering = true;
-        pdfDoc.getPage(num).then(page => {
-            const viewport = page.getViewport({ scale: scale }), canvas = $("pdfCanvas");
-            canvas.height = viewport.height; canvas.width = viewport.width;
-            return page.render({ canvasContext: canvas.getContext("2d"), viewport: viewport }).promise;
-        }).catch(err => toast("PDF: " + err.message, "err")).then(() => {
-            pageRendering = false;
-            if (pageNumPending !== null) { const n = pageNumPending; pageNumPending = null; renderPage(n); }
-        });
-        $("pageInput").value = num; $("translationBox").style.display = "none";
-    }
-    function queueRenderPage(n) { if (pageRendering) pageNumPending = n; else renderPage(n); }
-    function changePage(o) { if (!pdfDoc) return; const n = pageNum + o; if (n >= 1 && n <= pdfDoc.numPages) { pageNum = n; queueRenderPage(n); } }
-    function goToPage() {
-        if (!pdfDoc) return;
-        const v = parseInt($("pageInput").value, 10);
-        if (v >= 1 && v <= pdfDoc.numPages) { pageNum = v; queueRenderPage(v); } else { toast(t("noPage"), "err"); $("pageInput").value = pageNum; }
-    }
-    function zoom(d) { if (!pdfDoc) return; scale = Math.min(4, Math.max(0.5, scale + d)); queueRenderPage(pageNum); }
-    function closePdfViewer() {
-        $("pdfViewerContainer").style.display = "none"; $("localCatalogInput").value = ""; $("translationBox").style.display = "none";
-        pdfDoc = null; revokePdfUrl();
-    }
-    function chunkText(s, max) {
-        const out = []; let cur = "";
-        s.split(" ").forEach(w => { if ((cur + " " + w).length > max && cur) { out.push(cur); cur = w; } else cur = cur ? cur + " " + w : w; });
-        if (cur) out.push(cur);
-        return out;
-    }
-    async function translateTextFree() {
-        if (!pdfDoc) return;
-        const box = $("translationBox"), out = $("translationText");
-        box.style.display = "block"; out.style.color = "#0275d8"; out.textContent = "...";
-        const src = $("transSrc").value;
-        if (src === currentLang) { out.textContent = t("transSame"); return; }
-        try {
-            const page = await pdfDoc.getPage(pageNum);
-            const tc = await page.getTextContent();
-            const text = tc.items.map(i => i.str).join(" ").replace(/\s+/g, " ").trim();
-            if (text.length < 5) throw new Error(t("noText"));
-            const all = chunkText(text, 450), chunks = all.slice(0, 3), parts = [];
-            for (const c of chunks) {
-                const res = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(c) + "&langpair=" + src + "|" + currentLang);
-                if (!res.ok) throw new Error("HTTP " + res.status);
-                const data = await res.json();
-                const tt = data && data.responseData && data.responseData.translatedText;
-                if (!tt) throw new Error(t("transFail"));
-                parts.push(decodeEntities(tt));
-            }
-            out.textContent = parts.join(" ") + (all.length > chunks.length ? " …" : "");
-            out.style.color = "#333";
-        } catch (err) { out.textContent = err.message; out.style.color = "red"; }
-    }
-
-    /* ---------- Language / render ---------- */
-    function renderAll() { renderCustomFaults(); renderHistory(); renderCatalogs(); }
-    function applyLanguage() {
-        document.documentElement.lang = currentLang;
-        document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
-        document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
-        document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
-        $("langBtn").textContent = currentLang === "ar" ? "Deutsch" : "العربية";
-        renderAll();
-        $("result").style.display = "none"; $("codeResult").style.display = "none";
-    }
-
-    /* ---------- Wire up events ---------- */
-    $("langBtn").addEventListener("click", () => {
-        currentLang = currentLang === "ar" ? "de" : "ar";
-        try { localStorage.setItem(LS.lang, currentLang); } catch (e) { /* ignore */ }
-        applyLanguage();
-    });
-    $("btnSearchCode").addEventListener("click", searchErrorCode);
-    $("btnSearchLocal").addEventListener("click", unifiedSearch);
-    $("btnSearchGoogle").addEventListener("click", searchGoogle);
-    $("searchCode").addEventListener("keydown", e => { if (e.key === "Enter") searchErrorCode(); });
-    $("searchBrand").addEventListener("keydown", e => { if (e.key === "Enter") searchErrorCode(); });
-    $("manualSearchText").addEventListener("keydown", e => { if (e.key === "Enter") unifiedSearch(); });
-    $("btnAddCode").addEventListener("click", addNewCode);
-    $("btnAddFault").addEventListener("click", addNewFault);
-    $("btnExport").addEventListener("click", exportFaults);
-    $("btnImport").addEventListener("click", () => $("importFaultsInput").click());
-    $("importFaultsInput").addEventListener("change", importFaults);
-    $("btnCam").addEventListener("click", () => $("cameraInput").click());
-    $("btnGal").addEventListener("click", () => $("galleryInput").click());
-    $("cameraInput").addEventListener("change", e => handleImageSelection(e.target));
-    $("galleryInput").addEventListener("change", e => handleImageSelection(e.target));
-    $("btnLens").addEventListener("click", searchWithGoogleLens);
-    $("btnSaveCat").addEventListener("click", saveCatalogLink);
-    $("localCatalogInput").addEventListener("change", loadLocalPDF);
-    $("btnPrev").addEventListener("click", () => changePage(-1));
-    $("btnNext").addEventListener("click", () => changePage(1));
-    $("pageInput").addEventListener("change", goToPage);
-    $("btnZoomIn").addEventListener("click", () => zoom(0.3));
-    $("btnZoomOut").addEventListener("click", () => zoom(-0.3));
-    $("btnClosePdf").addEventListener("click", closePdfViewer);
-    $("btnExtPdf").addEventListener("click", () => { if (currentPdfBlobUrl) window.open(currentPdfBlobUrl, "_blank"); });
-    $("btnTransPdf").addEventListener("click", translateTextFree);
-    $("btnClearHistory").dataset.act = "clear";
-
-    /* ---------- Init ---------- */
-    loadState();
-    applyLanguage();
-    loadFromCloud();
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+const LS={lang:"hvacLang",db:"hvacCustomDB",codes:"hvacCustomCodes",history:"hvacHistory",catalogs:"hvacCatalogs"};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isObj=v=>v&&typeof v==="object"&&!Array.isArray(v);
+const canon=s=>String(s||"").toUpperCase().replace(/[\s\-_.]/g,"");
+const norm=s=>String(s||"").toLowerCase().replace(/ß/g,"ss").normalize("NFKD").replace(/[\u0300-\u036f\u064b-\u065f\u0670]/g,"").replace(/[أإآ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/^ال/,"");
+const flat=v=>typeof v==="string"?v:Array.isArray(v)?v.map(flat).join(" "):isObj(v)?Object.values(v).map(flat).join(" "):"";
+const decodeEntities=s=>{const t=document.createElement("textarea");t.innerHTML=s;return t.value;};
+const readJSON=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?f:v}catch{return f}};
+let toastTimer=null;
+function toast(msg,type){const el=$("toast");el.textContent=msg;el.className=type||"";el.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display="none",2800);}
+let currentLang=localStorage.getItem(LS.lang)==="de"?"de":"ar";
+const translations={
+ar:{title:"❄ HVAC Diagnose Tool",subtitle:"مرجعك الميداني السريع - يعمل بدون إنترنت",secCode:"🔢 البحث عن الأكواد والأعطال",lblCodeSearch:"1. البحث بواسطة كود العطل:",lblTextSearch:"2. البحث بالكلمات (عن أي عطل):",phBrand:"الماركة (اختياري) مثال: Daikin",phCode:"كود العطل مثال: E4",btnSearchCode:"🔍 بحث عن الكود",phSearch:"مثال: ضغط عالي، لا يبرد، تجمد...",btnSearchLocal:"البحث في كل الأجهزة",btnSearchGoogle:"🌐 ابحث في جوجل",secLens:"📸 البحث بالصورة (Google Lens)",lensDesc:"التقط صورة للعطل أو الكود، ثم شاركها مع Google Lens.",btnCam:"📷 التقاط صورة",btnGal:"🖼️ من الاستديو",imgPreview:"✅ تم اختيار الصورة",btnLens:"🔍 فتح في Google Lens",secAdd:"➕ إضافة أعطال / أكواد مخصصة",lblAddCodeTitle:"إضافة كود عطل جديد:",lblBrand:"الماركة:",lblCode:"الكود:",lblCodeDesc:"الوصف والأسباب (السطر الأول = الوصف):",phCodeCauses:"ضغط منخفض\nنقص غاز\nحساس ضغط تالف",btnAddCode:"💾 حفظ الكود",lblAddFaultTitle:"إضافة عطل عام (بدون كود):",lblDevice:"نوع الجهاز:",optSplit:"مكيف سبليت",optCold:"غرفة تبريد",optChiller:"تشيلر (Chiller)",optWindow:"مكيف شباك",lblFaultName:"اسم العطل:",lblCauses:"الأسباب وخطوات الفحص:",phCausesFault:"كل سبب في سطر بالشكل:\nالسبب - طريقة الفحص",btnAddFault:"💾 حفظ العطل",btnExport:"⬇️ تصدير البيانات",btnImport:"⬆️ استيراد البيانات",lblDelete:"🗑️ الأكواد والأعطال المضافة:",secCat:"📖 الكتالوجات وقارئ PDF",lblCatLink:"حفظ رابط كتالوج:",phCatName:"اسم الكتالوج",btnSaveCat:"💾 حفظ الرابط",lblCatFile:"فتح كتالوج من ذاكرة الهاتف:",btnClosePdf:"× إغلاق",btnExtPdf:"↗️ خارجي",btnTransPdf:"📄 ترجمة",lblTransTitle:"🌐 النص المترجم:",secHist:"📚 سجل التشخيصات السابقة",btnClearHistory:"🗑️ مسح السجل",noCustom:"لا توجد إضافات حالياً.",noCatalogs:"لا توجد كتالوجات.",noHistory:"لا يوجد سجل.",noPage:"رقم الصفحة غير صحيح",codeNotFound:"لم يتم العثور على الكود. ابحث عنه في جوجل:",btnGoogleCode:"🌐 البحث في جوجل",saveLabel:"هل وجدت الحل؟ الصقه هنا (السطر الأول = الوصف):",saveBtn:"💾 حفظ الكود",fillCode:"أدخل كود العطل.",fillBrandCode:"أدخل الماركة والكود.",fillFields:"الرجاء تعبئة كل الحقول.",fillDesc:"الرجاء كتابة الوصف.",saved:"✅ تم الحفظ",confirmDelete:"حذف؟",confirmClear:"مسح السجل بالكامل؟",noResults:"لم يتم العثور عليه محلياً. جرب جوجل.",resultsFor:"النتائج",codePrefix:"كود",searchPrefix:"بحث",probHigh:"شائع",probMid:"متوسط",probLow:"نادر",custom:"مخصص",badLink:"رابط غير صالح (يجب أن يبدأ بـ http أو https).",pickImage:"اختر صورة أولاً.",pdfLibMissing:"قارئ PDF غير متاح – تم فتح الملف خارجياً.",noText:"لا يوجد نص في هذه الصفحة.",transFail:"فشلت الترجمة.",transSame:"اختر لغة مصدر مختلفة عن لغة الواجهة.",importOk:"✅ تم الاستيراد",importFail:"❌ ملف غير صالح"},
+de:{title:"❄ HVAC Diagnose-Tool",subtitle:"Ihr schneller Außendienst-Leitfaden - Offline",secCode:"🔢 Fehlercodes & Fehler suchen",lblCodeSearch:"1. Suche nach Fehlercode:",lblTextSearch:"2. Suche nach Stichworten:",phBrand:"Marke (optional), z.B. Daikin",phCode:"Fehlercode, z.B. E4",btnSearchCode:"🔍 Code suchen",phSearch:"z.B.: Hochdruck, kühlt nicht, vereist...",btnSearchLocal:"In allen Geräten suchen",btnSearchGoogle:"🌐 Bei Google suchen",secLens:"📸 Bildsuche (Google Lens)",lensDesc:"Foto vom Fehlercode machen und mit Google Lens teilen.",btnCam:"📷 Foto machen",btnGal:"🖼️ Aus Galerie",imgPreview:"✅ Bild ausgewählt",btnLens:"🔍 In Google Lens öffnen",secAdd:"➕ Fehler / Codes hinzufügen",lblAddCodeTitle:"Neuen Fehlercode hinzufügen:",lblBrand:"Marke:",lblCode:"Code:",lblCodeDesc:"Beschreibung & Ursachen (1. Zeile = Beschreibung):",phCodeCauses:"Niederdruckfehler\nKältemittelmangel\nDruckfühler defekt",btnAddCode:"💾 Code speichern",lblAddFaultTitle:"Allgemeinen Fehler hinzufügen:",lblDevice:"Gerätetyp:",optSplit:"Split-Klimaanlage",optCold:"Kühlraum",optChiller:"Kaltwassersatz",optWindow:"Fensterklima",lblFaultName:"Fehlername:",lblCauses:"Ursachen & Prüfschritte:",phCausesFault:"Eine Ursache pro Zeile:\nUrsache - Prüfschritt",btnAddFault:"💾 Fehler speichern",btnExport:"⬇️ Daten exportieren",btnImport:"⬆️ Daten importieren",lblDelete:"🗑️ Eigene Einträge (löschen):",secCat:"📖 Kataloge & PDF-Reader",lblCatLink:"Katalog-Link speichern:",phCatName:"Katalogname",btnSaveCat:"💾 Link speichern",lblCatFile:"Katalog vom Handy öffnen:",btnClosePdf:"× Schließen",btnExtPdf:"↗️ Extern",btnTransPdf:"📄 Übersetzen",lblTransTitle:"🌐 Übersetzter Text:",secHist:"📚 Diagnose-Verlauf",btnClearHistory:"🗑️ Verlauf löschen",noCustom:"Noch keine Einträge.",noCatalogs:"Keine Kataloge.",noHistory:"Kein Verlauf.",noPage:"Ungültige Seitenzahl",codeNotFound:"Code nicht gefunden. Bitte bei Google suchen:",btnGoogleCode:"🌐 Bei Google suchen",saveLabel:"Lösung gefunden? Hier einfügen (1. Zeile = Beschreibung):",saveBtn:"💾 Code speichern",fillCode:"Bitte Fehlercode eingeben.",fillBrandCode:"Bitte Marke und Code eingeben.",fillFields:"Bitte alle Felder ausfüllen.",fillDesc:"Bitte Beschreibung eingeben.",saved:"✅ Gespeichert",confirmDelete:"Löschen?",confirmClear:"Gesamten Verlauf löschen?",noResults:"Nicht gefunden.",resultsFor:"Ergebnisse",codePrefix:"Code",searchPrefix:"Suche",probHigh:"häufig",probMid:"mittel",probLow:"selten",custom:"eigen",badLink:"Ungültiger Link.",pickImage:"Bitte zuerst ein Bild auswählen.",pdfLibMissing:"PDF-Reader nicht verfügbar – Datei extern geöffnet.",noText:"Kein Text auf dieser Seite.",transFail:"Übersetzung fehlgeschlagen.",transSame:"Quellsprache muss sich unterscheiden.",importOk:"✅ Import erfolgreich",importFail:"❌ Ungültige Datei"}
+};
+const t=k=>translations[currentLang][k]??translations.ar[k]??k;
+const DEVICE_KEY={split:"optSplit",coldroom:"optCold",chiller:"optChiller",window:"optWindow"};
+const devLabel=d=>t(DEVICE_KEY[d])||d;
+const tr=v=>isObj(v)?(v[currentLang]??v.ar??v.de??""):v??"";
+const trList=v=>Array.isArray(v)?v:isObj(v)?(v[currentLang]||v.ar||v.de||[]):[];
+const defaultCodesDB={"LG":{"E5":{desc:"Kompressor-Überhitzung / ارتفاع حرارة الضاغط",causes:["Kältemittelmangel - Druck prüfen","Verstopfter Filter - reinigen"]},"CH05":{desc:"Kommunikationsfehler / خطأ في الاتصال",causes:["Kabel prüfen","Platine prüfen"]}},"DAIKIN":{"E4":{desc:"Niederdruckfehler / خطأ ضغط منخفض",causes:["Kältemittel prüfen","Lecksuche"]},"U4":{desc:"Kommunikationsfehler / خطأ اتصال",causes:["Verkabelung prüfen"]}},"SAMSUNG":{"E1":{desc:"Raumtemperaturfühler defekt / حساس حرارة الغرفة تالف",causes:["Fühler prüfen","Kabel prüfen"]}}};
+const DEFAULT_DB={
+split:{not_cooling:{label:{ar:"لا يبرد",de:"Kühlt nicht"},causes:[{name:{ar:"نقص غاز / تسرب",de:"Kältemittelmangel / Leck"},prob:"high",checks:{ar:["قياس ضغط الشفط والدفع مع Superheat","فحص التسرب"],de:["Saug-/Hochdruck messen","Lecksuche"]}},{name:{ar:"اتساخ الفلتر / المبخر",de:"Filter verschmutzt"},prob:"high",checks:{ar:["تنظيف الفلتر والمبخر"],de:["Filter reinigen"]}}]},water_leak:{label:{ar:"تنقيط ماء من الوحدة الداخلية",de:"Innengerät tropft"},causes:[{name:{ar:"انسداد تصريف المياه",de:"Ablauf verstopft"},prob:"high",checks:{ar:["تنظيف خرطوم التصريف"],de:["Ablauf reinigen"]}}]}},
+coldroom:{not_cooling:{label:{ar:"لا يبرد",de:"Kühlt nicht"},causes:[{name:{ar:"نقص غاز",de:"Kältemittelverlust"},prob:"high",checks:{ar:["فحص زجاجة البيان"],de:["Schauglas prüfen"]}}]}},
+chiller:{high_pressure:{label:{ar:"ضغط مرتفع",de:"Hochdruck"},causes:[{name:{ar:"المكثف متسخ",de:"Verflüssiger verschmutzt"},prob:"high",checks:{ar:["تنظيف المكثف"],de:["Reinigen"]}}]}},
+window:{not_cooling:{label:{ar:"لا يبرد",de:"Kühlt nicht"},causes:[{name:{ar:"الضاغط لا يعمل",de:"Kompressor läuft nicht"},prob:"high",checks:{ar:["فحص الكابستور"],de:["Kondensator prüfen"]}}]}}
+};
+const state={codes:{},faults:{},history:[],catalogs:[]};
+let selectedImageFile=null,pendingCode=null;
+function loadState(){state.codes=readJSON(LS.codes,{});state.faults=readJSON(LS.db,{});state.history=readJSON(LS.history,[]);state.catalogs=readJSON(LS.catalogs,[]);}
+function persist(){try{localStorage.setItem(LS.codes,JSON.stringify(state.codes));localStorage.setItem(LS.db,JSON.stringify(state.faults));localStorage.setItem(LS.history,JSON.stringify(state.history));localStorage.setItem(LS.catalogs,JSON.stringify(state.catalogs));}catch(e){toast("Storage error: "+e.message,"err")}}
+function saveToHistory(title,resultText){const top=state.history[0];if(top&&top.title===title&&top.result===resultText)return;state.history.unshift({id:Date.now(),date:new Date().toLocaleString(currentLang==="ar"?"ar-EG":"de-DE"),title,result:resultText});if(state.history.length>50)state.history.length=50;persist();renderHistory()}
+function renderHistory(){const box=$("historyList");if(!state.history.length){box.innerHTML=`<p style="text-align:center;color:#888">${esc(t("noHistory"))}</p>`;return}box.innerHTML=state.history.map(i=>`<div class="history-item"><button class="delete-btn" type="button" data-act="delhist" data-id="${esc(i.id)}">×</button><div class="history-date">🕒 ${esc(i.date)}</div><div class="history-text">${esc(i.title)}</div><div class="history-result">${esc(i.result).replace(/\n/g,"<br>")}</div></div>`).join("")}
+function findCodes(brandIn,codeIn){const cb=canon(brandIn),cc=canon(codeIn),hits=[],seen=new Set();const scan=(db,custom)=>{for(const b in db){if(cb&&!canon(b).includes(cb))continue;for(const c in db[b]){if(canon(c)!==cc)continue;const key=canon(b)+"|"+canon(c);if(seen.has(key))continue;seen.add(key);const v=db[b][c];hits.push({brand:b,code:c,desc:v.desc||"",causes:Array.isArray(v.causes)?v.causes:[],custom})}};scan(state.codes,true);scan(defaultCodesDB,false);return hits}
+function searchErrorCode(){const brandIn=$("searchBrand").value.trim(),codeIn=$("searchCode").value.trim(),out=$("codeResult");if(!codeIn){toast(t("fillCode"),"err");return}const hits=findCodes(brandIn,codeIn);if(hits.length){out.innerHTML=hits.map(h=>`<div class="code-block"><h3>${esc(h.brand)} – ${esc(h.code)} ${h.custom?`<span class="badge">${esc(t("custom"))}</span>`:""}</h3><p class="code-desc">${esc(h.desc)}</p><ul>${h.causes.map(c=>`<li>${esc(c)}</li>`).join("")}</ul></div>`).join("");out.style.display="block";saveToHistory(`${t("codePrefix")}: ${hits[0].brand} ${hits[0].code}`,hits.map(h=>`${h.brand} ${h.code}\n${h.desc}\n${h.causes.join("\n")}`).join("\n\n"))}else{const b=brandIn.toUpperCase(),c=codeIn.toUpperCase();pendingCode={brand:b,code:c};out.innerHTML=`<p style="color:#d9534f;font-weight:bold">${esc(t("codeNotFound"))}</p><button type="button" style="background:#4285f4;margin-bottom:15px" id="btnGoogleCode">${esc(t("btnGoogleCode"))}</button><div style="padding:10px;background:#fff;border:1px solid #ddd;border-radius:8px"><label style="font-size:13px">${esc(t("saveLabel"))}</label><textarea id="foundCodeDesc" style="height:60px;font-size:14px"></textarea><button class="add-btn" type="button" style="margin-top:5px;padding:10px" id="btnSaveFound">${esc(t("saveBtn"))}</button></div>`;out.style.display="block";$("btnGoogleCode").addEventListener("click",()=>window.open("https://www.google.com/search?q="+encodeURIComponent(`${b} ${c} error code HVAC`),"_blank","noopener"));$("btnSaveFound").addEventListener("click",saveCodeFromSearch)}}
+function saveCodeFromSearch(){if(!pendingCode)return;if(!pendingCode.brand){toast(t("fillBrandCode"),"err");return}const lines=$("foundCodeDesc").value.split("\n").map(s=>s.trim()).filter(Boolean);if(!lines.length){toast(t("fillDesc"),"err");return}if(!state.codes[pendingCode.brand])state.codes[pendingCode.brand]={};state.codes[pendingCode.brand][pendingCode.code]={desc:lines[0],causes:lines.length>1?lines.slice(1):[]};persist();renderCustomFaults();toast(t("saved"),"ok");searchErrorCode()}
+function getEntries(){const out=[];for(const dev in DEFAULT_DB)for(const k in DEFAULT_DB[dev])out.push({device:dev,key:k,custom:false,data:DEFAULT_DB[dev][k]});for(const dev in state.faults){if(!isObj(state.faults[dev]))continue;for(const k in state.faults[dev])if(k.indexOf("custom_")===0)out.push({device:dev,key:k,custom:true,data:state.faults[dev][k]})}return out}
+function probText(p){if(p==="high")return t("probHigh");if(p==="mid")return t("probMid");if(p==="low")return t("probLow");return p||""}
+function entryHtml(e){const d=e.data;let html=`<h3>${esc(devLabel(e.device))}: ${esc(tr(d.label))} ${e.custom?`<span class="badge">${esc(t("custom"))}</span>`:""}</h3>`;(d.causes||[]).forEach(c=>{const p=probText(c.prob);html+=`<div class="cause-item"><strong>${esc(tr(c.name))}</strong> ${p?`<span class="prob">(${esc(p)})</span>`:""}<ul>${trList(c.checks).map(ch=>`<li>${esc(ch)}</li>`).join("")}</ul></div>`});return html}
+function entryText(e){return`${devLabel(e.device)}: ${tr(e.data.label)}\n`+(e.data.causes||[]).map(c=>`- ${tr(c.name)}`).join("\n")}
+function unifiedSearch(){const query=$("manualSearchText").value.trim();if(!query)return;let tokens=norm(query).split(/[^\p{L}\p{N}]+/u).filter(Boolean);const long=tokens.filter(w=>w.length>=3);if(long.length)tokens=long;const scored=getEntries().map(e=>{const hay=norm(flat(e.data));return{e,score:tokens.filter(w=>hay.includes(w)).length}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,5);const out=$("result");if(!scored.length){out.innerHTML=`<p style="color:#d9534f;font-weight:bold;text-align:center">${esc(t("noResults"))}</p>`;out.style.display="block";return}out.innerHTML=scored.map(x=>entryHtml(x.e)).join("");out.style.display="block";saveToHistory(`${t("searchPrefix")}: ${query}`,scored.map(x=>entryText(x.e)).join("\n\n"))}
+function searchGoogle(){const q=$("manualSearchText").value.trim();if(!q)return;window.open("https://www.google.com/search?q="+encodeURIComponent(q+" HVAC fault"),"_blank","noopener")}
+function addNewCode(){const brand=$("newBrandName").value.trim().toUpperCase(),code=$("newCodeName").value.trim().toUpperCase(),lines=$("newCodeCauses").value.split("\n").map(s=>s.trim()).filter(Boolean);if(!brand||!code||!lines.length){toast(t("fillFields"),"err");return}if(!state.codes[brand])state.codes[brand]={};state.codes[brand][code]={desc:lines[0],causes:lines.slice(1)};persist();renderCustomFaults();$("newBrandName").value="";$("newCodeName").value="";$("newCodeCauses").value="";toast(t("saved"),"ok")}
+function addNewFault(){const device=$("addDeviceType").value,name=$("newFaultName").value.trim(),lines=$("newFaultCauses").value.split("\n").map(s=>s.trim()).filter(Boolean);if(!name||!lines.length){toast(t("fillFields"),"err");return}const causes=lines.map(line=>{const i=line.indexOf(" - ");return i>0?{name:line.slice(0,i).trim(),prob:"",checks:[line.slice(i+3).trim()]}:{name:line,prob:"",checks:[]}});if(!isObj(state.faults[device]))state.faults[device]={};state.faults[device]["custom_"+Date.now()]={label:name,causes};persist();renderCustomFaults();$("newFaultName").value="";$("newFaultCauses").value="";toast(t("saved"),"ok")}
+function renderCustomFaults(){const list=$("customFaultsList");let html="";for(const b in state.codes)for(const c in state.codes[b])html+=`<div class="custom-fault-item"><span>[${esc(t("codePrefix"))}] ${esc(b)} - ${esc(c)}</span><button type="button" class="mini-del" data-act="delcode" data-brand="${esc(b)}" data-code="${esc(c)}">×</button></div>`;for(const dev in state.faults){if(!isObj(state.faults[dev]))continue;for(const k in state.faults[dev])if(k.indexOf("custom_")===0)html+=`<div class="custom-fault-item"><span>[${esc(devLabel(dev))}] ${esc(tr(state.faults[dev][k].label))}</span><button type="button" class="mini-del" data-act="delfault" data-dev="${esc(dev)}" data-key="${esc(k)}">×</button></div>`}list.innerHTML=html||`<p style="text-align:center;font-size:12px;color:#555;margin:0">${esc(t("noCustom"))}</p>`}
+function saveCatalogLink(){const name=$("catalogName").value.trim();let link=$("catalogLink").value.trim();if(!name||!link){toast(t("fillFields"),"err");return}if(!/^[a-z][a-z0-9+.-]*:/i.test(link))link="https://"+link;try{const u=new URL(link);if(u.protocol!=="http:"&&u.protocol!=="https:")throw 0;link=u.href}catch{toast(t("badLink"),"err");return}if(state.catalogs.some(x=>x.link===link)){toast(t("saved"),"ok");return}state.catalogs.push({name,link});persist();renderCatalogs();$("catalogName").value="";$("catalogLink").value=""}
+function renderCatalogs(){const box=$("catalogList");if(!state.catalogs.length){box.innerHTML=`<p style="text-align:center;font-size:12px;color:#888">${esc(t("noCatalogs"))}</p>`;return}box.innerHTML=state.catalogs.map((i,idx)=>`<div class="catalog-item"><a href="${esc(i.link)}" target="_blank" rel="noopener noreferrer">📄 ${esc(i.name)}</a><button type="button" class="mini-del" data-act="delcat" data-i="${idx}">×</button></div>`).join("")}
+document.addEventListener("click",e=>{const b=e.target.closest("button[data-act]");if(!b)return;const act=b.dataset.act;if(act==="clear"){if(confirm(t("confirmClear"))){state.history=[];persist();renderHistory()}return}if(!confirm(t("confirmDelete")))return;if(act==="delcode"){if(state.codes[b.dataset.brand]){delete state.codes[b.dataset.brand][b.dataset.code];if(!Object.keys(state.codes[b.dataset.brand]).length)delete state.codes[b.dataset.brand]}}else if(act==="delfault"){if(state.faults[b.dataset.dev])delete state.faults[b.dataset.dev][b.dataset.key]}else if(act==="delhist"){state.history=state.history.filter(i=>String(i.id)!==b.dataset.id)}else if(act==="delcat"){state.catalogs.splice(Number(b.dataset.i),1)}persist();renderAll()});
+function exportFaults(){const data={customDB:state.faults,customCodes:state.codes,catalogs:state.catalogs,history:state.history};const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="HVAC_Backup_"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function importFaults(ev){const file=ev.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const parse=v=>typeof v==="string"?JSON.parse(v):v;const d=JSON.parse(e.target.result);if(!isObj(d))throw 0;const f=parse(d.customDB),c=parse(d.customCodes),k=parse(d.catalogs),h=parse(d.history);if(isObj(f))for(const dev in f)if(isObj(f[dev]))state.faults[dev]=Object.assign({},state.faults[dev]||{},f[dev]);if(isObj(c))for(const b in c)if(isObj(c[b]))state.codes[b]=Object.assign({},state.codes[b]||{},c[b]);if(Array.isArray(k))k.forEach(i=>{if(i&&i.link&&!state.catalogs.some(x=>x.link===i.link))state.catalogs.push({name:String(i.name||i.link),link:String(i.link)})});if(Array.isArray(h))h.forEach(i=>{if(i&&i.id&&!state.history.some(x=>x.id===i.id))state.history.push(i)});state.history=state.history.sort((a,b)=>b.id-a.id).slice(0,50);persist();renderAll();toast(t("importOk"),"ok")}catch{toast(t("importFail"),"err")}ev.target.value=""};reader.readAsText(file)}
+let selectedImageFileReal=null;
+function handleImageSelection(input){if(input.files&&input.files[0]){selectedImageFileReal=input.files[0];$("imgPreviewText").style.display="block"}input.value=""}
+async function searchWithGoogleLens(){if(!selectedImageFileReal){toast(t("pickImage"),"err");return}try{if(navigator.canShare&&navigator.canShare({files:[selectedImageFileReal]})){await navigator.share({files:[selectedImageFileReal],title:"HVAC search"})}else{window.open("https://lens.google.com/","_blank","noopener")}}catch{window.open("https://lens.google.com/","_blank","noopener")}}
+const pdfReady=typeof pdfjsLib!=="undefined";
+if(pdfReady)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+let pdfDoc=null,pageNum=1,pageRendering=false,pageNumPending=null,scale=1.5,currentPdfBlobUrl=null;
+function revokePdfUrl(){if(currentPdfBlobUrl){URL.revokeObjectURL(currentPdfBlobUrl);currentPdfBlobUrl=null}}
+function loadLocalPDF(){const file=$("localCatalogInput").files[0];if(!file)return;revokePdfUrl();currentPdfBlobUrl=URL.createObjectURL(file);$("translationBox").style.display="none";if(!pdfReady){toast(t("pdfLibMissing"),"err");window.open(currentPdfBlobUrl,"_blank");return}const reader=new FileReader();reader.onload=e=>{pdfjsLib.getDocument({data:new Uint8Array(e.target.result)}).promise.then(doc=>{pdfDoc=doc;$("pageCount").textContent=doc.numPages;$("pdfViewerContainer").style.display="block";pageNum=1;scale=1.5;renderPage(1)}).catch(err=>toast("PDF: "+err.message,"err"))};reader.readAsArrayBuffer(file)}
+function renderPage(num){pageRendering=true;pdfDoc.getPage(num).then(page=>{const viewport=page.getViewport({scale}),canvas=$("pdfCanvas");canvas.height=viewport.height;canvas.width=viewport.width;return page.render({canvasContext:canvas.getContext("2d"),viewport}).promise}).catch(err=>toast("PDF: "+err.message,"err")).then(()=>{pageRendering=false;if(pageNumPending!==null){const n=pageNumPending;pageNumPending=null;renderPage(n)}});$("pageInput").value=num;$("translationBox").style.display="none"}
+function queueRenderPage(n){if(pageRendering)pageNumPending=n;else renderPage(n)}
+function changePage(o){if(!pdfDoc)return;const n=pageNum+o;if(n>=1&&n<=pdfDoc.numPages){pageNum=n;queueRenderPage(n)}}
+function goToPage(){if(!pdfDoc)return;const v=parseInt($("pageInput").value,10);if(v>=1&&v<=pdfDoc.numPages){pageNum=v;queueRenderPage(v)}else{toast(t("noPage"),"err");$("pageInput").value=pageNum}}
+function zoom(d){if(!pdfDoc)return;scale=Math.min(4,Math.max(0.5,scale+d));queueRenderPage(pageNum)}
+function closePdfViewer(){$("pdfViewerContainer").style.display="none";$("localCatalogInput").value="";$("translationBox").style.display="none";pdfDoc=null;revokePdfUrl()}
+function chunkText(s,max){const out=[];let cur="";s.split(" ").forEach(w=>{if((cur+" "+w).length>max&&cur){out.push(cur);cur=w}else cur=cur?cur+" "+w:w});if(cur)out.push(cur);return out}
+async function translateTextFree(){if(!pdfDoc)return;const box=$("translationBox"),out=$("translationText");box.style.display="block";out.style.color="#0275d8";out.textContent="...";const src=$("transSrc").value;if(src===currentLang){out.textContent=t("transSame");return}try{const page=await pdfDoc.getPage(pageNum);const tc=await page.getTextContent();const text=tc.items.map(i=>i.str).join(" ").replace(/\s+/g," ").trim();if(text.length<5)throw new Error(t("noText"));const all=chunkText(text,450),chunks=all.slice(0,3),parts=[];for(const c of chunks){const res=await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(c)+"&langpair="+src+"|"+currentLang);if(!res.ok)throw new Error("HTTP "+res.status);const data=await res.json();const tt=data&&data.responseData&&data.responseData.translatedText;if(!tt)throw new Error(t("transFail"));parts.push(decodeEntities(tt))}out.textContent=parts.join(" ")+(all.length>chunks.length?" …":"");out.style.color="#333"}catch(err){out.textContent=err.message;out.style.color="red"}}
+function renderAll(){renderCustomFaults();renderHistory();renderCatalogs()}
+function applyLanguage(){document.documentElement.lang=currentLang;document.documentElement.dir=currentLang==="ar"?"rtl":"ltr";document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=t(el.dataset.i18n));document.querySelectorAll("[data-i18n-ph]").forEach(el=>el.placeholder=t(el.dataset.i18nPh));$("langBtn").textContent=currentLang==="ar"?"Deutsch":"العربية";renderAll();$("result").style.display="none";$("codeResult").style.display="none"}
+$("langBtn").addEventListener("click",()=>{currentLang=currentLang==="ar"?"de":"ar";try{localStorage.setItem(LS.lang,currentLang)}catch{}applyLanguage()});
+$("btnSearchCode").addEventListener("click",searchErrorCode);
+$("btnSearchLocal").addEventListener("click",unifiedSearch);
+$("btnSearchGoogle").addEventListener("click",searchGoogle);
+$("searchCode").addEventListener("keydown",e=>{if(e.key==="Enter")searchErrorCode()});
+$("searchBrand").addEventListener("keydown",e=>{if(e.key==="Enter")searchErrorCode()});
+$("manualSearchText").addEventListener("keydown",e=>{if(e.key==="Enter")unifiedSearch()});
+$("btnAddCode").addEventListener("click",addNewCode);
+$("btnAddFault").addEventListener("click",addNewFault);
+$("btnExport").addEventListener("click",exportFaults);
+$("btnImport").addEventListener("click",()=>$("importFaultsInput").click());
+$("importFaultsInput").addEventListener("change",importFaults);
+$("btnCam").addEventListener("click",()=>$("cameraInput").click());
+$("btnGal").addEventListener("click",()=>$("galleryInput").click());
+$("cameraInput").addEventListener("change",e=>handleImageSelection(e.target));
+$("galleryInput").addEventListener("change",e=>handleImageSelection(e.target));
+$("btnLens").addEventListener("click",searchWithGoogleLens);
+$("btnSaveCat").addEventListener("click",saveCatalogLink);
+$("localCatalogInput").addEventListener("change",loadLocalPDF);
+$("btnPrev").addEventListener("click",()=>changePage(-1));
+$("btnNext").addEventListener("click",()=>changePage(1));
+$("pageInput").addEventListener("change",goToPage);
+$("btnZoomIn").addEventListener("click",()=>zoom(0.3));
+$("btnZoomOut").addEventListener("click",()=>zoom(-0.3));
+$("btnClosePdf").addEventListener("click",closePdfViewer);
+$("btnExtPdf").addEventListener("click",()=>{if(currentPdfBlobUrl)window.open(currentPdfBlobUrl,"_blank")});
+$("btnTransPdf").addEventListener("click",translateTextFree);
+$("btnClearHistory").dataset.act="clear";
+loadState();applyLanguage();
 })();
 </script>
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
