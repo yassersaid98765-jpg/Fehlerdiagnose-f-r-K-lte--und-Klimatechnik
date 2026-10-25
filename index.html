@@ -11,7 +11,8 @@
         h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
         label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
-        select, input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        select, input[type="text"], input[type="number"], input[type="file"], textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        textarea { resize: vertical; height: 80px; }
         button { width: 100%; padding: 15px; background-color: #0275d8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; font-size: 16px; transition: background 0.3s; }
         button:hover { background-color: #025aa5; }
         
@@ -22,9 +23,15 @@
         .google-btn:hover { background-color: #3367d6; }
         
         #result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none; border: 1px solid #ddd; line-height: 1.6; }
-        .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative;}
         .prob { color: #d9534f; font-weight: bold; }
         
+        /* قسم إضافة عطل جديد */
+        .add-fault-section { background-color: #e6f4ea; border: 2px dashed #34a853; padding: 15px; border-radius: 8px; margin-top: 30px; }
+        .add-fault-section h3 { color: #1e8e3e; margin-top: 0; text-align: center;}
+        .add-btn { background-color: #34a853; }
+        .add-btn:hover { background-color: #2b8a44; }
+
         .history-section { border-top: 2px solid #0275d8; margin-top: 40px; padding-top: 20px; }
         .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; position: relative;}
         .history-date { color: #888; font-size: 12px; margin-bottom: 5px; }
@@ -33,7 +40,7 @@
         .delete-btn { position: absolute; top: 10px; left: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; padding: 0; line-height: 1; }
         .clear-btn { background-color: #d9534f; margin-top: 10px; padding: 10px; font-size: 14px; }
         
-        .catalog-section { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 30px; }
+        .catalog-section { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 15px; }
         .catalog-section h3 { color: #856404; margin-top: 0; text-align: center;}
         .catalog-item { background: white; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; }
         .catalog-item a { color: #0275d8; text-decoration: none; font-weight: bold; word-break: break-all; }
@@ -58,6 +65,8 @@
         .translate-free-btn { background-color: #f39c12 !important; }
         
         #translationBox { display: none; background: #fff3cd; border: 2px solid #f0ad4e; padding: 15px; margin-top: 15px; border-radius: 8px; color: #333; line-height: 1.6; white-space: pre-wrap; }
+        
+        .custom-badge { font-size: 10px; background: #34a853; color: white; padding: 2px 6px; border-radius: 10px; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -68,7 +77,7 @@
 
     <div class="search-section">
         <label for="manualSearchText">🔎 اكتب العطل بكلماتك الخاصة:</label>
-        <input type="text" id="manualSearchText" placeholder="مثال: الكهرباء تفصل، أو تسريب ماء...">
+        <input type="text" id="manualSearchText" placeholder="مثال: الكهرباء تفصل...">
         <button class="search-btn" onclick="unifiedSearch()">البحث في المكتبة الداخلية</button>
         <button class="google-btn" onclick="searchGoogle()">🌐 ابحث عن هذا العطل في جوجل</button>
     </div>
@@ -84,6 +93,24 @@
     </div>
 
     <div id="result"></div>
+
+    <!-- 🌟 قسم إضافة عطل جديد 🌟 -->
+    <div class="add-fault-section">
+        <h3>➕ إضافة عطل جديد للمكتبة</h3>
+        <label>نوع الجهاز:</label>
+        <select id="addDeviceType">
+            <option value="split">مكيف سبليت</option>
+            <option value="coldroom">غرفة تبريد</option>
+        </select>
+        
+        <label>اسم العطل (مثال: تسريب ماء من السقف):</label>
+        <input type="text" id="newFaultName" placeholder="اكتب اسم العطل هنا...">
+        
+        <label>الأسباب وخطوات الفحص (اكتب كل سبب في سطر جديد):</label>
+        <textarea id="newFaultCauses" placeholder="مثال:&#10;انسداد في خرطوم التصريف - قم بنفخ الخرطوم&#10;تجمد المبخر - قم بتنظيف الفلتر"></textarea>
+        
+        <button class="add-btn" onclick="addNewFault()">💾 حفظ العطل في المكتبة</button>
+    </div>
 
     <div class="catalog-section">
         <h3>📖 مكتبة الكتالوجات (الروابط)</h3>
@@ -136,177 +163,85 @@
 
 <script>
     // ==========================================
-    // 1. قاعدة البيانات الموسعة والشاملة
+    // 1. قاعدة البيانات (تُحمّل من الذاكرة أو تُنشأ جديدة)
     // ==========================================
-    let diagnoseDB = {
+    let defaultDB = {
         split: {
-            not_cooling: { 
-                label: "لا يبرد (هواء عادي)", 
-                causes: [
-                    { name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس", "البحث عن آثار زيت"] }, 
-                    { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر", "تنظيف أو استبدال"] }, 
-                    { name: "عطل في الضاغط (الكمبرسور)", prob: "15%", checks: ["قياس تيار الضاغط", "فحص الكابستور"] }, 
-                    { name: "عطل في المروحة الخارجية", prob: "10%", checks: ["فحص دوران المروحة", "فحص الكابستور"] },
-                    { name: "انسداد في الأنبوب الشعري", prob: "10%", checks: ["فحص الصقيع على الأنبوب"] }
-                ] 
-            },
-            high_pressure: { 
-                label: "ضغط مرتفع", 
-                causes: [
-                    { name: "مكثف متسخ (الوحدة الخارجية)", prob: "50%", checks: ["تنظيف المكثف بالماء والفرشاة"] }, 
-                    { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة والكابستور"] }, 
-                    { name: "شحن زائد للغاز", prob: "20%", checks: ["قياس الضغط وتفريغ الزائد"] }
-                ] 
-            },
-            low_pressure: { 
-                label: "ضغط منخفض", 
-                causes: [
-                    { name: "تسريب غاز", prob: "60%", checks: ["فحص مفاصل النحاس", "فحص الصمامات"] }, 
-                    { name: "انسداد في الفلتر أو الأنبوب الشعري", prob: "40%", checks: ["فحص الفلتر", "فحص الانخفاض الحراري"] }
-                ] 
-            },
-            water_leak: { 
-                label: "تسريب ماء", 
-                causes: [
-                    { name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم", "فحص مضخة التصريف"] }, 
-                    { name: "تجمد المبخر بسبب فلتر متسخ", prob: "30%", checks: ["فحص الفلتر", "فحص إذابة الثلج"] }, 
-                    { name: "ميل الوحدة الداخلية غير صحيح", prob: "20%", checks: ["تعديل ميل الوحدة"] }
-                ] 
-            },
-            noise: { 
-                label: "صوت عالي أو اهتزاز", 
-                causes: [
-                    { name: "اهتزاز في الوحدة الخارجية", prob: "40%", checks: ["فحص القواعد", "تثبيت الوحدة"] }, 
-                    { name: "تلف في بلوفير المروحة الداخلية", prob: "30%", checks: ["فحص المروحة الداخلية"] }, 
-                    { name: "احتكاك في مروحة الوحدة الخارجية", prob: "30%", checks: ["فحص المروحة الخارجية"] }
-                ] 
-            },
-            compressor_off: {
-                label: "الضاغط لا يعمل (الوحدة الخارجية صامتة)",
-                causes: [
-                    { name: "الكابستور (المكثف الكهربائي) تالف", prob: "40%", checks: ["فحص الكابستور", "استبداله"] },
-                    { name: "أوفرلود الحماية فصل", prob: "30%", checks: ["انتظار 30 دقيقة", "قياس الأمبير"] },
-                    { name: "عطل في الكونتاكتور", prob: "15%", checks: ["فحص الكونتاكتور"] },
-                    { name: "انخفاض الجهد الكهربائي", prob: "15%", checks: ["قياس الفولت"] }
-                ]
-            },
-            fan_off: {
-                label: "المروحة لا تدور",
-                causes: [
-                    { name: "تلف موتور المروحة", prob: "40%", checks: ["قياس مقاومة الموتور"] },
-                    { name: "تلف الكابستور", prob: "30%", checks: ["فحص الكابستور"] },
-                    { name: "عطل في لوحة التحكم (البوردة)", prob: "30%", checks: ["فحص خروج الكهرباء للبوردة"] }
-                ]
-            },
-            tripping_breaker: {
-                label: "الكهرباء تفصل (الأتوماتيك يطيح)",
-                causes: [
-                    { name: "تماس كهربائي في الأسلاك", prob: "40%", checks: ["فحص الأسلاك والوصلات"] },
-                    { name: "تلف الضاغط (تماس داخلي)", prob: "40%", checks: ["قياس الضاغط بالأفوميتر"] },
-                    { name: "تلف موتور المروحة", prob: "20%", checks: ["فصل المروحة وتجربة التشغيل"] }
-                ]
-            },
-            ice_buildup: {
-                label: "تثلج الأنابيب أو الوحدة الداخلية",
-                causes: [
-                    { name: "نقص غاز التبريد", prob: "50%", checks: ["قياس الضغط", "فحص التسريب"] },
-                    { name: "نقص تدفق الهواء (فلتر مسدود)", prob: "30%", checks: ["فحص وتنظيف الفلتر"] },
-                    { name: "عطل في المروحة الداخلية", prob: "20%", checks: ["فحص سرعة المروحة"] }
-                ]
-            },
-            smell: {
-                label: "رائحة كريهة أو عفن",
-                causes: [
-                    { name: "تراكم العفن في حوض التصريف", prob: "50%", checks: ["تنظيف الحوض بالماء والكلور"] },
-                    { name: "تسخ المبخر (الوحدة الداخلية)", prob: "30%", checks: ["تنظيف المبخر ببخاخ مخصص"] },
-                    { name: "فلتر متسخ جداً", prob: "20%", checks: ["تنظيف الفلتر"] }
-                ]
-            },
-            remote_issue: {
-                label: "الريموت لا يعمل",
-                causes: [
-                    { name: "بطاريات الريموت فارغة", prob: "50%", checks: ["استبدال البطاريات"] },
-                    { name: "عطل في مستقبل الإشارة (البوردة)", prob: "30%", checks: ["فحص مستقبل الأشعة"] },
-                    { name: "عطل في الريموت نفسه", prob: "20%", checks: ["تجربة ريموت آخر أو كاميرا الهاتف"] }
-                ]
-            }
+            not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }, { name: "عطل في الضاغط", prob: "15%", checks: ["قياس تيار الضاغط"] }] },
+            high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }] },
+            water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }, { name: "تجمد المبخر", prob: "30%", checks: ["فحص الفلتر"] }] },
+            noise: { label: "صوت عالي", causes: [{ name: "اهتزاز في الوحدة", prob: "40%", checks: ["فحص القواعد"] }, { name: "تلف في بلوفير المروحة", prob: "30%", checks: ["فحص المروحة"] }] },
+            compressor_off: { label: "الضاغط لا يعمل", causes: [{ name: "الكابستور تالف", prob: "40%", checks: ["فحص الكابستور"] }, { name: "أوفرلود فصل", prob: "30%", checks: ["انتظار 30 دقيقة"] }] }
         },
         coldroom: {
-            not_cooling: { 
-                label: "غرفة التبريد لا تبرد", 
-                causes: [
-                    { name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات", "قياس الضغط"] }, 
-                    { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص دورة إذابة الثلج Defrost"] },
-                    { name: "عطل في منظم الحرارة (الثرموستات)", prob: "20%", checks: ["فحص الإعدادات", "فحص الحساس"] },
-                    { name: "باب الغرفة غير محكم", prob: "20%", checks: ["فحص المطاط (العزل)"] }
-                ] 
-            },
-            ice_buildup: { 
-                label: "تراكم ثلج على المبخر", 
-                causes: [
-                    { name: "عطل في مؤقت إذابة الثلج (Defrost Timer)", prob: "40%", checks: ["فحص المؤقت"] },
-                    { name: "عطل في سخانات إذابة الثلج (Heaters)", prob: "30%", checks: ["قياس مقاومة السخانات"] },
-                    { name: "عطل في حساس الحرارة", prob: "30%", checks: ["فحص الحساس"] }
-                ] 
-            },
-            compressor_off: { 
-                label: "الضاغط لا يعمل", 
-                causes: [
-                    { name: "فصل أوفرلود الحماية", prob: "40%", checks: ["انتظار 30 دقيقة ثم إعادة التشغيل"] },
-                    { name: "عطل في الكابستور أو الكونتاكتور", prob: "40%", checks: ["فحص الكونتاكتور"] },
-                    { name: "انخفاض الجهد الكهربائي", prob: "20%", checks: ["قياس الفولت"] }
-                ] 
-            },
-            oil_leak: {
-                label: "تسريب زيت من الضاغط",
-                causes: [
-                    { name: "تلف في حشوة العمود (Shaft Seal)", prob: "50%", checks: ["فحص الحشوة", "استبدالها"] },
-                    { name: "ارتخاء في الوصلات", prob: "30%", checks: ["إحكام الوصلات"] },
-                    { name: "ضغط مرتفع جداً يفجر الوصلات", prob: "20%", checks: ["فحص ضغط التصريف"] }
-                ]
-            },
-            high_current: {
-                label: "سحب تيار عالي / يفصل كهرباء",
-                causes: [
-                    { name: "ضغط تصريف مرتفع (مكثف متسخ)", prob: "40%", checks: ["تنظيف المكثف"] },
-                    { name: "نقص الجهد الكهربائي", prob: "30%", checks: ["قياس الفولت وقت التشغيل"] },
-                    { name: "تلف في محامل الضاغط", prob: "30%", checks: ["فحص الضاغط"] }
-                ]
-            },
-            noise_compressor: {
-                label: "صوت عالي من الضاغط",
-                causes: [
-                    { name: "سحب غاز سائل (Liquid Slugging)", prob: "40%", checks: ["فحص الشحنة", "فحص صمام التمدد"] },
-                    { name: "اهتزاز في القواعد", prob: "30%", checks: ["تثبيت الضاغط"] },
-                    { name: "تلف داخلي في الضاغط", prob: "30%", checks: ["قياس الضوضاء والأمبير"] }
-                ]
-            }
+            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج", prob: "25%", checks: ["فحص إذابة الثلج"] }] },
+            ice_buildup: { label: "تراكم ثلج", causes: [{ name: "عطل في مؤقت إذابة الثلج", prob: "40%", checks: ["فحص المؤقت"] }, { name: "عطل في السخانات", prob: "30%", checks: ["قياس السخانات"] }] }
         }
     };
 
-    // خريطة الكلمات المفتاحية الموسعة للبحث المحلي
-    const keywordMap = [
-        { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "قطرات", "يقطر", "تنقيط"] },
-        { device: "split", symptom: "noise", words: ["صوت", "ضجيج", "اهتزاز", "طقطقة"] },
+    // نبحث في ذاكرة المتصفح عن أعطال مضافة سابقاً
+    let diagnoseDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || defaultDB;
+
+    let keywordMap = [
+        { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "يقطر"] },
+        { device: "split", symptom: "noise", words: ["صوت", "اهتزاز", "طقطقة"] },
         { device: "split", symptom: "high_pressure", words: ["ضغط عالي", "ضغط مرتفع"] },
-        { device: "split", symptom: "low_pressure", words: ["ضغط منخفض", "ضغط ضعيف"] },
-        { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "هواء ساخن", "بارد"] },
-        { device: "split", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور لا يعمل", "صامت"] },
-        { device: "split", symptom: "fan_off", words: ["المروحة لا تدور", "المروحة واقفة", "مروحة"] },
-        { device: "split", symptom: "tripping_breaker", words: ["يفصل", "كهرباء", "أتوماتيك", "قاطع", "شورت"] },
-        { device: "split", symptom: "ice_buildup", words: ["تثلج", "ثلج", "صقيع", "يتجمد"] },
-        { device: "split", symptom: "smell", words: ["رائحة", "عفن", "كريهة"] },
-        { device: "split", symptom: "remote_issue", words: ["ريموت", "ريموت لا يعمل", "حساس"] },
+        { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
+        { device: "split", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور"] },
         { device: "coldroom", symptom: "ice_buildup", words: ["ثلج", "تجميد", "جليد"] },
-        { device: "coldroom", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور لا يعمل", "مطفي"] },
-        { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
-        { device: "coldroom", symptom: "oil_leak", words: ["زيت", "تسريب زيت"] },
-        { device: "coldroom", symptom: "high_current", words: ["أمبير", "يفصل", "تيار عالي"] },
-        { device: "coldroom", symptom: "noise_compressor", words: ["صوت", "ضاغط", "طقطقة"] }
+        { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار"] }
     ];
 
     // ==========================================
-    // 2. باقي الوظائف (البحث، السجل، الكتالوج)
+    // 2. دالة إضافة عطل جديد
+    // ==========================================
+    function addNewFault() {
+        const device = document.getElementById("addDeviceType").value;
+        const faultName = document.getElementById("newFaultName").value.trim();
+        const causesText = document.getElementById("newFaultCauses").value.trim();
+
+        if (!faultName || !causesText) {
+            alert("الرجاء كتابة اسم العطل والأسباب.");
+            return;
+        }
+
+        // إنشاء معرف فريد للعطل
+        const newKey = "custom_" + Date.now();
+
+        // تحويل النص المكتوب إلى مصفوفة أسباب
+        const causesArray = causesText.split('\n').filter(line => line.trim() !== "").map(line => {
+            // نفصل بين السبب والفحص إذا وضع المستخدم شرطة (-)
+            const parts = line.split('-');
+            return {
+                name: parts[0].trim(),
+                prob: "جديد",
+                checks: parts.length > 1 ? [parts[1].trim()] : ["فحص يدوي"]
+            };
+        });
+
+        // إضافة العطل لقاعدة البيانات
+        if (!diagnoseDB[device]) diagnoseDB[device] = {};
+        diagnoseDB[device][newKey] = {
+            label: faultName + " (مخصص)",
+            causes: causesArray
+        };
+
+        // إضافة كلمات مفتاحية للبحث
+        keywordMap.push({ device: device, symptom: newKey, words: faultName.split(" ") });
+
+        // حفظ في ذاكرة المتصفح
+        localStorage.setItem("hvacCustomDB", JSON.stringify(diagnoseDB));
+
+        // تفريغ الحقول وإعادة تحديث القائمة
+        document.getElementById("newFaultName").value = "";
+        document.getElementById("newFaultCauses").value = "";
+        updateSymptoms();
+        
+        alert("✅ تم حفظ العطل بنجاح! ستجده الآن في القائمة المنسدلة.");
+    }
+
+    // ==========================================
+    // 3. باقي الوظائف (البحث، السجل، الكتالوج)
     // ==========================================
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null;
