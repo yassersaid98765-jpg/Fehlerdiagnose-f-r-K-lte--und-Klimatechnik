@@ -26,13 +26,12 @@
         .cause-item { background: white; padding: 10px; margin-bottom: 10px; border-right: 4px solid #0275d8; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative;}
         .prob { color: #d9534f; font-weight: bold; }
         
-        /* قسم إضافة عطل جديد */
         .add-fault-section { background-color: #e6f4ea; border: 2px dashed #34a853; padding: 15px; border-radius: 8px; margin-top: 30px; }
         .add-fault-section h3 { color: #1e8e3e; margin-top: 0; text-align: center;}
         .add-btn { background-color: #34a853; }
         .add-btn:hover { background-color: #2b8a44; }
 
-        .history-section { border-top: 2px solid #0275d8; margin-top: 40px; padding-top: 20px; }
+        .history-section { border-top: 2px solid #0275d8; margin-top: 30px; padding-top: 20px; }
         .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; position: relative;}
         .history-date { color: #888; font-size: 12px; margin-bottom: 5px; }
         .history-text { font-weight: bold; color: #333; margin-bottom: 5px; padding-left: 25px;}
@@ -65,8 +64,15 @@
         .translate-free-btn { background-color: #f39c12 !important; }
         
         #translationBox { display: none; background: #fff3cd; border: 2px solid #f0ad4e; padding: 15px; margin-top: 15px; border-radius: 8px; color: #333; line-height: 1.6; white-space: pre-wrap; }
-        
-        .custom-badge { font-size: 10px; background: #34a853; color: white; padding: 2px 6px; border-radius: 10px; margin-right: 5px; }
+
+        /* قسم النسخ الاحتياطي */
+        .backup-section { background-color: #e2e3e5; border: 1px solid #d6d8db; padding: 15px; border-radius: 8px; margin-top: 30px; text-align: center; }
+        .backup-section h3 { color: #383d41; margin-top: 0; }
+        .backup-btn { background-color: #17a2b8; margin-top: 10px; }
+        .backup-btn:hover { background-color: #138496; }
+        .restore-btn { background-color: #6c757d; margin-top: 10px; }
+        .restore-btn:hover { background-color: #5a6268; }
+        input[type="file"].restore-input { display: none; }
     </style>
 </head>
 <body>
@@ -94,7 +100,6 @@
 
     <div id="result"></div>
 
-    <!-- 🌟 قسم إضافة عطل جديد 🌟 -->
     <div class="add-fault-section">
         <h3>➕ إضافة عطل جديد للمكتبة</h3>
         <label>نوع الجهاز:</label>
@@ -103,10 +108,10 @@
             <option value="coldroom">غرفة تبريد</option>
         </select>
         
-        <label>اسم العطل (مثال: تسريب ماء من السقف):</label>
-        <input type="text" id="newFaultName" placeholder="اكتب اسم العطل هنا...">
+        <label>اسم العطل:</label>
+        <input type="text" id="newFaultName" placeholder="مثال: تسريب ماء من السقف">
         
-        <label>الأسباب وخطوات الفحص (اكتب كل سبب في سطر جديد):</label>
+        <label>الأسباب وخطوات الفحص (كل سبب في سطر جديد):</label>
         <textarea id="newFaultCauses" placeholder="مثال:&#10;انسداد في خرطوم التصريف - قم بنفخ الخرطوم&#10;تجمد المبخر - قم بتنظيف الفلتر"></textarea>
         
         <button class="add-btn" onclick="addNewFault()">💾 حفظ العطل في المكتبة</button>
@@ -159,89 +164,95 @@
         <div id="historyList"></div>
         <button class="clear-btn" onclick="clearHistory()">🗑️ مسح السجل بالكامل</button>
     </div>
+
+    <!-- 🌟 قسم النسخ الاحتياطي والاستعادة 🌟 -->
+    <div class="backup-section">
+        <h3>☁️ النسخ الاحتياطي (Google Drive)</h3>
+        <p style="font-size: 13px; color: #555;">احفظ أعطالك وروابطك كملف لتتمكن من استعادتها لاحقاً.</p>
+        
+        <button class="backup-btn" onclick="exportData()">⬇️ تصدير البيانات (حفظ نسخة)</button>
+        
+        <label class="restore-btn" for="restoreFileInput" style="display:block; padding:15px; color:white; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;">
+            ⬆️ استيراد البيانات (استعادة نسخة)
+        </label>
+        <input type="file" id="restoreFileInput" class="restore-input" accept=".json" onchange="importData(event)">
+    </div>
+
 </div>
 
 <script>
-    // ==========================================
-    // 1. قاعدة البيانات (تُحمّل من الذاكرة أو تُنشأ جديدة)
-    // ==========================================
     let defaultDB = {
         split: {
             not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }, { name: "عطل في الضاغط", prob: "15%", checks: ["قياس تيار الضاغط"] }] },
             high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }] },
-            water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }, { name: "تجمد المبخر", prob: "30%", checks: ["فحص الفلتر"] }] },
-            noise: { label: "صوت عالي", causes: [{ name: "اهتزاز في الوحدة", prob: "40%", checks: ["فحص القواعد"] }, { name: "تلف في بلوفير المروحة", prob: "30%", checks: ["فحص المروحة"] }] },
-            compressor_off: { label: "الضاغط لا يعمل", causes: [{ name: "الكابستور تالف", prob: "40%", checks: ["فحص الكابستور"] }, { name: "أوفرلود فصل", prob: "30%", checks: ["انتظار 30 دقيقة"] }] }
+            water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }, { name: "تجمد المبخر", prob: "30%", checks: ["فحص الفلتر"] }] }
         },
         coldroom: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج", prob: "25%", checks: ["فحص إذابة الثلج"] }] },
-            ice_buildup: { label: "تراكم ثلج", causes: [{ name: "عطل في مؤقت إذابة الثلج", prob: "40%", checks: ["فحص المؤقت"] }, { name: "عطل في السخانات", prob: "30%", checks: ["قياس السخانات"] }] }
+            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج", prob: "25%", checks: ["فحص إذابة الثلج"] }] }
         }
     };
 
-    // نبحث في ذاكرة المتصفح عن أعطال مضافة سابقاً
     let diagnoseDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || defaultDB;
 
     let keywordMap = [
         { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "يقطر"] },
-        { device: "split", symptom: "noise", words: ["صوت", "اهتزاز", "طقطقة"] },
         { device: "split", symptom: "high_pressure", words: ["ضغط عالي", "ضغط مرتفع"] },
         { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
-        { device: "split", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور"] },
-        { device: "coldroom", symptom: "ice_buildup", words: ["ثلج", "تجميد", "جليد"] },
         { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار"] }
     ];
 
     // ==========================================
-    // 2. دالة إضافة عطل جديد
+    // دوال التصدير والاستيراد
     // ==========================================
-    function addNewFault() {
-        const device = document.getElementById("addDeviceType").value;
-        const faultName = document.getElementById("newFaultName").value.trim();
-        const causesText = document.getElementById("newFaultCauses").value.trim();
-
-        if (!faultName || !causesText) {
-            alert("الرجاء كتابة اسم العطل والأسباب.");
-            return;
-        }
-
-        // إنشاء معرف فريد للعطل
-        const newKey = "custom_" + Date.now();
-
-        // تحويل النص المكتوب إلى مصفوفة أسباب
-        const causesArray = causesText.split('\n').filter(line => line.trim() !== "").map(line => {
-            // نفصل بين السبب والفحص إذا وضع المستخدم شرطة (-)
-            const parts = line.split('-');
-            return {
-                name: parts[0].trim(),
-                prob: "جديد",
-                checks: parts.length > 1 ? [parts[1].trim()] : ["فحص يدوي"]
-            };
-        });
-
-        // إضافة العطل لقاعدة البيانات
-        if (!diagnoseDB[device]) diagnoseDB[device] = {};
-        diagnoseDB[device][newKey] = {
-            label: faultName + " (مخصص)",
-            causes: causesArray
+    function exportData() {
+        // جمع كل البيانات من ذاكرة المتصفح
+        const dataToExport = {
+            customDB: localStorage.getItem("hvacCustomDB"),
+            history: localStorage.getItem("hvacHistory"),
+            catalogs: localStorage.getItem("hvacCatalogs")
         };
 
-        // إضافة كلمات مفتاحية للبحث
-        keywordMap.push({ device: device, symptom: newKey, words: faultName.split(" ") });
-
-        // حفظ في ذاكرة المتصفح
-        localStorage.setItem("hvacCustomDB", JSON.stringify(diagnoseDB));
-
-        // تفريغ الحقول وإعادة تحديث القائمة
-        document.getElementById("newFaultName").value = "";
-        document.getElementById("newFaultCauses").value = "";
-        updateSymptoms();
+        // تحويلها إلى نص JSON
+        const dataStr = JSON.stringify(dataToExport, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
         
-        alert("✅ تم حفظ العطل بنجاح! ستجده الآن في القائمة المنسدلة.");
+        // إنشاء رابط وهمي للتحميل
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `HVAC_Backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        alert("✅ تم إنشاء ملف النسخة الاحتياطية. يمكنك الآن رفعه إلى Google Drive!");
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                
+                if (importedData.customDB) localStorage.setItem("hvacCustomDB", importedData.customDB);
+                if (importedData.history) localStorage.setItem("hvacHistory", importedData.history);
+                if (importedData.catalogs) localStorage.setItem("hvacCatalogs", importedData.catalogs);
+
+                alert("✅ تم استعادة البيانات بنجاح! سيتم تحديث الصفحة الآن.");
+                location.reload(); // إعادة تحميل الصفحة لتطبيق التغييرات
+            } catch (error) {
+                alert("❌ حدث خطأ أثناء قراءة الملف. تأكد من أنه ملف نسخة احتياطية صحيح.");
+            }
+        };
+        reader.readAsText(file);
     }
 
     // ==========================================
-    // 3. باقي الوظائف (البحث، السجل، الكتالوج)
+    // باقي الوظائف (البحث، الإضافة، السجل، الكتالوج)
     // ==========================================
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null;
@@ -250,6 +261,31 @@
     let pageNumPending = null;
     let scale = 1.5; 
     let currentPdfBlobUrl = null;
+
+    function addNewFault() {
+        const device = document.getElementById("addDeviceType").value;
+        const faultName = document.getElementById("newFaultName").value.trim();
+        const causesText = document.getElementById("newFaultCauses").value.trim();
+
+        if (!faultName || !causesText) { alert("الرجاء كتابة اسم العطل والأسباب."); return; }
+
+        const newKey = "custom_" + Date.now();
+        const causesArray = causesText.split('\n').filter(line => line.trim() !== "").map(line => {
+            const parts = line.split('-');
+            return { name: parts[0].trim(), prob: "جديد", checks: parts.length > 1 ? [parts[1].trim()] : ["فحص يدوي"] };
+        });
+
+        if (!diagnoseDB[device]) diagnoseDB[device] = {};
+        diagnoseDB[device][newKey] = { label: faultName + " (مخصص)", causes: causesArray };
+        keywordMap.push({ device: device, symptom: newKey, words: faultName.split(" ") });
+
+        localStorage.setItem("hvacCustomDB", JSON.stringify(diagnoseDB));
+
+        document.getElementById("newFaultName").value = "";
+        document.getElementById("newFaultCauses").value = "";
+        updateSymptoms();
+        alert("✅ تم حفظ العطل بنجاح! ستجده الآن في القائمة المنسدلة.");
+    }
 
     function loadLocalPDF() {
         const fileInput = document.getElementById("localCatalogInput");
@@ -266,12 +302,8 @@
                 pdfDoc = pdfDoc_;
                 document.getElementById("pageCount").textContent = pdfDoc.numPages;
                 document.getElementById("pdfViewerContainer").style.display = "block";
-                pageNum = 1;
-                scale = 1.5; 
-                renderPage(pageNum);
-            }).catch(function(error) {
-                alert("حدث خطأ في قراءة الملف: " + error.message);
-            });
+                pageNum = 1; scale = 1.5; renderPage(pageNum);
+            }).catch(function(error) { alert("حدث خطأ في قراءة الملف: " + error.message); });
         };
         reader.readAsArrayBuffer(file);
     }
@@ -282,19 +314,12 @@
             const viewport = page.getViewport({scale: scale});
             const canvas = document.getElementById('pdfCanvas');
             const ctx = canvas.getContext('2d');
-            
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
+            canvas.height = viewport.height; canvas.width = viewport.width;
             const renderContext = { canvasContext: ctx, viewport: viewport };
             const renderTask = page.render(renderContext);
-
             renderTask.promise.then(function() {
                 pageRendering = false;
-                if (pageNumPending !== null) {
-                    renderPage(pageNumPending);
-                    pageNumPending = null;
-                }
+                if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
             });
         });
         document.getElementById('pageInput').value = num;
@@ -331,25 +356,19 @@
         translationBox.style.display = "block";
         translationText.innerHTML = "⏳ جاري استخراج النص وترجمته...";
         translationText.style.color = "#0275d8";
-
         try {
             const page = await pdfDoc.getPage(pageNum);
             const textContent = await page.getTextContent();
             const text = textContent.items.map(item => item.str).join(" ").trim();
-
             if (text.length < 5) throw new Error("هذه الصفحة لا تحتوي على نصوص قابلة للنسخ.\nاستخدم 'ترجمة AI' أو 'فتح خارجي'.");
-
             const textToTranslate = text.substring(0, 500);
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=en|ar`);
             const data = await res.json();
-
             if (data.responseData && data.responseData.translatedText) {
                 translationText.innerHTML = data.responseData.translatedText;
                 translationText.style.color = "#333";
             } else throw new Error("فشلت الترجمة، يرجى المحاولة لاحقاً.");
-        } catch (error) {
-            translationText.innerHTML = `<span style="color:red;">${error.message}</span>`;
-        }
+        } catch (error) { translationText.innerHTML = `<span style="color:red;">${error.message}</span>`; }
     }
 
     async function translateCurrentPage() {
@@ -359,26 +378,19 @@
         translationBox.style.display = "block";
         translationText.innerHTML = "⏳ جاري قراءة الصورة وترجمتها بالذكاء الاصطناعي...";
         translationText.style.color = "#8e44ad";
-
         try {
             const canvas = document.getElementById('pdfCanvas');
             const imageData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
             const prompt = `أنت مترجم فني خبير. قم باستخراج جميع النصوص من هذه الصورة وترجمتها إلى اللغة العربية. حافظ على المصطلحات الفنية. أجب بالنص المترجم فقط.`;
-
             const response = await fetch("/api/diagnose", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt: prompt, fileData: imageData, mimeType: "image/jpeg" })
             });
-
             const data = await response.json();
             if (data.error) throw new Error(data.error);
-
             translationText.innerHTML = data.result.replace(/\n/g, '<br>');
             translationText.style.color = "#333";
-        } catch (error) {
-            translationText.innerHTML = `<span style="color:red;">حدث خطأ في الترجمة: ${error.message}</span>`;
-        }
+        } catch (error) { translationText.innerHTML = `<span style="color:red;">حدث خطأ في الترجمة: ${error.message}</span>`; }
     }
 
     function unifiedSearch() {
