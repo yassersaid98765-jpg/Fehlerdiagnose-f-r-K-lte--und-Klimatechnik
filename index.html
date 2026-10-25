@@ -54,9 +54,9 @@
         .zoom-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; background: #eee; padding: 8px; border-bottom: 1px solid #ddd; }
         .zoom-controls button { background-color: #6c757d; margin: 0; padding: 5px 15px; font-size: 14px;}
         .external-btn { background-color: #28a745 !important; }
-        .translate-btn { background-color: #8e44ad !important; }
+        .translate-ai-btn { background-color: #8e44ad !important; }
+        .translate-free-btn { background-color: #f39c12 !important; }
         
-        /* صندوق الترجمة */
         #translationBox { display: none; background: #fff3cd; border: 2px solid #f0ad4e; padding: 15px; margin-top: 15px; border-radius: 8px; color: #333; line-height: 1.6; white-space: pre-wrap; }
     </style>
 </head>
@@ -112,7 +112,8 @@
                 <button onclick="zoomIn()">➕ تكبير</button>
                 <button onclick="zoomOut()">➖ تصغير</button>
                 <button class="external-btn" onclick="openPdfExternally()">↗️ فتح خارجي</button>
-                <button class="translate-btn" onclick="translateCurrentPage()">🌐 ترجمة الصفحة</button>
+                <button class="translate-free-btn" onclick="translateTextFree()">📄 ترجمة سريعة</button>
+                <button class="translate-ai-btn" onclick="translateCurrentPage()">🌐 ترجمة AI</button>
             </div>
 
             <div id="canvasContainer">
@@ -120,9 +121,8 @@
             </div>
         </div>
 
-        <!-- صندوق عرض الترجمة -->
         <div id="translationBox">
-            <h4 style="margin-top:0;">🌐 ترجمة الذكاء الاصطناعي:</h4>
+            <h4 style="margin-top:0;">🌐 النص المترجم:</h4>
             <p id="translationText">جاري الترجمة...</p>
         </div>
     </div>
@@ -143,19 +143,17 @@
     let scale = 1.5; 
     let currentPdfBlobUrl = null;
 
-    // --- دوال عرض الكتالوج المحلي ---
     function loadLocalPDF() {
         const fileInput = document.getElementById("localCatalogInput");
         const file = fileInput.files[0];
         if (!file) return;
 
         currentPdfBlobUrl = URL.createObjectURL(file);
-        document.getElementById("translationBox").style.display = "none"; // إخفاء الترجمة السابقة
+        document.getElementById("translationBox").style.display = "none";
 
         const reader = new FileReader();
         reader.onload = function(e) {
             const typedarray = new Uint8Array(e.target.result);
-            
             pdfjsLib.getDocument(typedarray).promise.then(function(pdfDoc_) {
                 pdfDoc = pdfDoc_;
                 document.getElementById("pageCount").textContent = pdfDoc.numPages;
@@ -192,38 +190,24 @@
             });
         });
         document.getElementById('pageInput').value = num;
-        document.getElementById("translationBox").style.display = "none"; // إخفاء الترجمة عند تغيير الصفحة
+        document.getElementById("translationBox").style.display = "none"; 
     }
 
-    function queueRenderPage(num) {
-        if (pageRendering) { pageNumPending = num; } else { renderPage(num); }
-    }
-
+    function queueRenderPage(num) { if (pageRendering) { pageNumPending = num; } else { renderPage(num); } }
     function changePage(offset) {
         if (!pdfDoc) return;
         const newPage = pageNum + offset;
-        if (newPage >= 1 && newPage <= pdfDoc.numPages) {
-            pageNum = newPage;
-            queueRenderPage(pageNum);
-        }
+        if (newPage >= 1 && newPage <= pdfDoc.numPages) { pageNum = newPage; queueRenderPage(pageNum); }
     }
-
     function goToPage() {
         if (!pdfDoc) return;
         const inputVal = parseInt(document.getElementById('pageInput').value);
-        if (inputVal >= 1 && inputVal <= pdfDoc.numPages) {
-            pageNum = inputVal;
-            queueRenderPage(pageNum);
-        } else {
-            alert("رقم الصفحة غير صحيح");
-            document.getElementById('pageInput').value = pageNum;
-        }
+        if (inputVal >= 1 && inputVal <= pdfDoc.numPages) { pageNum = inputVal; queueRenderPage(pageNum); } 
+        else { alert("رقم الصفحة غير صحيح"); document.getElementById('pageInput').value = pageNum; }
     }
-
     function zoomIn() { if (!pdfDoc) return; scale += 0.3; queueRenderPage(pageNum); }
     function zoomOut() { if (!pdfDoc || scale <= 0.5) return; scale -= 0.3; queueRenderPage(pageNum); }
     function openPdfExternally() { if (currentPdfBlobUrl) window.open(currentPdfBlobUrl, '_blank'); }
-    
     function closePdfViewer() {
         document.getElementById("pdfViewerContainer").style.display = "none";
         document.getElementById("localCatalogInput").value = "";
@@ -232,19 +216,51 @@
         if (currentPdfBlobUrl) { URL.revokeObjectURL(currentPdfBlobUrl); currentPdfBlobUrl = null; }
     }
 
-    // --- دالة ترجمة الصفحة بالذكاء الاصطناعي ---
-    async function translateCurrentPage() {
+    // --- 1. الترجمة السريعة (بدون ذكاء اصطناعي - تعتمد على استخراج النص) ---
+    async function translateTextFree() {
         if (!pdfDoc) return;
-
         const translationBox = document.getElementById("translationBox");
         const translationText = document.getElementById("translationText");
-        
         translationBox.style.display = "block";
-        translationText.innerHTML = "⏳ جاري قراءة النص من الصورة وترجمته... الرجاء الانتظار.";
+        translationText.innerHTML = "⏳ جاري استخراج النص وترجمته...";
         translationText.style.color = "#0275d8";
 
         try {
-            // أخذ صورة من الكانفاس
+            const page = await pdfDoc.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            const text = textContent.items.map(item => item.str).join(" ").trim();
+
+            if (text.length < 5) {
+                throw new Error("هذه الصفحة لا تحتوي على نصوص قابلة للنسخ (قد تكون مجرد صورة).\nاستخدم 'ترجمة AI' أو 'فتح خارجي'.");
+            }
+
+            // استخدام خدمة MyMemory المجانية للترجمة
+            // لاحظ أن الخدمة لها حد أقصى للطلب الواحد، لذلك نأخذ أول 500 حرف
+            const textToTranslate = text.substring(0, 500);
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=en|ar`);
+            const data = await res.json();
+
+            if (data.responseData && data.responseData.translatedText) {
+                translationText.innerHTML = data.responseData.translatedText;
+                translationText.style.color = "#333";
+            } else {
+                throw new Error("فشلت الترجمة، يرجى المحاولة لاحقاً.");
+            }
+        } catch (error) {
+            translationText.innerHTML = `<span style="color:red;">${error.message}</span>`;
+        }
+    }
+
+    // --- 2. الترجمة بالذكاء الاصطناعي (تقرأ الصور) ---
+    async function translateCurrentPage() {
+        if (!pdfDoc) return;
+        const translationBox = document.getElementById("translationBox");
+        const translationText = document.getElementById("translationText");
+        translationBox.style.display = "block";
+        translationText.innerHTML = "⏳ جاري قراءة الصورة وترجمتها بالذكاء الاصطناعي...";
+        translationText.style.color = "#8e44ad";
+
+        try {
             const canvas = document.getElementById('pdfCanvas');
             const imageData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
 
@@ -268,7 +284,7 @@
         }
     }
 
-    // --- باقي الدوال (السجل والبحث المحلي) ---
+    // --- باقي الدوال ---
     let diagnoseDB = {
         split: {
             not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }] },
@@ -287,15 +303,10 @@
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) { alert("الرجاء كتابة العطل للبحث عنه."); return; }
-
         let foundMatch = null;
-        for (let item of keywordMap) {
-            if (item.words.some(w => query.includes(w))) { foundMatch = item; break; }
-        }
-
-        if (foundMatch) {
-            showResults(foundMatch.device, foundMatch.symptom);
-        } else {
+        for (let item of keywordMap) { if (item.words.some(w => query.includes(w))) { foundMatch = item; break; } }
+        if (foundMatch) { showResults(foundMatch.device, foundMatch.symptom); } 
+        else {
             const resultDiv = document.getElementById("result");
             resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold; text-align:center;">لم يتم العثور على العطل في المكتبة الداخلية.<br>يمكنك الضغط على الزر الأزرق (ابحث في جوجل) للبحث عنه في الإنترنت.</p>`;
             resultDiv.style.display = "block";
@@ -305,8 +316,7 @@
     function searchGoogle() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) { alert("الرجاء كتابة العطل أولاً لكي تبحث عنه في جوجل."); return; }
-        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query + " HVAC fault")}`;
-        window.open(googleUrl, '_blank');
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query + " HVAC fault")}`, '_blank');
     }
 
     function updateSymptoms() {
@@ -315,27 +325,22 @@
         symptomSelect.innerHTML = "";
         for (let key in diagnoseDB[device]) {
             let option = document.createElement("option");
-            option.value = key;
-            option.text = diagnoseDB[device][key].label;
+            option.value = key; option.text = diagnoseDB[device][key].label;
             symptomSelect.appendChild(option);
         }
     }
 
     function runDiagnose() { showResults(document.getElementById("deviceType").value, document.getElementById("symptom").value); }
-
     function showResults(device, symptom) {
         const resultDiv = document.getElementById("result");
         const data = diagnoseDB[device][symptom];
         if (!data) return;
-
         let html = `<h3>النتائج: ${data.label}</h3>`;
         let textToSave = `نوع العطل: ${data.label}\n`;
-        
         data.causes.forEach(c => {
             html += `<div class="cause-item"><strong>${c.name}</strong> <span class="prob">(${c.prob})</span><ul>${c.checks.map(ch => `<li>${ch}</li>`).join("")}</ul></div>`;
             textToSave += `- ${c.name} (${c.prob})\n`;
         });
-        
         resultDiv.innerHTML = html;
         resultDiv.style.display = "block";
         saveToHistory("تشخيص: " + data.label, textToSave);
@@ -343,8 +348,7 @@
 
     function saveToHistory(title, resultText) {
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
-        const newRecord = { id: Date.now(), date: new Date().toLocaleString('ar-EG'), title: title, result: resultText };
-        history.unshift(newRecord); 
+        history.unshift({ id: Date.now(), date: new Date().toLocaleString('ar-EG'), title: title, result: resultText }); 
         if (history.length > 50) history = history.slice(0, 50); 
         localStorage.setItem("hvacHistory", JSON.stringify(history));
         renderHistory();
@@ -353,32 +357,15 @@
     function renderHistory() {
         const historyList = document.getElementById("historyList");
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
-        if (history.length === 0) {
-            historyList.innerHTML = "<p style='text-align:center; color:#888;'>لا توجد أعطال محفوظة.</p>";
-            return;
-        }
+        if (history.length === 0) { historyList.innerHTML = "<p style='text-align:center; color:#888;'>لا توجد أعطال محفوظة.</p>"; return; }
         let html = "";
         history.forEach(item => {
-            html += `
-            <div class="history-item">
-                <button class="delete-btn" onclick="deleteHistory(${item.id})">×</button>
-                <div class="history-date">🕒 ${item.date}</div>
-                <div class="history-text">${item.title}</div>
-                <div class="history-result">${item.result.replace(/\n/g, '<br>')}</div>
-            </div>`;
+            html += `<div class="history-item"><button class="delete-btn" onclick="deleteHistory(${item.id})">×</button><div class="history-date">🕒 ${item.date}</div><div class="history-text">${item.title}</div><div class="history-result">${item.result.replace(/\n/g, '<br>')}</div></div>`;
         });
         historyList.innerHTML = html;
     }
 
-    function deleteHistory(id) {
-        if (confirm("حذف هذا العطل؟")) {
-            let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
-            history = history.filter(item => item.id !== id);
-            localStorage.setItem("hvacHistory", JSON.stringify(history));
-            renderHistory();
-        }
-    }
-
+    function deleteHistory(id) { if (confirm("حذف هذا العطل؟")) { let history = JSON.parse(localStorage.getItem("hvacHistory")) || []; history = history.filter(item => item.id !== id); localStorage.setItem("hvacHistory", JSON.stringify(history)); renderHistory(); } }
     function clearHistory() { if (confirm("مسح كل السجل؟")) { localStorage.removeItem("hvacHistory"); renderHistory(); } }
     
     function saveCatalogLink() {
@@ -388,18 +375,14 @@
         let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
         catalogs.push({ name: name, link: link });
         localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs));
-        document.getElementById("catalogName").value = "";
-        document.getElementById("catalogLink").value = "";
+        document.getElementById("catalogName").value = ""; document.getElementById("catalogLink").value = "";
         renderCatalogs();
     }
 
     function renderCatalogs() {
         const catalogList = document.getElementById("catalogList");
         let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
-        if (catalogs.length === 0) {
-            catalogList.innerHTML = "<p style='text-align:center; font-size:12px; color:#888;'>لا توجد كتالوجات محفوظة.</p>";
-            return;
-        }
+        if (catalogs.length === 0) { catalogList.innerHTML = "<p style='text-align:center; font-size:12px; color:#888;'>لا توجد كتالوجات محفوظة.</p>"; return; }
         let html = "";
         catalogs.forEach((item, index) => {
             html += `<div class="catalog-item"><a href="${item.link}" target="_blank">📄 ${item.name}</a><button class="delete-btn" style="position:static; border-radius:5px; width:30px; height:30px;" onclick="deleteCatalog(${index})">×</button></div>`;
@@ -409,9 +392,7 @@
 
     function deleteCatalog(index) {
         let catalogs = JSON.parse(localStorage.getItem("hvacCatalogs")) || [];
-        catalogs.splice(index, 1);
-        localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs));
-        renderCatalogs();
+        catalogs.splice(index, 1); localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs)); renderCatalogs();
     }
 
     window.onload = () => { updateSymptoms(); renderHistory(); renderCatalogs(); };
