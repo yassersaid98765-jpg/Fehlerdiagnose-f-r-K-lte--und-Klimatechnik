@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HVAC Diagnose Tool</title>
+    <!-- استدعاء مكتبة PDF.js لعرض الكتالوجات داخل الموقع -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; color: #333; }
         .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
@@ -39,14 +41,16 @@
         .save-btn { background-color: #f0ad4e; margin-top: 10px; font-size: 14px;}
         .save-btn:hover { background-color: #ec971f; }
         
-        /* قسم الكتالوج المحلي */
         .local-catalog-section { background-color: #e2e3e5; border: 1px solid #d6d8db; padding: 15px; border-radius: 8px; margin-top: 15px; }
         .local-catalog-section h3 { color: #383d41; margin-top: 0; text-align: center; font-size: 16px;}
         
-        /* حاوية عرض ملف الـ PDF */
-        #pdfViewerContainer { display: none; margin-top: 15px; border: 2px solid #0275d8; border-radius: 8px; overflow: hidden; background: white; }
-        .pdf-controls { display: flex; justify-content: space-between; background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd; }
-        .pdf-controls button { width: auto; margin: 0; padding: 8px 12px; font-size: 12px; }
+        /* تنسيقات عارض الـ PDF الداخلي */
+        #pdfViewerContainer { display: none; margin-top: 15px; border: 2px solid #0275d8; border-radius: 8px; overflow: hidden; background: #525659; }
+        .pdf-controls { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd; }
+        .pdf-controls button { width: auto; margin: 0; padding: 8px 12px; font-size: 14px; background-color: #0275d8;}
+        .pdf-controls span { font-weight: bold; color: #333; }
+        #canvasContainer { width: 100%; text-align: center; padding: 10px 0; max-height: 500px; overflow-y: auto; }
+        canvas { max-width: 100%; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -75,7 +79,6 @@
 
     <div id="result"></div>
 
-    <!-- قسم الكتالوجات المحفوظة -->
     <div class="catalog-section">
         <h3>📖 مكتبة الكتالوجات (الروابط)</h3>
         <input type="text" id="catalogName" placeholder="اسم الكتالوج/الجهاز">
@@ -87,19 +90,20 @@
     <!-- قسم فتح الكتالوجات من الهاتف -->
     <div class="local-catalog-section">
         <h3>📂 فتح كتالوج من ذاكرة الهاتف</h3>
-        <p style="font-size: 12px; color: #555; text-align: center;">اختر ملف PDF من هاتفك لعرضه هنا:</p>
-        <input type="file" id="localCatalogInput" accept="application/pdf, image/*" onchange="viewLocalCatalog()" style="background: white; cursor: pointer;">
+        <p style="font-size: 12px; color: #555; text-align: center;">اختر ملف PDF من هاتفك لقراءته هنا:</p>
+        <input type="file" id="localCatalogInput" accept="application/pdf" onchange="loadLocalPDF()" style="background: white; cursor: pointer;">
         
         <!-- حاوية عرض الكتالوج المدمجة -->
         <div id="pdfViewerContainer">
             <div class="pdf-controls">
-                <span style="font-size:12px; font-weight:bold; color:#0275d8;">معاينة الكتالوج</span>
-                <div>
-                    <button style="background-color:#4285f4;" onclick="openPdfExternally()">↗️ فتح خارجي</button>
-                    <button style="background-color:#d9534f;" onclick="closePdfViewer()">× إغلاق</button>
-                </div>
+                <button onclick="changePage(-1)">⬅️ السابق</button>
+                <span>صفحة <span id="pageNum">1</span> من <span id="pageCount">?</span></span>
+                <button onclick="changePage(1)">التالي ➡️</button>
             </div>
-            <iframe id="pdfFrame" src="" style="width:100%; height:500px; border:none;"></iframe>
+            <div id="canvasContainer">
+                <canvas id="pdfCanvas"></canvas>
+            </div>
+            <button style="background-color:#d9534f; margin-top:0; border-radius:0;" onclick="closePdfViewer()">× إغلاق الكتالوج</button>
         </div>
     </div>
 
@@ -111,7 +115,86 @@
 </div>
 
 <script>
-    let currentPdfUrl = "";
+    // إعداد مكتبة PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    let pdfDoc = null;
+    let pageNum = 1;
+    let pageRendering = false;
+    let pageNumPending = null;
+    const scale = 1.5; 
+
+    // --- دوال عرض الكتالوج المحلي ---
+    function loadLocalPDF() {
+        const fileInput = document.getElementById("localCatalogInput");
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const typedarray = new Uint8Array(e.target.result);
+            
+            // تحميل الملف في PDF.js
+            pdfjsLib.getDocument(typedarray).promise.then(function(pdfDoc_) {
+                pdfDoc = pdfDoc_;
+                document.getElementById("pageCount").textContent = pdfDoc.numPages;
+                document.getElementById("pdfViewerContainer").style.display = "block";
+                pageNum = 1;
+                renderPage(pageNum);
+            }).catch(function(error) {
+                alert("حدث خطأ في قراءة الملف: " + error.message);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function renderPage(num) {
+        pageRendering = true;
+        pdfDoc.getPage(num).then(function(page) {
+            const viewport = page.getViewport({scale: scale});
+            const canvas = document.getElementById('pdfCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+            const renderTask = page.render(renderContext);
+
+            renderTask.promise.then(function() {
+                pageRendering = false;
+                if (pageNumPending !== null) {
+                    renderPage(pageNumPending);
+                    pageNumPending = null;
+                }
+            });
+        });
+        document.getElementById('pageNum').textContent = num;
+    }
+
+    function queueRenderPage(num) {
+        if (pageRendering) {
+            pageNumPending = num;
+        } else {
+            renderPage(num);
+        }
+    }
+
+    function changePage(offset) {
+        if (!pdfDoc) return;
+        const newPage = pageNum + offset;
+        if (newPage >= 1 && newPage <= pdfDoc.numPages) {
+            pageNum = newPage;
+            queueRenderPage(pageNum);
+        }
+    }
+
+    function closePdfViewer() {
+        document.getElementById("pdfViewerContainer").style.display = "none";
+        document.getElementById("localCatalogInput").value = "";
+        pdfDoc = null;
+    }
 
     // قاعدة البيانات الموسعة
     let diagnoseDB = {
@@ -140,38 +223,6 @@
         { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] }
     ];
 
-    // --- دوال عرض الكتالوج المحلي ---
-    function viewLocalCatalog() {
-        const fileInput = document.getElementById("localCatalogInput");
-        const file = fileInput.files[0];
-        
-        if (file) {
-            currentPdfUrl = URL.createObjectURL(file);
-            const viewerContainer = document.getElementById("pdfViewerContainer");
-            const pdfFrame = document.getElementById("pdfFrame");
-            
-            pdfFrame.src = currentPdfUrl;
-            viewerContainer.style.display = "block";
-        }
-    }
-
-    function openPdfExternally() {
-        if (currentPdfUrl) {
-            window.open(currentPdfUrl, '_blank');
-        }
-    }
-
-    function closePdfViewer() {
-        document.getElementById("pdfViewerContainer").style.display = "none";
-        document.getElementById("pdfFrame").src = "";
-        document.getElementById("localCatalogInput").value = ""; // إعادة تعيين حقل الملف
-        if (currentPdfUrl) {
-            URL.revokeObjectURL(currentPdfUrl);
-            currentPdfUrl = "";
-        }
-    }
-
-    // --- دوال البحث ---
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) { alert("الرجاء كتابة العطل للبحث عنه."); return; }
@@ -231,7 +282,6 @@
         saveToHistory("تشخيص: " + data.label, textToSave);
     }
 
-    // --- إدارة السجل ---
     function saveToHistory(title, resultText) {
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
         const newRecord = { id: Date.now(), date: new Date().toLocaleString('ar-EG'), title: title, result: resultText };
@@ -277,7 +327,6 @@
         }
     }
 
-    // --- إدارة الكتالوجات (الروابط) ---
     function saveCatalogLink() {
         const name = document.getElementById("catalogName").value.trim();
         const link = document.getElementById("catalogLink").value.trim();
