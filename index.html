@@ -9,34 +9,58 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: "خطأ: مفتاح GEMINI_API_KEY غير موجود." }), { status: 500, headers: cors });
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${env.GEMINI_API_KEY}`;
-    
     const parts = [{ text: prompt }];
-    
-    // استقبال أي نوع من الملفات (صورة أو PDF)
     if (fileData) {
-      parts.push({ 
-        inline_data: { 
-          mime_type: mimeType || "image/jpeg", 
-          data: fileData 
-        } 
-      });
+      parts.push({ inline_data: { mime_type: mimeType || "image/jpeg", data: fileData } });
     }
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts }] })
-    });
-    
-    const data = await res.json();
+    // قائمة النماذج (من الأحدث للأكثر استقراراً)
+    const models = ["gemini-3.8-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+    let lastError = null;
 
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        return new Response(JSON.stringify({ error: "خطأ من Google: " + JSON.stringify(data) }), { status: 500, headers: cors });
+    // دالة مساعدة للانتظار
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+    // محاولة الاتصال بكل نموذج
+    for (const model of models) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
+          
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts }] })
+          });
+          
+          const data = await res.json();
+
+          // إذا نجح الرد
+          if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+            const aiText = data.candidates[0].content.parts[0].text;
+            return new Response(JSON.stringify({ result: aiText }), { headers: cors });
+          }
+
+          // إذا كان الخطأ 503 (ضغط)، ننتظر ونحاول مرة أخرى
+          if (data.error && data.error.code === 503) {
+            lastError = data.error.message;
+            await sleep(2000); // انتظار ثانيتين
+            continue; 
+          }
+
+          // أي خطأ آخر (مثل 404)، نكسر الحلقة ونجرب النموذج التالي
+          lastError = data.error ? data.error.message : "خطأ غير معروف";
+          break;
+
+        } catch (e) {
+          lastError = e.message;
+          await sleep(1000);
+        }
+      }
     }
 
-    const aiText = data.candidates[0].content.parts[0].text;
-    return new Response(JSON.stringify({ result: aiText }), { headers: cors });
+    // إذا فشلت كل المحاولات
+    return new Response(JSON.stringify({ error: "السيرفرات مشغولة جداً حالياً. يرجى المحاولة بعد قليل. (الخطأ: " + lastError + ")" }), { status: 500, headers: cors });
 
   } catch (e) {
     return new Response(JSON.stringify({ error: "حدث خطأ في الخادم: " + e.message }), { status: 500, headers: cors });
