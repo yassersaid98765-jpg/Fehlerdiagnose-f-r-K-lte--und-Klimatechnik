@@ -108,6 +108,7 @@
             <div style="border-top: 1px dashed #ccc; margin-top: 20px; padding-top: 15px;">
                 <label id="lblSelect">أو اختر من القائمة:</label>
                 <select id="deviceType" onchange="updateSymptoms()">
+                    <option value="all" id="optAll">كل الأجهزة (Alle Geräte)</option>
                     <option value="split" id="optSplit">مكيف سبليت</option>
                     <option value="coldroom" id="optCold">غرفة تبريد</option>
                     <option value="chiller" id="optChiller">تشيلر (Chiller)</option>
@@ -220,10 +221,10 @@
         ar: {
             title: "❄ HVAC Diagnose Tool", subtitle: "مرجعك الميداني السريع",
             syncBar: "☁️ جاري المزامنة مع السحابة...",
-            sec1Title: "🔍 التشخيص والبحث السريع", lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: الكهرباء تفصل...",
-            btnSearchLocal: "البحث في المكتبة الداخلية", btnSearchGoogle: "🌐 ابحث عن هذا العطل في جوجل",
-            lblSelect: "أو اختر من القائمة:", 
-            optSplit: "مكيف سبليت", optCold: "غرفة تبريد", optChiller: "تشيلر (Chiller)", optWindow: "مكيف شباك",
+            sec1Title: "🔍 التشخيص والبحث السريع", lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: ضغط عالي، الكهرباء تفصل...",
+            btnSearchLocal: "البحث في كل الأجهزة", btnSearchGoogle: "🌐 ابحث عن هذا العطل في جوجل",
+            lblSelect: "أو اختر الجهاز والعطل:", 
+            optAll: "كل الأجهزة (شامل)", optSplit: "مكيف سبليت", optCold: "غرفة تبريد", optChiller: "تشيلر (Chiller)", optWindow: "مكيف شباك",
             btnDiagnose: "🔍 تشخيص",
             sec2Title: "📸 البحث بالصورة (Google Lens)", lensDesc: "التقط صورة لكود العطل أو القطعة، وسيتم فتح تطبيق جوجل للبحث عنها فوراً.",
             btnCam: "📷 التقاط صورة", btnGal: "🖼️ من الاستديو", imgPreview: "✅ تم اختيار الصورة بنجاح", btnLens: "🔍 فتح في Google Lens",
@@ -231,15 +232,15 @@
             sec4Title: "📖 الكتالوجات وقارئ PDF", lblCatLink: "حفظ رابط كتالوج:", btnSaveCat: "💾 حفظ الرابط", lblCatFile: "فتح كتالوج من ذاكرة الهاتف:",
             btnClosePdf: "× إغلاق", btnExtPdf: "↗️ خارجي", btnTransPdf: "📄 ترجمة سريعة", lblTransTitle: "🌐 النص المترجم:",
             sec5Title: "📚 سجل التشخيصات السابقة", btnClearHistory: "🗑️ مسح السجل بالكامل",
-            noCustomFaults: "لا توجد أعطال مخصصة مضافة حالياً.", noCatalogs: "لا توجد كتالوجات محفوظة.", noHistory: "لا توجد أعطال محفوظة.", noPage: "رقم الصفحة غير صحيح"
+            noCustomFaults: "لا توجد أعطال مخصصة مضافة حالياً.", noCatalogs: "لا توجد كتالوجات محفوظة.", noHistory: "لا توجد أعطال محفوظة.", noPage: "رقم الصفحة غير صحيح", allDevicesLabel: "الكل"
         },
         de: {
             title: "❄ HVAC Diagnose-Tool", subtitle: "Ihr schneller Außendienst-Leitfaden",
             syncBar: "☁️ Synchronisierung mit Cloud...",
-            sec1Title: "🔍 Schnelldiagnose & Suche", lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Sicherung fliegt raus...",
-            btnSearchLocal: "In lokaler Datenbank suchen", btnSearchGoogle: "🌐 Bei Google suchen",
-            lblSelect: "Oder aus Liste wählen:", 
-            optSplit: "Split-Klimaanlage", optCold: "Kühlraum", optChiller: "Kaltwassersatz (Chiller)", optWindow: "Fensterklimaanlage",
+            sec1Title: "🔍 Schnelldiagnose & Suche", lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Hochdruck, Sicherung fliegt...",
+            btnSearchLocal: "In allen Geräten suchen", btnSearchGoogle: "🌐 Bei Google suchen",
+            lblSelect: "Oder Gerät & Fehler wählen:", 
+            optAll: "Alle Geräte", optSplit: "Split-Klimaanlage", optCold: "Kühlraum", optChiller: "Kaltwassersatz (Chiller)", optWindow: "Fensterklimaanlage",
             btnDiagnose: "🔍 Diagnose",
             sec2Title: "📸 Bildsuche (Google Lens)", lensDesc: "Machen Sie ein Foto vom Fehlercode oder Bauteil, um es sofort in Google zu suchen.",
             btnCam: "📷 Foto machen", btnGal: "🖼️ Aus Galerie", imgPreview: "✅ Bild erfolgreich ausgewählt", btnLens: "🔍 In Google Lens öffnen",
@@ -247,7 +248,7 @@
             sec4Title: "📖 Kataloge & PDF-Reader", lblCatLink: "Katalog-Link speichern:", btnSaveCat: "💾 Link speichern", lblCatFile: "Katalog vom Handy öffnen:",
             btnClosePdf: "× Schließen", btnExtPdf: "↗️ Extern", btnTransPdf: "📄 Schnellübersetzung", lblTransTitle: "🌐 Übersetzter Text:",
             sec5Title: "📚 Diagnose-Verlauf", btnClearHistory: "🗑️ Verlauf löschen",
-            noCustomFaults: "Noch keine eigenen Fehler vorhanden.", noCatalogs: "Keine Kataloge gespeichert.", noHistory: "Keine Fehler gespeichert.", noPage: "Ungültige Seitenzahl"
+            noCustomFaults: "Noch keine eigenen Fehler vorhanden.", noCatalogs: "Keine Kataloge gespeichert.", noHistory: "Keine Fehler gespeichert.", noPage: "Ungültige Seitenzahl", allDevicesLabel: "Alle"
         }
     };
 
@@ -265,10 +266,13 @@
         document.getElementById("btnSearchLocal").innerText = t.btnSearchLocal;
         document.getElementById("btnSearchGoogle").innerText = t.btnSearchGoogle;
         document.getElementById("lblSelect").innerText = t.lblSelect;
+        
+        document.getElementById("optAll").innerText = t.optAll;
         document.getElementById("optSplit").innerText = t.optSplit;
         document.getElementById("optCold").innerText = t.optCold;
         document.getElementById("optChiller").innerText = t.optChiller;
         document.getElementById("optWindow").innerText = t.optWindow;
+        
         document.getElementById("btnDiagnose").innerText = t.btnDiagnose;
         document.getElementById("sec2Title").innerText = t.sec2Title;
         document.getElementById("lensDesc").innerText = t.lensDesc;
@@ -278,10 +282,12 @@
         document.getElementById("btnLens").innerText = t.btnLens;
         document.getElementById("sec3Title").innerText = t.sec3Title;
         document.getElementById("lblAddDevice").innerText = t.lblAddDevice;
+        
         document.getElementById("optAddSplit").innerText = t.optSplit;
         document.getElementById("optAddCold").innerText = t.optCold;
         document.getElementById("optAddChiller").innerText = t.optChiller;
         document.getElementById("optAddWindow").innerText = t.optWindow;
+        
         document.getElementById("lblAddName").innerText = t.lblAddName;
         document.getElementById("lblAddCauses").innerText = t.lblAddCauses;
         document.getElementById("btnAddFault").innerText = t.btnAddFault;
@@ -310,35 +316,48 @@
         applyLanguage();
     }
 
+    // ==========================================
+    // قاعدة البيانات الضخمة (محدثة وموزعة)
+    // ==========================================
     let defaultDB_ar = {
         split: {
             not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }] },
-            water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }, { name: "تجمد المبخر", prob: "30%", checks: ["فحص الفلتر"] }] }
+            water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }] },
+            noise: { label: "صوت عالي", causes: [{ name: "اهتزاز القواعد", prob: "40%", checks: ["تثبيت الوحدة"] }] }
         },
         coldroom: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج", prob: "25%", checks: ["فحص إذابة الثلج"] }] }
+            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }] },
+            ice_buildup: { label: "تراكم ثلج", causes: [{ name: "عطل في إذابة الثلج", prob: "50%", checks: ["فحص المؤقت والسخانات"] }] }
         },
         chiller: {
-            low_chw_temp: { label: "درجة حرارة الماء منخفضة", causes: [{ name: "نقص في غاز التبريد", prob: "50%", checks: ["فحص الضغط", "البحث عن تسريب"] }] }
+            low_chw_temp: { label: "درجة حرارة الماء منخفضة", causes: [{ name: "نقص في غاز التبريد", prob: "50%", checks: ["فحص الضغط", "البحث عن تسريب"] }] },
+            high_pressure: { label: "ضغط مرتفع (High Pressure)", causes: [{ name: "انسداد في مبادل الحرارة", prob: "40%", checks: ["تنظيف المبادل"] }, { name: "عطل في مضخة الماء", prob: "40%", checks: ["فحص تدفق المضخة"] }] },
+            pump_fault: { label: "مضخة الماء لا تعمل", causes: [{ name: "عطل كهربائي", prob: "50%", checks: ["قياس جهد المضخة"] }, { name: "انسداد ميكانيكي", prob: "50%", checks: ["فحص المروحة الداخلية"] }] }
         },
         window: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "الضاغط لا يعمل", prob: "40%", checks: ["فحص الكابستور"] }] }
+            not_cooling: { label: "لا يبرد", causes: [{ name: "الضاغط لا يعمل", prob: "40%", checks: ["فحص الكابستور"] }] },
+            water_inside: { label: "تسريب ماء للداخل", causes: [{ name: "ميلان خاطئ", prob: "60%", checks: ["تعديل ميل الشباك"] }] }
         }
     };
 
     let defaultDB_de = {
         split: {
             not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kältemittelmangel", prob: "40%", checks: ["Saugdruck messen", "Kupferverbindungen prüfen"] }, { name: "Luftfilter verstopft", prob: "25%", checks: ["Filter prüfen"] }] },
-            water_leak: { label: "Wasserleck", causes: [{ name: "Kondensatablauf verstopft", prob: "50%", checks: ["Ablauf durchblasen"] }, { name: "Verdampfer vereist", prob: "30%", checks: ["Filter prüfen"] }] }
+            water_leak: { label: "Wasserleck", causes: [{ name: "Kondensatablauf verstopft", prob: "50%", checks: ["Ablauf durchblasen"] }] },
+            noise: { label: "Laute Geräusche", causes: [{ name: "Vibrationen", prob: "40%", checks: ["Gerät ausrichten"] }] }
         },
         coldroom: {
-            not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kältemittelverlust", prob: "35%", checks: ["Lecksuche"] }, { name: "Vereisung", prob: "25%", checks: ["Abtauung prüfen"] }] }
+            not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kältemittelverlust", prob: "35%", checks: ["Lecksuche"] }] },
+            ice_buildup: { label: "Vereisung", causes: [{ name: "Abtauung defekt", prob: "50%", checks: ["Timer und Heizung prüfen"] }] }
         },
         chiller: {
-            low_chw_temp: { label: "Kaltwassertemperatur zu niedrig", causes: [{ name: "Kältemittelmangel", prob: "50%", checks: ["Druck prüfen", "Lecksuche"] }] }
+            low_chw_temp: { label: "Kaltwassertemperatur zu niedrig", causes: [{ name: "Kältemittelmangel", prob: "50%", checks: ["Druck prüfen", "Lecksuche"] }] },
+            high_pressure: { label: "Hochdruck", causes: [{ name: "Wärmetauscher verstopft", prob: "40%", checks: ["Wärmetauscher reinigen"] }, { name: "Wasserpumpe defekt", prob: "40%", checks: ["Pumpendurchfluss prüfen"] }] },
+            pump_fault: { label: "Wasserpumpe läuft nicht", causes: [{ name: "Elektrischer Fehler", prob: "50%", checks: ["Spannung messen"] }, { name: "Blockiert", prob: "50%", checks: ["Laufrad prüfen"] }] }
         },
         window: {
-            not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kompressor läuft nicht", prob: "40%", checks: ["Kondensator prüfen"] }] }
+            not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kompressor läuft nicht", prob: "40%", checks: ["Kondensator prüfen"] }] },
+            water_inside: { label: "Wasser läuft ins Zimmer", causes: [{ name: "Falsche Neigung", prob: "60%", checks: ["Gerät neigen"] }] }
         }
     };
 
@@ -352,15 +371,6 @@
             chiller: { ...baseDB.chiller, ...(customDB.chiller || {}) },
             window: { ...baseDB.window, ...(customDB.window || {}) }
         };
-        
-        // تصحيح: إزالة أي أعطال افتراضية قديمة تسربت للذاكرة
-        for (let dev in diagnoseDB) {
-            for (let key in diagnoseDB[dev]) {
-                if (key.startsWith("custom_") && !customDB[dev]?.[key]) {
-                    delete diagnoseDB[dev][key];
-                }
-            }
-        }
     }
 
     let diagnoseDB = {};
@@ -423,7 +433,11 @@
         for (let dev in diagnoseDB) {
             for (let symp in diagnoseDB[dev]) {
                 let label = diagnoseDB[dev][symp].label.replace(" (مخصص)", "").replace(" (Eigene)", "");
-                keywordMap.push({ device: dev, symptom: symp, words: label.split(" ") });
+                // إضافة اسم الجهاز ككلمة مفتاحية
+                let deviceNameAr = translations['ar']['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)];
+                let deviceNameDe = translations['de']['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)];
+                let words = label.split(" ").concat(deviceNameAr.split(" "), deviceNameDe.split(" "));
+                keywordMap.push({ device: dev, symptom: symp, words: words });
             }
         }
     }
@@ -461,12 +475,7 @@
                 if (symp.startsWith("custom_")) {
                     hasCustom = true;
                     let faultName = customDB[dev][symp].label;
-                    let deviceName = "";
-                    if (dev === "split") deviceName = currentLang === 'ar' ? "مكيف" : "Split";
-                    else if (dev === "coldroom") deviceName = currentLang === 'ar' ? "غرفة تبريد" : "Kühlraum";
-                    else if (dev === "chiller") deviceName = currentLang === 'ar' ? "تشيلر" : "Chiller";
-                    else if (dev === "window") deviceName = currentLang === 'ar' ? "شباك" : "Fenster";
-                    
+                    let deviceName = translations[currentLang]['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)] || dev;
                     list.innerHTML += `<div class="custom-fault-item"><span>[${deviceName}] ${faultName}</span><button class="delete-btn" style="position:static; border-radius:5px; width:35px; height:35px; background-color:#d9534f;" onclick="deleteCustomFault('${dev}', '${symp}')">×</button></div>`;
                 }
             }
@@ -527,13 +536,20 @@
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) return;
-        rebuildKeywordMap();
+        rebuildKeywordMap(); // تحديث شامل للبحث في كل الأجهزة
         let foundMatch = null;
-        for (let item of keywordMap) { if (item.words.some(w => query.includes(w))) { foundMatch = item; break; } }
+        
+        // البحث في كل الأجهزة
+        for (let item of keywordMap) { 
+            if (item.words.some(w => query.toLowerCase().includes(w.toLowerCase()))) { 
+                foundMatch = item; break; 
+            } 
+        }
+        
         if (foundMatch) { showResults(foundMatch.device, foundMatch.symptom); } 
         else {
             const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold; text-align:center;">${currentLang === 'ar' ? 'لم يتم العثور على العطل. ابحث في جوجل.' : 'Nicht gefunden. Bitte bei Google suchen.'}</p>`;
+            resultDiv.innerHTML = `<p style="color:#d9534f; font-weight:bold; text-align:center;">${currentLang === 'ar' ? 'لم يتم العثور على العطل محلياً. جرب البحث في جوجل بالزر الأزرق.' : 'Nicht gefunden. Bitte über den blauen Button bei Google suchen.'}</p>`;
             resultDiv.style.display = "block";
         }
     }
@@ -549,21 +565,44 @@
         const symptomSelect = document.getElementById("symptom");
         symptomSelect.innerHTML = "";
         
-        if(!diagnoseDB[device]) return;
-
-        for (let key in diagnoseDB[device]) {
-            let option = document.createElement("option"); option.value = key; option.text = diagnoseDB[device][key].label; symptomSelect.appendChild(option);
+        // إذا اختار "كل الأجهزة"، نعرض كل الأعطال
+        if (device === "all") {
+            for (let dev in diagnoseDB) {
+                let deviceLabel = translations[currentLang]['opt'+dev.charAt(0).toUpperCase() + dev.slice(1)] || dev;
+                for (let key in diagnoseDB[dev]) {
+                    let option = document.createElement("option"); 
+                    option.value = dev + "||" + key; 
+                    option.text = `[${deviceLabel}] ${diagnoseDB[dev][key].label}`; 
+                    symptomSelect.appendChild(option);
+                }
+            }
+        } else {
+            if(!diagnoseDB[device]) return;
+            for (let key in diagnoseDB[device]) {
+                let option = document.createElement("option"); 
+                option.value = device + "||" + key; 
+                option.text = diagnoseDB[device][key].label; 
+                symptomSelect.appendChild(option);
+            }
         }
     }
 
-    function runDiagnose() { showResults(document.getElementById("deviceType").value, document.getElementById("symptom").value); }
+    function runDiagnose() { 
+        const val = document.getElementById("symptom").value;
+        if(!val) return;
+        const parts = val.split("||");
+        showResults(parts[0], parts[1]); 
+    }
     
     function showResults(device, symptom) {
         const resultDiv = document.getElementById("result");
         const data = diagnoseDB[device][symptom];
         if (!data) return;
-        let html = `<h3>Ergebnisse / النتائج: ${data.label}</h3>`;
-        let textToSave = `${currentLang === 'ar' ? 'نوع العطل' : 'Fehler'}: ${data.label}\n`;
+        let deviceLabel = translations[currentLang]['opt'+device.charAt(0).toUpperCase() + device.slice(1)] || device;
+        
+        let html = `<h3>${currentLang === 'ar' ? 'النتائج' : 'Ergebnisse'} (${deviceLabel}): ${data.label}</h3>`;
+        let textToSave = `${currentLang === 'ar' ? 'الجهاز' : 'Gerät'}: ${deviceLabel}\n${currentLang === 'ar' ? 'العطل' : 'Fehler'}: ${data.label}\n`;
+        
         data.causes.forEach(c => {
             html += `<div class="cause-item"><strong>${c.name}</strong> <span class="prob">(${c.prob})</span><ul>${c.checks.map(ch => `<li>${ch}</li>`).join("")}</ul></div>`;
             textToSave += `- ${c.name} (${c.prob})\n`;
@@ -590,6 +629,7 @@
         catalogList.innerHTML = html;
     }
 
+    // PDF
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
 
