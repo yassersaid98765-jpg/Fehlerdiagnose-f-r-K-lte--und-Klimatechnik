@@ -11,6 +11,7 @@
         h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
         
+        /* القوائم القابلة للطي */
         details { background: #fff; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
         summary { padding: 15px; font-weight: bold; font-size: 16px; cursor: pointer; background-color: #f8f9fa; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #0275d8; }
         summary::-webkit-details-marker { display: none; }
@@ -77,7 +78,6 @@
         .btn-gal:hover { background-color: #4a5155; }
         .img-preview { font-size: 12px; color: #28a745; margin-top: 5px; display: none; font-weight: bold;}
 
-        /* زر جوجل الجديد */
         .google-lens-btn { background-color: #ffffff; color: #4285f4; border: 2px solid #4285f4; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px;}
         .google-lens-btn:hover { background-color: #f1f5ff; }
     </style>
@@ -116,7 +116,7 @@
     <details>
         <summary>📸 تشخيص العطل بالكاميرا (AI / Google)</summary>
         <div class="details-content">
-            <p style="font-size: 13px; color: #555;">التقط صورة للعطل، واختر إما تحليلها بالذكاء الاصطناعي (لفهم العطل)، أو البحث عنها في Google Lens (للتعرف السريع).</p>
+            <p style="font-size: 13px; color: #555;">التقط صورة للعطل، واختر إما تحليلها بالذكاء الاصطناعي (لفهم العطل)، أو إرسالها إلى Google Lens (للتعرف السريع).</p>
             
             <div class="img-buttons">
                 <button type="button" class="btn-cam" onclick="document.getElementById('cameraInput').click()">📷 التقاط صورة</button>
@@ -131,7 +131,6 @@
             <label>ملاحظات إضافية (اختياري):</label>
             <input type="text" id="cameraNotes" placeholder="مثال: هذا كود يظهر على شاشة المكيف...">
             
-            <!-- أزرار المعالجة -->
             <button class="camera-btn" onclick="diagnoseWithImage()">✨ تحليل الصورة بالذكاء الاصطناعي (دقيق)</button>
             <div id="aiLoading" class="ai-loading">⏳ جاري تحليل الصورة... الرجاء الانتظار.</div>
             
@@ -223,29 +222,55 @@
         }
     }
 
-    // دالة البحث في Google Lens
-    function searchWithGoogleLens() {
-        // فتح جوجل لنس في نافذة جديدة
-        window.open("https://lens.google.com/", "_blank");
-        // ملاحظة: سيطلب منك جوجل رفع الصورة أو التقاطها هناك.
+    // دالة مشاركة الصورة مع تطبيق جوجل (Google Lens)
+    async function searchWithGoogleLens() {
+        if (!selectedImageFile) {
+            alert("الرجاء التقاط صورة أو اختيارها أولاً.");
+            return;
+        }
+
+        if (navigator.canShare && navigator.canShare({ files: [selectedImageFile] })) {
+            try {
+                await navigator.share({
+                    files: [selectedImageFile],
+                    title: 'تشخيص عطل',
+                    text: 'ابحث عن هذه الصورة في Google Lens'
+                });
+            } catch (error) {
+                console.log('تم إلغاء المشاركة', error);
+            }
+        } else {
+            alert("متصفحك لا يدعم المشاركة المباشرة. سيتم فتح جوجل، يرجى رفع الصورة يدوياً.");
+            window.open("https://lens.google.com/", "_blank");
+        }
     }
 
+    // ==========================================
+    // 1. المزامنة السحابية
+    // ==========================================
     async function syncToCloud() {
         const syncBar = document.getElementById("syncStatus");
         syncBar.style.display = "block";
         syncBar.textContent = "☁️ جاري الحفظ في السحابة...";
         syncBar.style.backgroundColor = "#fff3cd"; syncBar.style.color = "#856404";
+
         const dataToSync = {
             customDB: localStorage.getItem("hvacCustomDB"),
             history: localStorage.getItem("hvacHistory"),
             catalogs: localStorage.getItem("hvacCatalogs")
         };
+
         try {
-            await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSync) });
-            syncBar.textContent = "✅ تم الحفظ في السحابة بنجاح"; syncBar.style.backgroundColor = "#d4edda"; syncBar.style.color = "#155724";
+            await fetch('/api/sync', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataToSync)
+            });
+            syncBar.textContent = "✅ تم الحفظ في السحابة بنجاح";
+            syncBar.style.backgroundColor = "#d4edda"; syncBar.style.color = "#155724";
             setTimeout(() => { syncBar.style.display = "none"; }, 3000); 
         } catch (e) {
-            syncBar.textContent = "❌ فشل الاتصال بالسحابة"; syncBar.style.backgroundColor = "#f8d7da"; syncBar.style.color = "#721c24";
+            syncBar.textContent = "❌ فشل الاتصال بالسحابة";
+            syncBar.style.backgroundColor = "#f8d7da"; syncBar.style.color = "#721c24";
         }
     }
 
@@ -263,6 +288,9 @@
         } catch (e) { console.log("لا توجد بيانات سحابية سابقة."); }
     }
 
+    // ==========================================
+    // 2. التشخيص بالكاميرا (AI)
+    // ==========================================
     async function diagnoseWithImage() {
         const notes = document.getElementById("cameraNotes").value.trim();
         const loading = document.getElementById("aiLoading");
@@ -314,6 +342,9 @@
         }
     }
 
+    // ==========================================
+    // 3. قاعدة البيانات والبحث
+    // ==========================================
     let defaultDB = {
         split: {
             not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }] },
@@ -424,6 +455,9 @@
         catalogs.splice(index, 1); localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs)); renderCatalogs(); syncToCloud(); 
     }
 
+    // ==========================================
+    // 4. قارئ الـ PDF والترجمة
+    // ==========================================
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
 
@@ -499,6 +533,9 @@
         } catch (error) { txt.innerHTML = `<span style="color:red;">حدث خطأ في الترجمة: ${error.message}</span>`; }
     }
 
+    // ==========================================
+    // 5. دوال التشغيل
+    // ==========================================
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) { alert("الرجاء كتابة العطل للبحث عنه."); return; }
