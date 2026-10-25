@@ -5,13 +5,12 @@ export async function onRequestPost(context) {
   try {
     const { prompt, imageData } = await request.json();
     
-    // التأكد من وجود المفتاح
     if (!env.GEMINI_API_KEY) {
       return new Response(JSON.stringify({ error: "خطأ: مفتاح GEMINI_API_KEY غير موجود في إعدادات Cloudflare." }), { status: 500, headers: cors });
     }
 
-    // استخدام النموذج الأحدث
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${env.GEMINI_API_KEY}`;
+    // استخدام النموذج المدعوم حالياً بدلاً من النموذج القديم
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`;
     
     const parts = [{ text: prompt }];
     if (imageData) {
@@ -31,7 +30,6 @@ export async function onRequestPost(context) {
     
     const data = await res.json();
 
-    // التحقق من وجود رد صالح
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
         return new Response(JSON.stringify({ error: "خطأ من Google: " + JSON.stringify(data) }), { status: 500, headers: cors });
     }
