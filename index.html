@@ -11,7 +11,6 @@
         h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
         
-        /* القوائم القابلة للطي */
         details { background: #fff; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
         summary { padding: 15px; font-weight: bold; font-size: 16px; cursor: pointer; background-color: #f8f9fa; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #0275d8; }
         summary::-webkit-details-marker { display: none; }
@@ -66,7 +65,6 @@
         
         #translationBox { display: none; background: #fff3cd; border: 2px solid #f0ad4e; padding: 15px; margin-top: 15px; border-radius: 8px; color: #333; line-height: 1.6; white-space: pre-wrap; }
         
-        /* تنسيقات الكاميرا */
         .camera-btn { background-color: #6f42c1; }
         .camera-btn:hover { background-color: #5a32a3; }
         .ai-loading { text-align: center; color: #6f42c1; font-weight: bold; display: none; margin-top: 15px; }
@@ -80,7 +78,6 @@
 
     <div id="syncStatus" class="sync-bar">☁️ جاري المزامنة مع السحابة...</div>
 
-    <!-- 1. التشخيص السريع -->
     <details open>
         <summary>🔍 التشخيص والبحث السريع</summary>
         <div class="details-content">
@@ -103,14 +100,14 @@
 
     <div id="result"></div>
 
-    <!-- 2. التشخيص بالكاميرا (الذكاء الاصطناعي) -->
     <details>
         <summary>📸 تشخيص العطل بالكاميرا (AI)</summary>
         <div class="details-content">
-            <p style="font-size: 13px; color: #555;">التقط صورة لكود العطل، أو للقطعة التالفة، أو للأنابيب، وسيقوم الذكاء الاصطناعي بتحليلها.</p>
+            <p style="font-size: 13px; color: #555;">التقط صورة لكود العطل، أو اختر صورة من الاستديو، وسيقوم الذكاء الاصطناعي بتحليلها.</p>
             
-            <label>التقط صورة أو اختر من المعرض:</label>
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="background: #f8f9fa;">
+            <label>التقط صورة أو اختر من الاستديو:</label>
+            <!-- تم حذف capture="environment" هنا لكي يفتح المعرض والكاميرا معاً -->
+            <input type="file" id="cameraInput" accept="image/*" style="background: #f8f9fa;">
             
             <label>ملاحظات إضافية (اختياري):</label>
             <input type="text" id="cameraNotes" placeholder="مثال: هذا كود يظهر على شاشة المكيف...">
@@ -121,7 +118,6 @@
         </div>
     </details>
 
-    <!-- 3. إدارة الأعطال -->
     <details>
         <summary>➕ إضافة وإدارة الأعطال المخصصة</summary>
         <div class="details-content">
@@ -145,7 +141,6 @@
         </div>
     </details>
 
-    <!-- 4. الكتالوجات -->
     <details>
         <summary>📖 الكتالوجات وقارئ PDF</summary>
         <div class="details-content">
@@ -185,7 +180,6 @@
         </div>
     </details>
 
-    <!-- 5. السجل -->
     <details>
         <summary>📚 سجل التشخيصات السابقة</summary>
         <div class="details-content">
@@ -197,9 +191,6 @@
 </div>
 
 <script>
-    // ==========================================
-    // 1. المزامنة السحابية
-    // ==========================================
     async function syncToCloud() {
         const syncBar = document.getElementById("syncStatus");
         syncBar.style.display = "block";
@@ -240,9 +231,6 @@
         } catch (e) { console.log("لا توجد بيانات سحابية سابقة."); }
     }
 
-    // ==========================================
-    // 2. التشخيص بالكاميرا (AI)
-    // ==========================================
     async function diagnoseWithImage() {
         const fileInput = document.getElementById("cameraInput");
         const notes = document.getElementById("cameraNotes").value.trim();
@@ -261,7 +249,6 @@
 
         try {
             const file = fileInput.files[0];
-            // ضغط الصورة
             const base64Image = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -297,7 +284,6 @@
             resultDiv.innerHTML = `<h3>🤖 تحليل الذكاء الاصطناعي:</h3><p>${data.result.replace(/\n/g, '<br>')}</p>`;
             resultDiv.style.display = "block";
             
-            // حفظ النتيجة في السجل
             saveToHistory("تشخيص بالكاميرا: " + (notes || "صورة عطل"), data.result);
 
         } catch (error) {
@@ -309,9 +295,6 @@
         }
     }
 
-    // ==========================================
-    // 3. باقي الوظائف (قاعدة البيانات، البحث، الكتالوج)
-    // ==========================================
     let defaultDB = {
         split: {
             not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }] },
@@ -425,7 +408,6 @@
         catalogs.splice(index, 1); localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs)); renderCatalogs(); syncToCloud(); 
     }
 
-    // قارئ الـ PDF
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
 
