@@ -9,7 +9,6 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; color: #333; }
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         
-        /* تنسيق زر اللغة */
         .lang-switch { text-align: left; margin-bottom: 10px; }
         .lang-btn { padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: auto; margin: 0; font-size: 14px;}
         .lang-btn:hover { background-color: #5a6268; }
@@ -89,7 +88,6 @@
 
 <div class="container">
     
-    <!-- زر تبديل اللغة -->
     <div class="lang-switch">
         <button class="lang-btn" id="langBtn" onclick="toggleLanguage()">DE / AR</button>
     </div>
@@ -112,6 +110,8 @@
                 <select id="deviceType" onchange="updateSymptoms()">
                     <option value="split" id="optSplit">مكيف سبليت</option>
                     <option value="coldroom" id="optCold">غرفة تبريد</option>
+                    <option value="chiller" id="optChiller">تشيلر (Chiller)</option>
+                    <option value="window" id="optWindow">مكيف شباك</option>
                 </select>
                 <select id="symptom" style="margin-top: 10px;"></select>
                 <button onclick="runDiagnose()" id="btnDiagnose">🔍 تشخيص</button>
@@ -147,6 +147,8 @@
             <select id="addDeviceType">
                 <option value="split" id="optAddSplit">مكيف سبليت</option>
                 <option value="coldroom" id="optAddCold">غرفة تبريد</option>
+                <option value="chiller" id="optAddChiller">تشيلر (Chiller)</option>
+                <option value="window" id="optAddWindow">مكيف شباك</option>
             </select>
             
             <label id="lblAddName">اسم العطل:</label>
@@ -212,9 +214,6 @@
 </div>
 
 <script>
-    // ==========================================
-    // 1. نظام الترجمة والتبديل بين اللغتين
-    // ==========================================
     let currentLang = localStorage.getItem("hvacLang") || "ar";
 
     const translations = {
@@ -223,28 +222,32 @@
             syncBar: "☁️ جاري المزامنة مع السحابة...",
             sec1Title: "🔍 التشخيص والبحث السريع", lblSearch: "اكتب العطل بكلماتك الخاصة:", searchPlaceholder: "مثال: الكهرباء تفصل...",
             btnSearchLocal: "البحث في المكتبة الداخلية", btnSearchGoogle: "🌐 ابحث عن هذا العطل في جوجل",
-            lblSelect: "أو اختر من القائمة:", optSplit: "مكيف سبليت / Split", optCold: "غرفة تبريد / Cold Room", btnDiagnose: "🔍 تشخيص",
+            lblSelect: "أو اختر من القائمة:", 
+            optSplit: "مكيف سبليت", optCold: "غرفة تبريد", optChiller: "تشيلر (Chiller)", optWindow: "مكيف شباك",
+            btnDiagnose: "🔍 تشخيص",
             sec2Title: "📸 البحث بالصورة (Google Lens)", lensDesc: "التقط صورة لكود العطل أو القطعة، وسيتم فتح تطبيق جوجل للبحث عنها فوراً.",
             btnCam: "📷 التقاط صورة", btnGal: "🖼️ من الاستديو", imgPreview: "✅ تم اختيار الصورة بنجاح", btnLens: "🔍 فتح في Google Lens",
             sec3Title: "➕ إضافة وإدارة الأعطال المخصصة", lblAddDevice: "نوع الجهاز:", lblAddName: "اسم العطل:", lblAddCauses: "الأسباب وخطوات الفحص (كل سبب في سطر جديد):", btnAddFault: "💾 حفظ العطل", lblDeleteFaults: "🗑️ الأعطال المضافة (لحذفها):",
             sec4Title: "📖 الكتالوجات وقارئ PDF", lblCatLink: "حفظ رابط كتالوج:", btnSaveCat: "💾 حفظ الرابط", lblCatFile: "فتح كتالوج من ذاكرة الهاتف:",
             btnClosePdf: "× إغلاق", btnExtPdf: "↗️ خارجي", btnTransPdf: "📄 ترجمة سريعة", lblTransTitle: "🌐 النص المترجم:",
             sec5Title: "📚 سجل التشخيصات السابقة", btnClearHistory: "🗑️ مسح السجل بالكامل",
-            noCustomFaults: "لا توجد أعطال مخصصة مضافة حالياً.", noCatalogs: "لا توجد كتالوجات محفوظة.", noHistory: "لا توجد أعطال محفوظة.", noPage: "رقم الصفحة غير صحيح", of: "من"
+            noCustomFaults: "لا توجد أعطال مخصصة مضافة حالياً.", noCatalogs: "لا توجد كتالوجات محفوظة.", noHistory: "لا توجد أعطال محفوظة.", noPage: "رقم الصفحة غير صحيح"
         },
         de: {
             title: "❄ HVAC Diagnose-Tool", subtitle: "Ihr schneller Außendienst-Leitfaden",
             syncBar: "☁️ Synchronisierung mit Cloud...",
             sec1Title: "🔍 Schnelldiagnose & Suche", lblSearch: "Fehler eingeben:", searchPlaceholder: "z.B.: Sicherung fliegt raus...",
             btnSearchLocal: "In lokaler Datenbank suchen", btnSearchGoogle: "🌐 Bei Google suchen",
-            lblSelect: "Oder aus Liste wählen:", optSplit: "Split-Klimaanlage", optCold: "Kühlraum", btnDiagnose: "🔍 Diagnose",
+            lblSelect: "Oder aus Liste wählen:", 
+            optSplit: "Split-Klimaanlage", optCold: "Kühlraum", optChiller: "Kaltwassersatz (Chiller)", optWindow: "Fensterklimaanlage",
+            btnDiagnose: "🔍 Diagnose",
             sec2Title: "📸 Bildsuche (Google Lens)", lensDesc: "Machen Sie ein Foto vom Fehlercode oder Bauteil, um es sofort in Google zu suchen.",
             btnCam: "📷 Foto machen", btnGal: "🖼️ Aus Galerie", imgPreview: "✅ Bild erfolgreich ausgewählt", btnLens: "🔍 In Google Lens öffnen",
             sec3Title: "➕ Eigene Fehler hinzufügen", lblAddDevice: "Gerätetyp:", lblAddName: "Fehlername:", lblAddCauses: "Ursachen & Prüfschritte (je 1 pro Zeile):", btnAddFault: "💾 Fehler speichern", lblDeleteFaults: "🗑️ Eigene Fehler (zum Löschen):",
             sec4Title: "📖 Kataloge & PDF-Reader", lblCatLink: "Katalog-Link speichern:", btnSaveCat: "💾 Link speichern", lblCatFile: "Katalog vom Handy öffnen:",
             btnClosePdf: "× Schließen", btnExtPdf: "↗️ Extern", btnTransPdf: "📄 Schnellübersetzung", lblTransTitle: "🌐 Übersetzter Text:",
             sec5Title: "📚 Diagnose-Verlauf", btnClearHistory: "🗑️ Verlauf löschen",
-            noCustomFaults: "Noch keine eigenen Fehler vorhanden.", noCatalogs: "Keine Kataloge gespeichert.", noHistory: "Keine Fehler gespeichert.", noPage: "Ungültige Seitenzahl", of: "von"
+            noCustomFaults: "Noch keine eigenen Fehler vorhanden.", noCatalogs: "Keine Kataloge gespeichert.", noHistory: "Keine Fehler gespeichert.", noPage: "Ungültige Seitenzahl"
         }
     };
 
@@ -253,7 +256,6 @@
         document.documentElement.lang = currentLang;
         document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
 
-        // تحديث النصوص
         document.getElementById("mainTitle").innerText = t.title;
         document.getElementById("subTitle").innerText = t.subtitle;
         document.getElementById("syncStatus").innerText = t.syncBar;
@@ -265,6 +267,8 @@
         document.getElementById("lblSelect").innerText = t.lblSelect;
         document.getElementById("optSplit").innerText = t.optSplit;
         document.getElementById("optCold").innerText = t.optCold;
+        document.getElementById("optChiller").innerText = t.optChiller;
+        document.getElementById("optWindow").innerText = t.optWindow;
         document.getElementById("btnDiagnose").innerText = t.btnDiagnose;
         document.getElementById("sec2Title").innerText = t.sec2Title;
         document.getElementById("lensDesc").innerText = t.lensDesc;
@@ -276,6 +280,8 @@
         document.getElementById("lblAddDevice").innerText = t.lblAddDevice;
         document.getElementById("optAddSplit").innerText = t.optSplit;
         document.getElementById("optAddCold").innerText = t.optCold;
+        document.getElementById("optAddChiller").innerText = t.optChiller;
+        document.getElementById("optAddWindow").innerText = t.optWindow;
         document.getElementById("lblAddName").innerText = t.lblAddName;
         document.getElementById("lblAddCauses").innerText = t.lblAddCauses;
         document.getElementById("btnAddFault").innerText = t.btnAddFault;
@@ -291,7 +297,6 @@
         document.getElementById("sec5Title").innerText = t.sec5Title;
         document.getElementById("btnClearHistory").innerText = t.btnClearHistory;
 
-        // تحديث قاعدة البيانات الافتراضية
         updateDefaultDBLanguage();
         updateSymptoms();
         renderCustomFaults();
@@ -305,9 +310,6 @@
         applyLanguage();
     }
 
-    // ==========================================
-    // 2. قاعدة البيانات بلغتين
-    // ==========================================
     let defaultDB_ar = {
         split: {
             not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }] },
@@ -315,6 +317,12 @@
         },
         coldroom: {
             not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج", prob: "25%", checks: ["فحص إذابة الثلج"] }] }
+        },
+        chiller: {
+            low_chw_temp: { label: "درجة حرارة الماء منخفضة", causes: [{ name: "نقص في غاز التبريد", prob: "50%", checks: ["فحص الضغط", "البحث عن تسريب"] }] }
+        },
+        window: {
+            not_cooling: { label: "لا يبرد", causes: [{ name: "الضاغط لا يعمل", prob: "40%", checks: ["فحص الكابستور"] }] }
         }
     };
 
@@ -325,23 +333,36 @@
         },
         coldroom: {
             not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kältemittelverlust", prob: "35%", checks: ["Lecksuche"] }, { name: "Vereisung", prob: "25%", checks: ["Abtauung prüfen"] }] }
+        },
+        chiller: {
+            low_chw_temp: { label: "Kaltwassertemperatur zu niedrig", causes: [{ name: "Kältemittelmangel", prob: "50%", checks: ["Druck prüfen", "Lecksuche"] }] }
+        },
+        window: {
+            not_cooling: { label: "Kühlt nicht", causes: [{ name: "Kompressor läuft nicht", prob: "40%", checks: ["Kondensator prüfen"] }] }
         }
     };
 
     function updateDefaultDBLanguage() {
-        // دمج الأعطال الافتراضية مع الأعطال المخصصة
-        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {} };
+        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
         let baseDB = currentLang === 'ar' ? defaultDB_ar : defaultDB_de;
         
         diagnoseDB = {
-            split: { ...baseDB.split, ...customDB.split },
-            coldroom: { ...baseDB.coldroom, ...customDB.coldroom }
+            split: { ...baseDB.split, ...(customDB.split || {}) },
+            coldroom: { ...baseDB.coldroom, ...(customDB.coldroom || {}) },
+            chiller: { ...baseDB.chiller, ...(customDB.chiller || {}) },
+            window: { ...baseDB.window, ...(customDB.window || {}) }
         };
+        
+        // تصحيح: إزالة أي أعطال افتراضية قديمة تسربت للذاكرة
+        for (let dev in diagnoseDB) {
+            for (let key in diagnoseDB[dev]) {
+                if (key.startsWith("custom_") && !customDB[dev]?.[key]) {
+                    delete diagnoseDB[dev][key];
+                }
+            }
+        }
     }
 
-    // ==========================================
-    // 3. باقي وظائف التطبيق (المزامنة، البحث، إلخ)
-    // ==========================================
     let diagnoseDB = {};
     let selectedImageFile = null;
     let keywordMap = [];
@@ -419,7 +440,7 @@
             return { name: parts[0].trim(), prob: "Neu", checks: parts.length > 1 ? [parts[1].trim()] : ["Prüfen"] };
         });
 
-        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {} };
+        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
         if (!customDB[device]) customDB[device] = {};
         customDB[device][newKey] = { label: faultName + (currentLang === 'ar' ? " (مخصص)" : " (Eigene)"), causes: causesArray };
         
@@ -433,14 +454,19 @@
     function renderCustomFaults() {
         const list = document.getElementById("customFaultsList");
         list.innerHTML = ""; let hasCustom = false;
-        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {} };
+        let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
 
         for (let dev in customDB) {
             for (let symp in customDB[dev]) {
                 if (symp.startsWith("custom_")) {
                     hasCustom = true;
                     let faultName = customDB[dev][symp].label;
-                    let deviceName = dev === "split" ? (currentLang === 'ar' ? "مكيف" : "Split") : (currentLang === 'ar' ? "غرفة تبريد" : "Kühlraum");
+                    let deviceName = "";
+                    if (dev === "split") deviceName = currentLang === 'ar' ? "مكيف" : "Split";
+                    else if (dev === "coldroom") deviceName = currentLang === 'ar' ? "غرفة تبريد" : "Kühlraum";
+                    else if (dev === "chiller") deviceName = currentLang === 'ar' ? "تشيلر" : "Chiller";
+                    else if (dev === "window") deviceName = currentLang === 'ar' ? "شباك" : "Fenster";
+                    
                     list.innerHTML += `<div class="custom-fault-item"><span>[${deviceName}] ${faultName}</span><button class="delete-btn" style="position:static; border-radius:5px; width:35px; height:35px; background-color:#d9534f;" onclick="deleteCustomFault('${dev}', '${symp}')">×</button></div>`;
                 }
             }
@@ -450,7 +476,7 @@
 
     function deleteCustomFault(device, key) {
         if (confirm("Löschen? / حذف؟")) {
-            let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {} };
+            let customDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || { split: {}, coldroom: {}, chiller: {}, window: {} };
             if (customDB[device] && customDB[device][key]) {
                 delete customDB[device][key];
                 localStorage.setItem("hvacCustomDB", JSON.stringify(customDB));
@@ -458,9 +484,6 @@
             }
         }
     }
-
-    // ... (باقي الوظائف كـ History و Catalogs و PDF تكون كما هي مع استدعاء النصوص المترجمة عند الحاجة) ...
-    // لتوفير المساحة، سأترك الكود الأساسي، لكني سأقوم بتحديث نظام السجل والكتالوج ليعمل بشكل سليم.
 
     function saveToHistory(title, resultText) {
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
@@ -504,7 +527,7 @@
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) return;
-        rebuildKeywordMap(); // تحديث البحث
+        rebuildKeywordMap();
         let foundMatch = null;
         for (let item of keywordMap) { if (item.words.some(w => query.includes(w))) { foundMatch = item; break; } }
         if (foundMatch) { showResults(foundMatch.device, foundMatch.symptom); } 
@@ -525,6 +548,9 @@
         const device = document.getElementById("deviceType").value;
         const symptomSelect = document.getElementById("symptom");
         symptomSelect.innerHTML = "";
+        
+        if(!diagnoseDB[device]) return;
+
         for (let key in diagnoseDB[device]) {
             let option = document.createElement("option"); option.value = key; option.text = diagnoseDB[device][key].label; symptomSelect.appendChild(option);
         }
@@ -564,9 +590,6 @@
         catalogList.innerHTML = html;
     }
 
-    // ==========================================
-    // 4. PDF والترجمة (بدون تغيير جوهري)
-    // ==========================================
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
 
@@ -628,7 +651,6 @@
         } catch (error) { txt.innerHTML = `<span style="color:red;">${error.message}</span>`; }
     }
 
-    // التشغيل الأولي
     window.onload = () => { 
         applyLanguage();
         rebuildKeywordMap();
