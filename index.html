@@ -16,7 +16,6 @@
         button { width: 100%; padding: 15px; background-color: #0275d8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; font-size: 16px; transition: background 0.3s; }
         button:hover { background-color: #025aa5; }
         
-        /* شريط المزامنة */
         .sync-bar { background-color: #d4edda; color: #155724; text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; display: none; border: 1px solid #c3e6cb;}
         
         .search-section { background-color: #e8f4fd; padding: 15px; border-radius: 8px; border: 1px solid #bce0fd; }
@@ -33,6 +32,12 @@
         .add-fault-section h3 { color: #1e8e3e; margin-top: 0; text-align: center;}
         .add-btn { background-color: #34a853; }
         .add-btn:hover { background-color: #2b8a44; }
+
+        /* قسم إدارة الأعطال المخصصة */
+        .manage-faults-section { background-color: #f8d7da; border: 2px dashed #dc3545; padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .manage-faults-section h3 { color: #721c24; margin-top: 0; text-align: center;}
+        .custom-fault-item { background: white; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; }
+        .custom-fault-item span { font-weight: bold; color: #333; font-size: 14px;}
 
         .history-section { border-top: 2px solid #0275d8; margin-top: 30px; padding-top: 20px; }
         .history-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 14px; position: relative;}
@@ -75,7 +80,6 @@
     <h1>❄ HVAC Diagnose Tool</h1>
     <p class="subtitle">مرجعك الميداني السريع (مزامنة سحابية)</p>
 
-    <!-- شريط حالة المزامنة -->
     <div id="syncStatus" class="sync-bar">☁️ جاري المزامنة مع السحابة...</div>
 
     <div class="search-section">
@@ -112,6 +116,12 @@
         <textarea id="newFaultCauses" placeholder="مثال:&#10;انسداد في خرطوم التصريف - قم بنفخ الخرطوم&#10;تجمد المبخر - قم بتنظيف الفلتر"></textarea>
         
         <button class="add-btn" onclick="addNewFault()">💾 حفظ العطل في المكتبة</button>
+    </div>
+
+    <!-- 🌟 قسم إدارة وحذف الأعطال المخصصة 🌟 -->
+    <div class="manage-faults-section">
+        <h3>🗑️ إدارة الأعطال المخصصة (التي أضفتها)</h3>
+        <div id="customFaultsList"></div>
     </div>
 
     <div class="catalog-section">
@@ -165,7 +175,7 @@
 
 <script>
     // ==========================================
-    // 1. دوال المزامنة التلقائية مع السحابة
+    // 1. دوال المزامنة التلقائية
     // ==========================================
     async function syncToCloud() {
         const syncBar = document.getElementById("syncStatus");
@@ -209,22 +219,21 @@
                 
                 diagnoseDB = JSON.parse(cloudData.customDB);
                 updateSymptoms();
+                renderCustomFaults(); // تحديث قائمة الأعطال المخصصة
                 renderHistory();
                 renderCatalogs();
-                console.log("تم تحميل البيانات من السحابة بنجاح.");
             }
         } catch (e) {
-            console.log("لا توجد بيانات سحابية سابقة، سنبدأ من الصفر.");
+            console.log("لا توجد بيانات سحابية سابقة.");
         }
     }
 
     // ==========================================
-    // 2. قاعدة البيانات والوظائف الأساسية
+    // 2. قاعدة البيانات وإدارة الأعطال
     // ==========================================
     let defaultDB = {
         split: {
-            not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }, { name: "عطل في الضاغط", prob: "15%", checks: ["قياس تيار الضاغط"] }] },
-            high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }] },
+            not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }] },
             water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }, { name: "تجمد المبخر", prob: "30%", checks: ["فحص الفلتر"] }] }
         },
         coldroom: {
@@ -233,12 +242,23 @@
     };
 
     let diagnoseDB = JSON.parse(localStorage.getItem("hvacCustomDB")) || defaultDB;
-    let keywordMap = [
-        { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "يقطر"] },
-        { device: "split", symptom: "high_pressure", words: ["ضغط عالي", "ضغط مرتفع"] },
-        { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
-        { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار"] }
-    ];
+    let keywordMap = [];
+
+    function rebuildKeywordMap() {
+        keywordMap = [
+            { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "يقطر"] },
+            { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
+            { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار"] }
+        ];
+        // إضافة الأعطال المخصصة للبحث
+        for (let dev in diagnoseDB) {
+            for (let symp in diagnoseDB[dev]) {
+                if (symp.startsWith("custom_")) {
+                    keywordMap.push({ device: dev, symptom: symp, words: diagnoseDB[dev][symp].label.replace(" (مخصص)", "").split(" ") });
+                }
+            }
+        }
+    }
 
     function addNewFault() {
         const device = document.getElementById("addDeviceType").value;
@@ -255,18 +275,62 @@
 
         if (!diagnoseDB[device]) diagnoseDB[device] = {};
         diagnoseDB[device][newKey] = { label: faultName + " (مخصص)", causes: causesArray };
-        keywordMap.push({ device: device, symptom: newKey, words: faultName.split(" ") });
-
+        
         localStorage.setItem("hvacCustomDB", JSON.stringify(diagnoseDB));
         
+        rebuildKeywordMap();
+        updateSymptoms();
+        renderCustomFaults(); // تحديث القائمة الحمراء
         syncToCloud();
 
         document.getElementById("newFaultName").value = "";
         document.getElementById("newFaultCauses").value = "";
-        updateSymptoms();
         alert("✅ تم حفظ العطل بنجاح! (ومزامنته مع السحابة)");
     }
 
+    // دالة عرض الأعطال المخصصة لحذفها
+    function renderCustomFaults() {
+        const list = document.getElementById("customFaultsList");
+        list.innerHTML = "";
+        let hasCustom = false;
+
+        for (let dev in diagnoseDB) {
+            for (let symp in diagnoseDB[dev]) {
+                if (symp.startsWith("custom_")) {
+                    hasCustom = true;
+                    let faultName = diagnoseDB[dev][symp].label;
+                    let deviceName = dev === "split" ? "مكيف" : "غرفة تبريد";
+                    
+                    list.innerHTML += `
+                    <div class="custom-fault-item">
+                        <span>[${deviceName}] ${faultName}</span>
+                        <button class="delete-btn" style="position:static; border-radius:5px; width:35px; height:35px; background-color:#d9534f;" onclick="deleteCustomFault('${dev}', '${symp}')">×</button>
+                    </div>`;
+                }
+            }
+        }
+
+        if (!hasCustom) {
+            list.innerHTML = "<p style='text-align:center; font-size:12px; color:#555; margin:0;'>لا توجد أعطال مخصصة مضافة حالياً.</p>";
+        }
+    }
+
+    // دالة حذف عطل مخصص
+    function deleteCustomFault(device, key) {
+        if (confirm("هل أنت متأكد من حذف هذا العطل المخصص نهائياً؟")) {
+            delete diagnoseDB[device][key];
+            localStorage.setItem("hvacCustomDB", JSON.stringify(diagnoseDB));
+            
+            rebuildKeywordMap();
+            updateSymptoms();
+            renderCustomFaults();
+            syncToCloud();
+        }
+    }
+
+    // ==========================================
+    // 3. السجل والكتالوجات
+    // ==========================================
     function saveToHistory(title, resultText) {
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
         history.unshift({ id: Date.now(), date: new Date().toLocaleString('ar-EG'), title: title, result: resultText }); 
@@ -277,7 +341,7 @@
     }
 
     function deleteHistory(id) { 
-        if (confirm("حذف هذا العطل؟")) { 
+        if (confirm("حذف هذا العطل من السجل؟")) { 
             let history = JSON.parse(localStorage.getItem("hvacHistory")) || []; 
             history = history.filter(item => item.id !== id); 
             localStorage.setItem("hvacHistory", JSON.stringify(history)); 
@@ -315,7 +379,7 @@
     }
 
     // ==========================================
-    // 3. إدارة الكتالوجات، الترجمة، والبحث
+    // 4. قارئ الـ PDF والترجمة
     // ==========================================
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
@@ -393,6 +457,9 @@
         } catch (error) { txt.innerHTML = `<span style="color:red;">حدث خطأ في الترجمة: ${error.message}</span>`; }
     }
 
+    // ==========================================
+    // 5. البحث والتشخيص
+    // ==========================================
     function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
         if (!query) { alert("الرجاء كتابة العطل للبحث عنه."); return; }
@@ -456,7 +523,9 @@
     }
 
     window.onload = () => { 
+        rebuildKeywordMap();
         updateSymptoms(); 
+        renderCustomFaults(); // عرض الأعطال المخصصة عند التحميل
         renderHistory(); 
         renderCatalogs(); 
         loadFromCloud(); 
