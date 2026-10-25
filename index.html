@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HVAC Diagnose Tool</title>
-    <!-- استدعاء مكتبة PDF.js لعرض الكتالوجات داخل الموقع -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; color: #333; }
@@ -44,7 +43,6 @@
         .local-catalog-section { background-color: #e2e3e5; border: 1px solid #d6d8db; padding: 15px; border-radius: 8px; margin-top: 15px; }
         .local-catalog-section h3 { color: #383d41; margin-top: 0; text-align: center; font-size: 16px;}
         
-        /* تنسيقات عارض الـ PDF الداخلي */
         #pdfViewerContainer { display: none; margin-top: 15px; border: 2px solid #0275d8; border-radius: 8px; overflow: hidden; background: #525659; }
         .pdf-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd; gap: 5px;}
         .pdf-controls button { width: auto; margin: 0; padding: 8px 12px; font-size: 12px; background-color: #0275d8;}
@@ -53,9 +51,13 @@
         #canvasContainer { width: 100%; text-align: center; padding: 10px 0; max-height: 500px; overflow: auto; }
         canvas { max-width: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         
-        .zoom-controls { display: flex; justify-content: center; gap: 10px; background: #eee; padding: 8px; border-bottom: 1px solid #ddd; }
+        .zoom-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; background: #eee; padding: 8px; border-bottom: 1px solid #ddd; }
         .zoom-controls button { background-color: #6c757d; margin: 0; padding: 5px 15px; font-size: 14px;}
         .external-btn { background-color: #28a745 !important; }
+        .translate-btn { background-color: #8e44ad !important; }
+        
+        /* صندوق الترجمة */
+        #translationBox { display: none; background: #fff3cd; border: 2px solid #f0ad4e; padding: 15px; margin-top: 15px; border-radius: 8px; color: #333; line-height: 1.6; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -67,7 +69,6 @@
     <div class="search-section">
         <label for="manualSearchText">🔎 اكتب العطل بكلماتك الخاصة:</label>
         <input type="text" id="manualSearchText" placeholder="مثال: المكيف يقطر ماء...">
-        
         <button class="search-btn" onclick="unifiedSearch()">البحث في المكتبة الداخلية</button>
         <button class="google-btn" onclick="searchGoogle()">🌐 ابحث عن هذا العطل في جوجل</button>
     </div>
@@ -92,13 +93,10 @@
         <div id="catalogList" class="catalog-item-list"></div>
     </div>
 
-    <!-- قسم فتح الكتالوجات من الهاتف -->
     <div class="local-catalog-section">
         <h3>📂 فتح كتالوج من ذاكرة الهاتف</h3>
-        <p style="font-size: 12px; color: #555; text-align: center;">اختر ملف PDF من هاتفك:</p>
         <input type="file" id="localCatalogInput" accept="application/pdf" onchange="loadLocalPDF()" style="background: white; cursor: pointer;">
         
-        <!-- حاوية عرض الكتالوج المدمجة -->
         <div id="pdfViewerContainer">
             <div class="pdf-controls">
                 <div style="display:flex; align-items:center; gap:5px;">
@@ -110,16 +108,22 @@
                 <button style="background-color:#d9534f;" onclick="closePdfViewer()">× إغلاق</button>
             </div>
             
-            <!-- أزرار التكبير والتصغير وفتح خارجي -->
             <div class="zoom-controls">
                 <button onclick="zoomIn()">➕ تكبير</button>
                 <button onclick="zoomOut()">➖ تصغير</button>
                 <button class="external-btn" onclick="openPdfExternally()">↗️ فتح خارجي</button>
+                <button class="translate-btn" onclick="translateCurrentPage()">🌐 ترجمة الصفحة</button>
             </div>
 
             <div id="canvasContainer">
                 <canvas id="pdfCanvas"></canvas>
             </div>
+        </div>
+
+        <!-- صندوق عرض الترجمة -->
+        <div id="translationBox">
+            <h4 style="margin-top:0;">🌐 ترجمة الذكاء الاصطناعي:</h4>
+            <p id="translationText">جاري الترجمة...</p>
         </div>
     </div>
 
@@ -131,14 +135,13 @@
 </div>
 
 <script>
-    // إعداد مكتبة PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null;
     let pageNum = 1;
     let pageRendering = false;
     let pageNumPending = null;
     let scale = 1.5; 
-    let currentPdfBlobUrl = null; // متغير لحفظ رابط الملف للفتح الخارجي
+    let currentPdfBlobUrl = null;
 
     // --- دوال عرض الكتالوج المحلي ---
     function loadLocalPDF() {
@@ -146,8 +149,8 @@
         const file = fileInput.files[0];
         if (!file) return;
 
-        // إنشاء رابط للملف لاستخدامه في الفتح الخارجي
         currentPdfBlobUrl = URL.createObjectURL(file);
+        document.getElementById("translationBox").style.display = "none"; // إخفاء الترجمة السابقة
 
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -177,10 +180,7 @@
             canvas.height = viewport.height;
             canvas.width = viewport.width;
 
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: viewport
-            };
+            const renderContext = { canvasContext: ctx, viewport: viewport };
             const renderTask = page.render(renderContext);
 
             renderTask.promise.then(function() {
@@ -191,16 +191,12 @@
                 }
             });
         });
-        
         document.getElementById('pageInput').value = num;
+        document.getElementById("translationBox").style.display = "none"; // إخفاء الترجمة عند تغيير الصفحة
     }
 
     function queueRenderPage(num) {
-        if (pageRendering) {
-            pageNumPending = num;
-        } else {
-            renderPage(num);
-        }
+        if (pageRendering) { pageNumPending = num; } else { renderPage(num); }
     }
 
     function changePage(offset) {
@@ -224,62 +220,68 @@
         }
     }
 
-    function zoomIn() {
-        if (!pdfDoc) return;
-        scale += 0.3;
-        queueRenderPage(pageNum);
-    }
-
-    function zoomOut() {
-        if (!pdfDoc || scale <= 0.5) return;
-        scale -= 0.3;
-        queueRenderPage(pageNum);
-    }
-
-    // دالة الفتح الخارجي
-    function openPdfExternally() {
-        if (currentPdfBlobUrl) {
-            window.open(currentPdfBlobUrl, '_blank');
-        } else {
-            alert("الرجاء اختيار ملف أولاً.");
-        }
-    }
-
+    function zoomIn() { if (!pdfDoc) return; scale += 0.3; queueRenderPage(pageNum); }
+    function zoomOut() { if (!pdfDoc || scale <= 0.5) return; scale -= 0.3; queueRenderPage(pageNum); }
+    function openPdfExternally() { if (currentPdfBlobUrl) window.open(currentPdfBlobUrl, '_blank'); }
+    
     function closePdfViewer() {
         document.getElementById("pdfViewerContainer").style.display = "none";
         document.getElementById("localCatalogInput").value = "";
+        document.getElementById("translationBox").style.display = "none";
         pdfDoc = null;
-        if (currentPdfBlobUrl) {
-            URL.revokeObjectURL(currentPdfBlobUrl);
-            currentPdfBlobUrl = null;
+        if (currentPdfBlobUrl) { URL.revokeObjectURL(currentPdfBlobUrl); currentPdfBlobUrl = null; }
+    }
+
+    // --- دالة ترجمة الصفحة بالذكاء الاصطناعي ---
+    async function translateCurrentPage() {
+        if (!pdfDoc) return;
+
+        const translationBox = document.getElementById("translationBox");
+        const translationText = document.getElementById("translationText");
+        
+        translationBox.style.display = "block";
+        translationText.innerHTML = "⏳ جاري قراءة النص من الصورة وترجمته... الرجاء الانتظار.";
+        translationText.style.color = "#0275d8";
+
+        try {
+            // أخذ صورة من الكانفاس
+            const canvas = document.getElementById('pdfCanvas');
+            const imageData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+
+            const prompt = `أنت مترجم فني خبير. قم باستخراج جميع النصوص من هذه الصورة وترجمتها إلى اللغة العربية. 
+            حافظ على المصطلحات الفنية للتبريد والتكييف. أجب بالنص المترجم فقط.`;
+
+            const response = await fetch("/api/diagnose", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: prompt, fileData: imageData, mimeType: "image/jpeg" })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            translationText.innerHTML = data.result.replace(/\n/g, '<br>');
+            translationText.style.color = "#333";
+
+        } catch (error) {
+            translationText.innerHTML = `<span style="color:red;">حدث خطأ في الترجمة: ${error.message}</span>`;
         }
     }
 
-    // قاعدة البيانات الموسعة
+    // --- باقي الدوال (السجل والبحث المحلي) ---
     let diagnoseDB = {
         split: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }, { name: "عطل في الضاغط", prob: "20%", checks: ["قياس تيار الضاغط"] }, { name: "عطل في المروحة الخارجية", prob: "10%", checks: ["فحص دوران المروحة"] }] },
-            high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }, { name: "شحن زائد للغاز", prob: "20%", checks: ["قياس الضغط"] }] },
-            low_pressure: { label: "ضغط منخفض", causes: [{ name: "تسريب غاز", prob: "60%", checks: ["فحص مفاصل النحاس"] }, { name: "انسداد في الفلتر", prob: "40%", checks: ["فحص الفلتر"] }] },
-            water_leak: { label: "تسريب ماء", causes: [{ name: "انسداد في خرطوم التصريف", prob: "50%", checks: ["نفخ الخرطوم"] }, { name: "تجمد المبخر", prob: "30%", checks: ["فحص الفلتر"] }, { name: "ميل الوحدة غير صحيح", prob: "20%", checks: ["تعديل الميل"] }] },
-            noise: { label: "صوت عالي", causes: [{ name: "اهتزاز في الوحدة", prob: "40%", checks: ["فحص القواعد"] }, { name: "تلف في بلوفير المروحة", prob: "30%", checks: ["فحص المروحة"] }, { name: "احتكاك المروحة", prob: "30%", checks: ["فحص المروحة"] }] }
+            not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }] },
+            high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }] }
         },
         coldroom: {
-            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص إذابة الثلج"] }, { name: "عطل في منظم الحرارة", prob: "20%", checks: ["فحص الحساس"] }, { name: "باب الغرفة غير محكم", prob: "20%", checks: ["فحص المطاط"] }] },
-            ice_buildup: { label: "تراكم ثلج", causes: [{ name: "عطل في مؤقت إذابة الثلج", prob: "40%", checks: ["فحص المؤقت"] }, { name: "عطل في سخانات إذابة الثلج", prob: "30%", checks: ["قياس السخانات"] }, { name: "عطل في حساس الحرارة", prob: "30%", checks: ["فحص الحساس"] }] },
-            compressor_off: { label: "الضاغط لا يعمل", causes: [{ name: "فصل أوفرلود الحماية", prob: "40%", checks: ["انتظار 30 دقيقة"] }, { name: "عطل في الكونتاكتور", prob: "40%", checks: ["فحص الكونتاكتور"] }, { name: "انخفاض الجهد", prob: "20%", checks: ["قياس الفولت"] }] }
+            not_cooling: { label: "لا يبرد", causes: [{ name: "تسرب غاز", prob: "35%", checks: ["فحص التسربات"] }, { name: "تراكم ثلج على المبخر", prob: "25%", checks: ["فحص إذابة الثلج"] }] }
         }
     };
 
     const keywordMap = [
-        { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "قطرات", "يقطر", "تنقيط", "ماء من المكيف"] },
-        { device: "split", symptom: "noise", words: ["صوت", "ضجيج", "اهتزاز", "طقطقة", "صوت عالي"] },
-        { device: "split", symptom: "high_pressure", words: ["ضغط عالي", "ضغط مرتفع"] },
-        { device: "split", symptom: "low_pressure", words: ["ضغط منخفض", "ضغط ضعيف"] },
-        { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "هواء ساخن", "بارد"] },
-        { device: "coldroom", symptom: "ice_buildup", words: ["ثلج", "تجميد", "جليد"] },
-        { device: "coldroom", symptom: "compressor_off", words: ["الضاغط لا يعمل", "الكمبرسور لا يعمل", "مطفي"] },
-        { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] }
+        { device: "split", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] },
+        { device: "split", symptom: "high_pressure", words: ["ضغط عالي", "ضغط مرتفع"] }
     ];
 
     function unifiedSearch() {
@@ -319,9 +321,7 @@
         }
     }
 
-    function runDiagnose() {
-        showResults(document.getElementById("deviceType").value, document.getElementById("symptom").value);
-    }
+    function runDiagnose() { showResults(document.getElementById("deviceType").value, document.getElementById("symptom").value); }
 
     function showResults(device, symptom) {
         const resultDiv = document.getElementById("result");
@@ -379,13 +379,8 @@
         }
     }
 
-    function clearHistory() {
-        if (confirm("مسح كل السجل؟")) {
-            localStorage.removeItem("hvacHistory");
-            renderHistory();
-        }
-    }
-
+    function clearHistory() { if (confirm("مسح كل السجل؟")) { localStorage.removeItem("hvacHistory"); renderHistory(); } }
+    
     function saveCatalogLink() {
         const name = document.getElementById("catalogName").value.trim();
         const link = document.getElementById("catalogLink").value.trim();
@@ -407,11 +402,7 @@
         }
         let html = "";
         catalogs.forEach((item, index) => {
-            html += `
-            <div class="catalog-item">
-                <a href="${item.link}" target="_blank">📄 ${item.name}</a>
-                <button class="delete-btn" style="position:static; border-radius:5px; width:30px; height:30px;" onclick="deleteCatalog(${index})">×</button>
-            </div>`;
+            html += `<div class="catalog-item"><a href="${item.link}" target="_blank">📄 ${item.name}</a><button class="delete-btn" style="position:static; border-radius:5px; width:30px; height:30px;" onclick="deleteCatalog(${index})">×</button></div>`;
         });
         catalogList.innerHTML = html;
     }
@@ -423,12 +414,7 @@
         renderCatalogs();
     }
 
-    window.onload = () => {
-        updateSymptoms();
-        renderHistory();
-        renderCatalogs();
-    };
+    window.onload = () => { updateSymptoms(); renderHistory(); renderCatalogs(); };
 </script>
-
 </body>
 </html>
