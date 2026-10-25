@@ -69,7 +69,6 @@
         .camera-btn:hover { background-color: #5a32a3; }
         .ai-loading { text-align: center; color: #6f42c1; font-weight: bold; display: none; margin-top: 15px; }
         
-        /* تنسيق أزرار الكاميرا والاستديو */
         .img-buttons { display: flex; gap: 10px; margin-top: 10px; }
         .img-buttons button { margin-top: 0; flex: 1; }
         .btn-cam { background-color: #17a2b8; }
@@ -77,6 +76,10 @@
         .btn-gal { background-color: #5a6268; }
         .btn-gal:hover { background-color: #4a5155; }
         .img-preview { font-size: 12px; color: #28a745; margin-top: 5px; display: none; font-weight: bold;}
+
+        /* زر جوجل الجديد */
+        .google-lens-btn { background-color: #ffffff; color: #4285f4; border: 2px solid #4285f4; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .google-lens-btn:hover { background-color: #f1f5ff; }
     </style>
 </head>
 <body>
@@ -111,17 +114,15 @@
 
     <!-- قسم الكاميرا -->
     <details>
-        <summary>📸 تشخيص العطل بالكاميرا (AI)</summary>
+        <summary>📸 تشخيص العطل بالكاميرا (AI / Google)</summary>
         <div class="details-content">
-            <p style="font-size: 13px; color: #555;">التقط صورة لكود العطل، أو اختر صورة من الاستديو، وسيقوم الذكاء الاصطناعي بتحليلها.</p>
+            <p style="font-size: 13px; color: #555;">التقط صورة للعطل، واختر إما تحليلها بالذكاء الاصطناعي (لفهم العطل)، أو البحث عنها في Google Lens (للتعرف السريع).</p>
             
-            <!-- أزرار الكاميرا والاستديو -->
             <div class="img-buttons">
                 <button type="button" class="btn-cam" onclick="document.getElementById('cameraInput').click()">📷 التقاط صورة</button>
                 <button type="button" class="btn-gal" onclick="document.getElementById('galleryInput').click()">🖼️ من الاستديو</button>
             </div>
             
-            <!-- حقول اختيار الملفات المخفية -->
             <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageSelection(this)">
             <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handleImageSelection(this)">
             
@@ -130,8 +131,12 @@
             <label>ملاحظات إضافية (اختياري):</label>
             <input type="text" id="cameraNotes" placeholder="مثال: هذا كود يظهر على شاشة المكيف...">
             
-            <button class="camera-btn" onclick="diagnoseWithImage()">✨ تحليل الصورة بالذكاء الاصطناعي</button>
+            <!-- أزرار المعالجة -->
+            <button class="camera-btn" onclick="diagnoseWithImage()">✨ تحليل الصورة بالذكاء الاصطناعي (دقيق)</button>
             <div id="aiLoading" class="ai-loading">⏳ جاري تحليل الصورة... الرجاء الانتظار.</div>
+            
+            <button class="google-lens-btn" onclick="searchWithGoogleLens()">🔍 بحث في Google Lens (سريع)</button>
+
             <div id="aiResult" style="display:none; margin-top:15px; padding:15px; background:#f3e8ff; border:1px solid #d8b4fe; border-radius:8px; line-height:1.6;"></div>
         </div>
     </details>
@@ -209,10 +214,8 @@
 </div>
 
 <script>
-    // متغير لحفظ الصورة المختارة
     let selectedImageFile = null;
 
-    // دالة التعامل مع اختيار الصورة (من الكاميرا أو الاستديو)
     function handleImageSelection(input) {
         if (input.files && input.files[0]) {
             selectedImageFile = input.files[0];
@@ -220,32 +223,29 @@
         }
     }
 
-    // ==========================================
-    // 1. المزامنة السحابية
-    // ==========================================
+    // دالة البحث في Google Lens
+    function searchWithGoogleLens() {
+        // فتح جوجل لنس في نافذة جديدة
+        window.open("https://lens.google.com/", "_blank");
+        // ملاحظة: سيطلب منك جوجل رفع الصورة أو التقاطها هناك.
+    }
+
     async function syncToCloud() {
         const syncBar = document.getElementById("syncStatus");
         syncBar.style.display = "block";
         syncBar.textContent = "☁️ جاري الحفظ في السحابة...";
         syncBar.style.backgroundColor = "#fff3cd"; syncBar.style.color = "#856404";
-
         const dataToSync = {
             customDB: localStorage.getItem("hvacCustomDB"),
             history: localStorage.getItem("hvacHistory"),
             catalogs: localStorage.getItem("hvacCatalogs")
         };
-
         try {
-            await fetch('/api/sync', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSync)
-            });
-            syncBar.textContent = "✅ تم الحفظ في السحابة بنجاح";
-            syncBar.style.backgroundColor = "#d4edda"; syncBar.style.color = "#155724";
+            await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSync) });
+            syncBar.textContent = "✅ تم الحفظ في السحابة بنجاح"; syncBar.style.backgroundColor = "#d4edda"; syncBar.style.color = "#155724";
             setTimeout(() => { syncBar.style.display = "none"; }, 3000); 
         } catch (e) {
-            syncBar.textContent = "❌ فشل الاتصال بالسحابة";
-            syncBar.style.backgroundColor = "#f8d7da"; syncBar.style.color = "#721c24";
+            syncBar.textContent = "❌ فشل الاتصال بالسحابة"; syncBar.style.backgroundColor = "#f8d7da"; syncBar.style.color = "#721c24";
         }
     }
 
@@ -263,26 +263,17 @@
         } catch (e) { console.log("لا توجد بيانات سحابية سابقة."); }
     }
 
-    // ==========================================
-    // 2. التشخيص بالكاميرا (AI)
-    // ==========================================
     async function diagnoseWithImage() {
         const notes = document.getElementById("cameraNotes").value.trim();
         const loading = document.getElementById("aiLoading");
         const resultDiv = document.getElementById("aiResult");
         const btn = document.querySelector(".camera-btn");
 
-        if (!selectedImageFile) {
-            alert("الرجاء التقاط صورة أو اختيارها من الاستديو أولاً.");
-            return;
-        }
+        if (!selectedImageFile) { alert("الرجاء التقاط صورة أو اختيارها أولاً."); return; }
 
-        btn.disabled = true;
-        loading.style.display = "block";
-        resultDiv.style.display = "none";
+        btn.disabled = true; loading.style.display = "block"; resultDiv.style.display = "none";
 
         try {
-            // ضغط الصورة (MAX_SIZE 600 للسرعة)
             const base64Image = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -302,10 +293,7 @@
                 reader.readAsDataURL(selectedImageFile);
             });
 
-            const prompt = `أنت خبير في هندسة التبريد والتكييف. قم بتحليل هذه الصورة التي أرسلها الفني. 
-            ملاحظات الفني: "${notes || 'لا توجد ملاحظات'}".
-            إذا كانت الصورة تحتوي على كود عطل، فاشرح معناه. إذا كانت قطعة تالفة، فحدد العطل. 
-            أعطني الأسباب المحتملة، وخطوات الفحص، وتحذيرات السلامة. أجب باللغة العربية بأسلوب فني مختصر.`;
+            const prompt = `أنت خبير في هندسة التبريد والتكييف. قم بتحليل هذه الصورة التي أرسلها الفني. ملاحظات الفني: "${notes || 'لا توجد ملاحظات'}". إذا كانت الصورة تحتوي على كود عطل، فاشرح معناه. أعطني الأسباب المحتملة، وخطوات الفحص، وتحذيرات السلامة. أجب باللغة العربية بأسلوب فني مختصر.`;
 
             const response = await fetch("/api/diagnose", {
                 method: "POST", headers: { "Content-Type": "application/json" },
@@ -317,21 +305,15 @@
 
             resultDiv.innerHTML = `<h3>🤖 تحليل الذكاء الاصطناعي:</h3><p>${data.result.replace(/\n/g, '<br>')}</p>`;
             resultDiv.style.display = "block";
-            
             saveToHistory("تشخيص بالكاميرا: " + (notes || "صورة عطل"), data.result);
 
         } catch (error) {
-            resultDiv.innerHTML = `<p style="color:red;">حدث خطأ: ${error.message}</p>`;
-            resultDiv.style.display = "block";
+            resultDiv.innerHTML = `<p style="color:red;">حدث خطأ: ${error.message}</p>`; resultDiv.style.display = "block";
         } finally {
-            btn.disabled = false;
-            loading.style.display = "none";
+            btn.disabled = false; loading.style.display = "none";
         }
     }
 
-    // ==========================================
-    // 3. باقي الوظائف
-    // ==========================================
     let defaultDB = {
         split: {
             not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }] },
@@ -383,8 +365,7 @@
 
     function renderCustomFaults() {
         const list = document.getElementById("customFaultsList");
-        list.innerHTML = "";
-        let hasCustom = false;
+        list.innerHTML = ""; let hasCustom = false;
         for (let dev in diagnoseDB) {
             for (let symp in diagnoseDB[dev]) {
                 if (symp.startsWith("custom_")) {
@@ -424,9 +405,7 @@
     }
     
     function clearHistory() { 
-        if (confirm("مسح كل السجل؟")) { 
-            localStorage.removeItem("hvacHistory"); renderHistory(); syncToCloud(); 
-        } 
+        if (confirm("مسح كل السجل؟")) { localStorage.removeItem("hvacHistory"); renderHistory(); syncToCloud(); } 
     }
 
     function saveCatalogLink() {
@@ -445,7 +424,6 @@
         catalogs.splice(index, 1); localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs)); renderCatalogs(); syncToCloud(); 
     }
 
-    // PDF
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
 
@@ -481,8 +459,7 @@
                 if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
             });
         });
-        document.getElementById('pageInput').value = num;
-        document.getElementById("translationBox").style.display = "none"; 
+        document.getElementById('pageInput').value = num; document.getElementById("translationBox").style.display = "none"; 
     }
 
     function queueRenderPage(num) { if (pageRendering) { pageNumPending = num; } else { renderPage(num); } }
