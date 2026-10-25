@@ -20,7 +20,7 @@
         .details-content { padding: 15px; background: white; }
         
         label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
-        select, input[type="text"], input[type="number"], input[type="file"], textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        select, input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
         textarea { resize: vertical; height: 80px; }
         button { width: 100%; padding: 15px; background-color: #0275d8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; font-size: 16px; transition: background 0.3s; }
         button:hover { background-color: #025aa5; }
@@ -68,6 +68,15 @@
         .camera-btn { background-color: #6f42c1; }
         .camera-btn:hover { background-color: #5a32a3; }
         .ai-loading { text-align: center; color: #6f42c1; font-weight: bold; display: none; margin-top: 15px; }
+        
+        /* تنسيق أزرار الكاميرا والاستديو */
+        .img-buttons { display: flex; gap: 10px; margin-top: 10px; }
+        .img-buttons button { margin-top: 0; flex: 1; }
+        .btn-cam { background-color: #17a2b8; }
+        .btn-cam:hover { background-color: #138496; }
+        .btn-gal { background-color: #5a6268; }
+        .btn-gal:hover { background-color: #4a5155; }
+        .img-preview { font-size: 12px; color: #28a745; margin-top: 5px; display: none; font-weight: bold;}
     </style>
 </head>
 <body>
@@ -100,14 +109,23 @@
 
     <div id="result"></div>
 
+    <!-- قسم الكاميرا -->
     <details>
         <summary>📸 تشخيص العطل بالكاميرا (AI)</summary>
         <div class="details-content">
             <p style="font-size: 13px; color: #555;">التقط صورة لكود العطل، أو اختر صورة من الاستديو، وسيقوم الذكاء الاصطناعي بتحليلها.</p>
             
-            <label>التقط صورة أو اختر من الاستديو:</label>
-            <!-- تم حذف capture="environment" هنا لكي يفتح المعرض والكاميرا معاً -->
-            <input type="file" id="cameraInput" accept="image/*" style="background: #f8f9fa;">
+            <!-- أزرار الكاميرا والاستديو -->
+            <div class="img-buttons">
+                <button type="button" class="btn-cam" onclick="document.getElementById('cameraInput').click()">📷 التقاط صورة</button>
+                <button type="button" class="btn-gal" onclick="document.getElementById('galleryInput').click()">🖼️ من الاستديو</button>
+            </div>
+            
+            <!-- حقول اختيار الملفات المخفية -->
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageSelection(this)">
+            <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handleImageSelection(this)">
+            
+            <div id="imgPreviewText" class="img-preview">✅ تم اختيار الصورة بنجاح</div>
             
             <label>ملاحظات إضافية (اختياري):</label>
             <input type="text" id="cameraNotes" placeholder="مثال: هذا كود يظهر على شاشة المكيف...">
@@ -191,6 +209,20 @@
 </div>
 
 <script>
+    // متغير لحفظ الصورة المختارة
+    let selectedImageFile = null;
+
+    // دالة التعامل مع اختيار الصورة (من الكاميرا أو الاستديو)
+    function handleImageSelection(input) {
+        if (input.files && input.files[0]) {
+            selectedImageFile = input.files[0];
+            document.getElementById("imgPreviewText").style.display = "block";
+        }
+    }
+
+    // ==========================================
+    // 1. المزامنة السحابية
+    // ==========================================
     async function syncToCloud() {
         const syncBar = document.getElementById("syncStatus");
         syncBar.style.display = "block";
@@ -231,15 +263,17 @@
         } catch (e) { console.log("لا توجد بيانات سحابية سابقة."); }
     }
 
+    // ==========================================
+    // 2. التشخيص بالكاميرا (AI)
+    // ==========================================
     async function diagnoseWithImage() {
-        const fileInput = document.getElementById("cameraInput");
         const notes = document.getElementById("cameraNotes").value.trim();
         const loading = document.getElementById("aiLoading");
         const resultDiv = document.getElementById("aiResult");
         const btn = document.querySelector(".camera-btn");
 
-        if (!fileInput.files[0]) {
-            alert("الرجاء التقاط صورة أو اختيارها أولاً.");
+        if (!selectedImageFile) {
+            alert("الرجاء التقاط صورة أو اختيارها من الاستديو أولاً.");
             return;
         }
 
@@ -248,24 +282,24 @@
         resultDiv.style.display = "none";
 
         try {
-            const file = fileInput.files[0];
+            // ضغط الصورة (MAX_SIZE 600 للسرعة)
             const base64Image = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_SIZE = 800; 
+                        const MAX_SIZE = 600; 
                         let width = img.width, height = img.height;
                         if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } 
                         else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                         canvas.width = width; canvas.height = height;
                         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
                     };
                     img.src = e.target.result;
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(selectedImageFile);
             });
 
             const prompt = `أنت خبير في هندسة التبريد والتكييف. قم بتحليل هذه الصورة التي أرسلها الفني. 
@@ -295,6 +329,9 @@
         }
     }
 
+    // ==========================================
+    // 3. باقي الوظائف
+    // ==========================================
     let defaultDB = {
         split: {
             not_cooling: { label: "لا يبرد (هواء عادي)", causes: [{ name: "نقص غاز التبريد (تسريب)", prob: "40%", checks: ["قياس ضغط السحب", "فحص مفاصل النحاس"] }, { name: "فلتر هواء مسدود", prob: "25%", checks: ["فحص الفلتر"] }] },
@@ -408,6 +445,7 @@
         catalogs.splice(index, 1); localStorage.setItem("hvacCatalogs", JSON.stringify(catalogs)); renderCatalogs(); syncToCloud(); 
     }
 
+    // PDF
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     let pdfDoc = null; let pageNum = 1; let pageRendering = false; let pageNumPending = null; let scale = 1.5; let currentPdfBlobUrl = null;
 
