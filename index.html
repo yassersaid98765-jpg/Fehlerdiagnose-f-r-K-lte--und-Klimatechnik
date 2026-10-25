@@ -33,6 +33,8 @@
         .clear-btn:hover { background-color: #c9302c; }
         .search-btn { background-color: #5cb85c; }
         .search-btn:hover { background-color: #4cae4c; }
+        .save-btn { background-color: #f0ad4e; margin-top: 10px; font-size: 14px;}
+        .save-btn:hover { background-color: #ec971f; }
     </style>
 </head>
 <body>
@@ -41,26 +43,26 @@
     <h1>❄ HVAC Diagnose AI</h1>
     <p class="subtitle">مساعدك الذكي لتشخيص أعطال التكييف والتبريد</p>
 
-    <!-- قسم البحث المحلي بالكتابة -->
-    <label for="manualSearchText">🔎 ابحث بالكتابة (بدون إنترنت):</label>
-    <input type="text" id="manualSearchText" placeholder="مثال: المكيف يقطر ماء، أو ضغط عالي...">
-    <button class="search-btn" onclick="searchByText()">بحث في المكتبة المحلية</button>
+    <!-- قسم البحث الموحد -->
+    <label for="manualSearchText">🔎 اكتب العطل بكلماتك الخاصة:</label>
+    <input type="text" id="manualSearchText" placeholder="مثال: المكيف يقطر ماء، أو الضاغط لا يعمل...">
+    <button class="search-btn" onclick="unifiedSearch()">بحث وتشخيص ذكي</button>
 
     <div class="ai-section" style="border-top: 1px dashed #ccc; margin-top: 20px; padding-top: 15px;">
-        <label for="deviceType">أو اختر من القائمة:</label>
+        <label>أو اختر من القائمة المنسدلة:</label>
         <select id="deviceType" onchange="updateSymptoms()">
             <option value="split">مكيف سبليت / Split-Klimaanlage</option>
             <option value="coldroom">غرفة تبريد / Kühlraum</option>
         </select>
 
         <select id="symptom" style="margin-top: 10px;"></select>
-        <button onclick="runDiagnose()">🔍 تشخيص سريع (يدوي)</button>
+        <button onclick="runDiagnose()">🔍 تشخيص من القائمة</button>
     </div>
 
     <!-- قسم الذكاء الاصطناعي -->
     <div class="ai-section">
-        <h2>🤖 التشخيص بالذكاء الاصطناعي</h2>
-        <label for="problemText">اكتب تفاصيل العطل هنا (للمرة الصعبة):</label>
+        <h2>🤖 التشخيص المتقدم (ذكاء اصطناعي)</h2>
+        <label for="problemText">اكتب تفاصيل دقيقة أو أرفق صورة:</label>
         <textarea id="problemText" placeholder="مثال: المكيف يعمل ولكن لا يخرج هواء بارد..."></textarea>
         <label for="imageInput">أو أرفق صورة للعطل (اختياري):</label>
         <input type="file" id="imageInput" accept="image/*" capture="environment">
@@ -81,7 +83,7 @@
 
 <script>
     // --- قاعدة البيانات اليدوية الموسعة ---
-    const diagnoseDB = {
+    let diagnoseDB = JSON.parse(localStorage.getItem("hvacDB")) || {
         split: {
             not_cooling: { label: "لا يبرد", causes: [{ name: "نقص غاز التبريد", prob: "40%", checks: ["قياس الضغط", "فحص التسربات"] }, { name: "فلتر مسدود", prob: "30%", checks: ["فحص الفلتر"] }, { name: "عطل في الضاغط", prob: "20%", checks: ["قياس تيار الضاغط"] }, { name: "عطل في المروحة الخارجية", prob: "10%", checks: ["فحص دوران المروحة"] }] },
             high_pressure: { label: "ضغط مرتفع", causes: [{ name: "مكثف متسخ", prob: "50%", checks: ["تنظيف المكثف"] }, { name: "مروحة المكثف لا تعمل", prob: "30%", checks: ["فحص المروحة"] }, { name: "شحن زائد للغاز", prob: "20%", checks: ["قياس الضغط"] }] },
@@ -96,7 +98,7 @@
         }
     };
 
-    // --- خريطة الكلمات المفتاحية للبحث المحلي ---
+    // خريطة الكلمات المفتاحية للبحث المحلي
     const keywordMap = [
         { device: "split", symptom: "water_leak", words: ["ماء", "تسريب", "قطرات", "يقطر", "تنقيط", "ماء من المكيف"] },
         { device: "split", symptom: "noise", words: ["صوت", "ضجيج", "اهتزاز", "طقطقة", "صوت عالي"] },
@@ -108,35 +110,28 @@
         { device: "coldroom", symptom: "not_cooling", words: ["لا يبرد", "حار", "بارد"] }
     ];
 
-    // --- دالة البحث بالكتابة (بدون إنترنت) ---
-    function searchByText() {
+    // --- دالة البحث الموحدة (محلي + ذكاء اصطناعي) ---
+    function unifiedSearch() {
         const query = document.getElementById("manualSearchText").value.trim();
-        if (!query) {
-            alert("الرجاء كتابة العطل للبحث عنه.");
-            return;
-        }
+        if (!query) { alert("الرجاء كتابة العطل للبحث عنه."); return; }
 
         let foundMatch = null;
-        
-        // البحث في خريطة الكلمات المفتاحية
         for (let i = 0; i < keywordMap.length; i++) {
             const item = keywordMap[i];
             for (let j = 0; j < item.words.length; j++) {
                 if (query.includes(item.words[j])) {
-                    foundMatch = item;
-                    break;
+                    foundMatch = item; break;
                 }
             }
             if (foundMatch) break;
         }
 
         if (foundMatch) {
-            // عرض النتيجة
             showResults(foundMatch.device, foundMatch.symptom);
         } else {
-            const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `<p style="color:#d9534f;">لم يتم العثور على العطل في المكتبة المحلية.<br>يمكنك تجربة كتابته في قسم "الذكاء الاصطناعي" بالأسفل، أو اختياره من القائمة.</p>`;
-            resultDiv.style.display = "block";
+            // إذا لم يجده محلياً، يرسله تلقائياً للذكاء الاصطناعي
+            document.getElementById("problemText").value = query; 
+            diagnoseWithAI(); 
         }
     }
 
@@ -164,7 +159,7 @@
         const data = diagnoseDB[device][symptom];
         if (!data) return;
 
-        let html = `<h3>النتائج: ${data.label}</h3>`;
+        let html = `<h3>النتائج المحلية: ${data.label}</h3>`;
         let textToSave = `نوع العطل: ${data.label}\n`;
         
         data.causes.forEach(c => {
@@ -174,7 +169,7 @@
         
         resultDiv.innerHTML = html;
         resultDiv.style.display = "block";
-        saveToHistory("تشخيص: " + data.label, textToSave);
+        saveToHistory("تشخيص محلي: " + data.label, textToSave);
     }
 
     async function diagnoseWithAI() {
@@ -234,7 +229,15 @@
             if (data.error) throw new Error(data.error);
 
             let formattedResult = data.result.replace(/\n/g, '<br>');
-            resultDiv.innerHTML = `<h3>🤖 تحليل الذكاء الاصطناعي:</h3><p>${formattedResult}</p>`;
+            
+            // إضافة زر لحفظ هذا العطل في المكتبة المحلية
+            resultDiv.innerHTML = `
+                <h3>🤖 تحليل الذكاء الاصطناعي:</h3>
+                <p>${formattedResult}</p>
+                <button class="save-btn" onclick="addToLocalDB('${promptText.replace(/'/g, "\\'")}', '${data.result.replace(/'/g, "\\'").replace(/\n/g, "\\n")}')">
+                    💾 حفظ هذا العطل في المكتبة الداخلية
+                </button>
+            `;
             resultDiv.style.display = "block";
             saveToHistory("ذكاء اصطناعي: " + promptText, data.result);
 
@@ -245,6 +248,28 @@
             btn.disabled = false;
             loading.style.display = "none";
         }
+    }
+
+    // --- دالة حفظ عطل جديد للمكتبة الداخلية (التدريب) ---
+    function addToLocalDB(queryText, aiResult) {
+        if (!diagnoseDB.split.custom) diagnoseDB.split.custom = {};
+        
+        const newKey = "custom_" + Date.now();
+        
+        // إضافة العطل للقائمة المنسدلة
+        diagnoseDB.split.custom[newKey] = {
+            label: queryText,
+            causes: [{ name: aiResult, prob: "100%", checks: ["تم التشخيص بواسطة الذكاء الاصطناعي"] }]
+        };
+
+        // إضافة الكلمات للبحث المحلي
+        keywordMap.push({ device: "split", symptom: newKey, words: queryText.split(" ") });
+
+        // حفظ في ذاكرة المتصفح
+        localStorage.setItem("hvacDB", JSON.stringify(diagnoseDB));
+        
+        updateSymptoms();
+        alert("تم حفظ العطل بنجاح في المكتبة! يمكنك الآن اختياره من القائمة أو البحث عنه.");
     }
 
     // --- إدارة السجل ---
