@@ -47,7 +47,7 @@
     <div class="ai-section">
         <h2>🤖 التشخيص بالذكاء الاصطناعي</h2>
         
-        <label for="problemText">اكتب تفاصيل العطل هنا (أو صوت ما تراه):</label>
+        <label for="problemText">اكتب تفاصيل العطل هنا:</label>
         <textarea id="problemText" placeholder="مثال: المكيف يعمل ولكن لا يخرج هواء بارد، وأسمع صوت طقطقة من الوحدة الخارجية..."></textarea>
 
         <label for="imageInput">أو أرفق صورة للعطل (من الكاميرا أو المعرض):</label>
@@ -93,7 +93,7 @@
         resultDiv.style.display = "block";
     }
 
-    // 2. دالة الذكاء الاصطناعي
+    // 2. دالة الذكاء الاصطناعي (مربوطة بالخادم الجديد)
     async function diagnoseWithAI() {
         const promptText = document.getElementById("problemText").value;
         const fileInput = document.getElementById("imageInput");
@@ -117,7 +117,7 @@
             const file = fileInput.files[0];
             base64Image = await new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result.split(',')[1]); // إزالة البادئة
+                reader.onload = (e) => resolve(e.target.result.split(',')[1]); 
                 reader.readAsDataURL(file);
             });
         }
@@ -129,10 +129,10 @@
         أجب باللغة العربية بأسلوب فني واضح ومختصر.`;
 
         try {
-            // ⚠️ تأكد أن هذا هو رابط الـ Worker الخاص بك
-            const workerUrl = "https://hvac-ia.yassersaid98765.workers.dev"; 
+            // 🌟 هنا التعديل: الرابط أصبح داخلياً في موقعك
+            const apiEndpoint = "/api/diagnose"; 
             
-            const response = await fetch(workerUrl, {
+            const response = await fetch(apiEndpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt: fullPrompt, imageData: base64Image })
