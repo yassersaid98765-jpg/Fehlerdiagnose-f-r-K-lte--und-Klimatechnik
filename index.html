@@ -7,7 +7,7 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; color: #333; }
         .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        h1, h2 { color: #0275d8; text-align: center; margin-bottom: 10px; }
+        h1, h2, h3 { color: #0275d8; text-align: center; margin-bottom: 10px; }
         .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
         label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
         select, textarea, input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
@@ -22,7 +22,6 @@
         .prob { color: #d9534f; font-weight: bold; }
         .loading { text-align: center; color: #0275d8; font-weight: bold; display: none; margin-top: 15px; }
         
-        /* أزرار التقييم */
         .feedback-btns { display: flex; gap: 10px; margin-top: 15px; }
         .feedback-btns button { padding: 10px; margin-top: 0; }
         .btn-correct { background-color: #5cb85c; }
@@ -40,6 +39,14 @@
         .catalog-section h3 { color: #856404; margin-top: 0; text-align: center;}
         .catalog-item { background: white; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; }
         .catalog-item a { color: #0275d8; text-decoration: none; font-weight: bold; word-break: break-all; }
+        
+        /* تنسيقات المتصفح المدمج */
+        .browser-section { border: 2px solid #5cb85c; padding: 15px; border-radius: 8px; margin-top: 30px; background: #f4fbf4; }
+        .browser-section h3 { color: #4cae4c; margin-top: 0; }
+        .browser-controls { display: flex; gap: 10px; margin-top: 10px; }
+        .browser-controls input { flex: 1; margin-top: 0; }
+        .browser-controls button { width: auto; margin-top: 0; padding: 10px 20px; background-color: #5cb85c; }
+        iframe { width: 100%; height: 400px; border: 1px solid #ccc; border-radius: 8px; margin-top: 15px; background: white; }
     </style>
 </head>
 <body>
@@ -61,15 +68,25 @@
     </div>
 
     <div id="result">
-        <!-- سيتم وضع النتيجة هنا -->
         <div id="aiResponseText"></div>
-        
-        <!-- أزرار التقييم (التعلم) -->
         <div class="feedback-btns" id="feedbackArea" style="display:none;">
             <p style="width:100%; text-align:center; margin-bottom:5px; font-size:14px; font-weight:bold;">هل هذه الإجابة صحيحة؟</p>
             <button class="btn-correct" onclick="submitFeedback(true)">👍 نعم (تعلم منها)</button>
             <button class="btn-wrong" onclick="submitFeedback(false)">👎 لا (صححها)</button>
         </div>
+    </div>
+
+    <!-- 🌟 المتصفح المدمج الجديد 🌟 -->
+    <div class="browser-section">
+        <h3>🌐 متصفح البحث المدمج</h3>
+        <p style="font-size: 12px; color: #666;">ابحث عن أكواد الأعطال أو الكتالوجات مباشرة هنا.</p>
+        <div class="browser-controls">
+            <input type="text" id="browserSearch" placeholder="ابحث في جوجل/بينج...">
+            <button onclick="doBrowserSearch()">بحث</button>
+        </div>
+        <!-- الإطار الذي سيعرض الموقع -->
+        <iframe id="webFrame" src="https://duckduckgo.com/"></iframe>
+        <button style="background-color: #6c757d; font-size: 12px; padding: 10px; margin-top: 10px;" onclick="openInNewTab()">↗️ فتح الصفحة الحالية في المتصفح الخارجي</button>
     </div>
 
     <div class="catalog-section">
@@ -90,8 +107,22 @@
 <script>
     let currentAIPrompt = "";
     let currentAIResponse = "";
+    let currentBrowserUrl = "https://duckduckgo.com/";
 
-    // --- 1. دالة الذكاء الاصطناعي مع الذاكرة السياقية ---
+    // --- 1. دالة المتصفح المدمج ---
+    function doBrowserSearch() {
+        const query = document.getElementById("browserSearch").value.trim();
+        if (!query) return;
+        // استخدام DuckDuckGo لأنه يسمح بالعرض داخل iframe
+        currentBrowserUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+        document.getElementById("webFrame").src = currentBrowserUrl;
+    }
+
+    function openInNewTab() {
+        window.open(currentBrowserUrl, '_blank');
+    }
+
+    // --- 2. دالة الذكاء الاصطناعي مع الذاكرة السياقية ---
     async function diagnoseWithAI() {
         const promptText = document.getElementById("problemText").value;
         const fileInput = document.getElementById("imageInput");
@@ -114,10 +145,15 @@
         let fileData = null;
         let fileMimeType = null;
 
-        // ... (كود قراءة الملفات وضغط الصور كما هو) ...
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
-            fileMimeType = file.type;
+            if (file.size > 10 * 1024 * 1024) {
+                alert("حجم الملف كبير جداً. يرجى ضغطه.");
+                btn.disabled = false; loading.style.display = "none"; return;
+            }
+            if (file.name.toLowerCase().endsWith('.pdf')) { fileMimeType = "application/pdf"; } 
+            else { fileMimeType = file.type; }
+
             if (file.type === "application/pdf") {
                 fileData = await new Promise((resolve) => {
                     const reader = new FileReader();
@@ -147,21 +183,17 @@
             }
         }
 
-        // --- 🌟 الذاكرة السياقية (Contextual Memory) 🌟 ---
-        // جلب آخر 3 أعطال من السجل لإرسالها للذكاء الاصطناعي ليتعلم منها
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
         let pastContext = "";
         if (history.length > 0) {
-            pastContext = "إليك سياق من التشخيصات السابقة لتتعلم منها وتكون أكثر ذكاءً:\n";
+            pastContext = "إليك سياق من التشخيصات السابقة لتتعلم منها:\n";
             history.slice(0, 3).forEach((item, index) => {
                 pastContext += `[سياق ${index+1}]: ${item.title} -> ${item.result.substring(0, 100)}...\n`;
             });
         }
 
-        // دمج السياق مع السؤال الجديد
         const fullPrompt = `${pastContext}
-        أنت خبير في هندسة التبريد والتكييف. 
-        سؤال المستخدم الحالي: "${promptText}". 
+        أنت خبير في هندسة التبريد والتكييف. سؤال المستخدم الحالي: "${promptText}". 
         إذا أرفق المستخدم كتالوج أو صورة، ابحث فيها عن إجابة دقيقة. 
         أجب باللغة العربية بأسلوب فني واضح ومختصر.`;
 
@@ -180,7 +212,11 @@
 
             aiResponseText.innerHTML = `<h3>🤖 رد الذكاء الاصطناعي:</h3><p>${data.result.replace(/\n/g, '<br>')}</p>`;
             resultDiv.style.display = "block";
-            feedbackArea.style.display = "flex"; // إظهار أزرار التقييم
+            feedbackArea.style.display = "flex"; 
+
+            // إضافة زر للبحث في المتصفح المدمج عن الإجابة
+            document.getElementById("browserSearch").value = promptText;
+            doBrowserSearch();
 
         } catch (error) {
             aiResponseText.innerHTML = `<p style="color:red;">حدث خطأ: ${error.message}</p>`;
@@ -191,29 +227,24 @@
         }
     }
 
-    // --- 2. دالة التقييم والتعلم (Feedback Loop) ---
     function submitFeedback(isCorrect) {
         if (isCorrect) {
-            // إذا كانت الإجابة صحيحة، نحفظها في السجل كمرجع قوي
             saveToHistory("✅ تم تأكيده: " + currentAIPrompt, currentAIResponse);
-            alert("شكراً! تم حفظ هذه الإجابة في سجل النجاحات ليتعلم منها الذكاء الاصطناعي مستقبلاً.");
+            alert("شكراً! تم الحفظ.");
             document.getElementById("feedbackArea").style.display = "none";
         } else {
-            // إذا كانت خاطئة، نطلب التصحيح
-            const correction = prompt("نعتذر عن ذلك. يرجى كتابة الإجابة الصحيحة أو التصحيح (سيتم إرسالها للذكاء الاصطناعي ليتعلم منها):");
+            const correction = prompt("اكتب الإجابة الصحيحة ليتعلم منها الذكاء الاصطناعي:");
             if (correction) {
                 let corrections = JSON.parse(localStorage.getItem("hvacCorrections")) || [];
                 corrections.push({ wrong: currentAIResponse, correct: correction });
                 localStorage.setItem("hvacCorrections", JSON.stringify(corrections));
-                
                 saveToHistory("⚠️ تصحيح: " + currentAIPrompt, correction);
-                alert("تم حفظ التصحيح! سيتذكره الذكاء الاصطناعي في المرات القادمة.");
+                alert("تم الحفظ.");
                 document.getElementById("feedbackArea").style.display = "none";
             }
         }
     }
 
-    // ... (باقي الدوال الخاصة بالسجل والكتالوجات والبحث المحلي كما هي) ...
     function saveToHistory(title, resultText) {
         let history = JSON.parse(localStorage.getItem("hvacHistory")) || [];
         const newRecord = { id: Date.now(), date: new Date().toLocaleString('ar-EG'), title: title, result: resultText };
